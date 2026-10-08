@@ -8,8 +8,11 @@ function connect(): postgres.Sql {
   return postgres(url, {
     // Supabase's transaction pooler (port 6543) doesn't support prepared statements
     prepare: false,
-    max: Number(process.env.DB_POOL_MAX ?? 5),
+    max: Number(process.env.DB_POOL_MAX ?? 3),
     idle_timeout: 20,
+    // fail fast with a clear error instead of hanging a page render
+    connect_timeout: 10,
+    connection: { statement_timeout: 15000, application_name: "sarmagang-tracker" },
     // counts and sums come back as bigint: return them as plain numbers
     types: {
       bigint: { to: 20, from: [20], serialize: (x: number) => String(x), parse: (x: string) => Number(x) },
