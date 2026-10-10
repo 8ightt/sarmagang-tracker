@@ -223,7 +223,7 @@ export default async function Home() {
       </section>
 
       <footer className="site-footer">
-        Stats, crests and flags from EA&apos;s Clubs data, checked every 10 minutes. Fan site, not affiliated with EA.
+        Stats, crests and flags from EA&apos;s Clubs data, checked every 2 minutes while you play. Fan site, not affiliated with EA.
       </footer>
     </main>
   );

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
-import { getClub } from "@/lib/stats";
+import { LiveBadge } from "@/components/LiveBadge";
+import { getClub, lastPoll, savedMatchCount } from "@/lib/stats";
 import { crestUrl } from "@/lib/ea-assets";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const club = await getClub();
+  const [club, poll, saved] = await Promise.all([getClub(), lastPoll(), savedMatchCount()]);
   return (
     <html lang="en">
       <head>
@@ -36,6 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <img src={crestUrl(club.crestAssetId)} alt="" width={36} height={36} style={{ objectFit: "contain" }} />
               <span className="display">{club.name}</span>
             </a>
+            <LiveBadge lastCheck={poll?.at ?? null} matchCount={saved.count} />
             <Nav />
           </div>
         </header>

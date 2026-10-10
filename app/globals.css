@@ -66,6 +66,17 @@ main.wrap { padding-top: 40px; padding-bottom: 64px; display: flex; flex-directi
 .nav a:hover { color: var(--text); background: var(--surface); }
 .nav a[aria-current="page"] { background: var(--surface-2); color: var(--text); font-weight: 600; }
 
+/* live badge */
+.live-badge { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text); padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); margin-right: auto; transition: background .3s, color .3s; }
+.live-badge--flash { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.live-badge--flash .live-ago { color: var(--on-accent); }
+.live-ago { font-weight: 500; color: var(--muted); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(7, 244, 104, .6); animation: live-pulse 2s infinite; }
+.live-dot--idle { background: var(--muted); animation: none; }
+@keyframes live-pulse { 0% { box-shadow: 0 0 0 0 rgba(7, 244, 104, .6); } 70% { box-shadow: 0 0 0 8px rgba(7, 244, 104, 0); } 100% { box-shadow: 0 0 0 0 rgba(7, 244, 104, 0); } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+@media (max-width: 640px) { .live-ago { display: none; } }
+
 /* sections */
 .section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; }
 h1.display { font-size: clamp(44px, 7vw, 80px); font-weight: 900; margin: 0; }
