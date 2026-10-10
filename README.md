@@ -1,7 +1,7 @@
 # Sarma gang tracker
 
 Live stats site for **Sarma gang**, our EA FC 27 Clubs team (PS5).
-Next.js on Vercel, data in Supabase, EA checked every 10 minutes by a GitHub Actions workflow.
+Next.js on Vercel, data in Supabase, near-live: EA checked every 2 minutes while the club is playing.
 
 - **Club**: record, division, form, reputation, squad, recent results, tactics and kits
 - **Players**: sortable leaderboard and a profile per player with a match-by-match log
@@ -64,6 +64,10 @@ GitHub runs scheduled workflows late, often hours apart, and EA keeps only the l
 2. In the Supabase SQL Editor, paste `supabase/migrations/0002_schedule_ea_check.sql`,
    replace both `PASTE_YOUR_GITHUB_TOKEN_HERE` with the token, and run it. The token is
    kept encrypted in Supabase Vault.
+
+Then run `supabase/migrations/0003_live_schedule.sql` the same way (no token needed): it
+checks every 2 minutes while the club is playing (a game in the last 2 hours) and every
+10 minutes otherwise. Open pages refresh themselves every 30 seconds.
 
 ### 5. Optional
 
