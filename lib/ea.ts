@@ -4,15 +4,29 @@ import { CLUB_ID, EA_FIXTURE_DIR, PLATFORM } from "./config";
 
 const BASE = "https://proclubs.ea.com/api/fc";
 
-// EA's API sits behind a bot filter that rejects requests that don't look like a browser.
-const HEADERS: Record<string, string> = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-  Accept: "application/json, text/plain, */*",
-  "Accept-Language": "en-GB,en;q=0.9",
-  Referer: "https://www.ea.com/",
-  Origin: "https://www.ea.com",
+// EA sits behind a bot filter. A server pretending to be Chrome can get stalled
+// (its TLS fingerprint doesn't match the user agent), so try plain headers first
+// and only fall back to browser-like ones.
+const HEADER_SETS: Record<string, Record<string, string>> = {
+  plain: {
+    "User-Agent": "sarmagang-tracker/1.0 (+https://github.com/8ightt/sarmagang-tracker)",
+    Accept: "application/json",
+  },
+  browser: {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+    Accept: "application/json, text/plain, */*",
+    "Accept-Language": "en-GB,en;q=0.9",
+    Referer: "https://www.ea.com/",
+    Origin: "https://www.ea.com",
+  },
 };
+
+/** Per-request timeout. Keep the whole check well inside Vercel's function limit. */
+const TIMEOUT_MS = Number(process.env.EA_TIMEOUT_MS ?? 9000);
+
+/** Remembers which header set EA accepted, so later calls in the same check go straight to it. */
+let preferred: keyof typeof HEADER_SETS | null = null;
 
 export type EaMatch = {
   matchId: string;
@@ -35,26 +49,33 @@ export type EaMember = Record<string, string> & { name: string };
 
 async function get<T>(endpoint: string, params: Record<string, string>, fixture: string): Promise<T> {
   if (EA_FIXTURE_DIR) {
-    return JSON.parse(fs.readFileSync(path.join(EA_FIXTURE_DIR, fixture), "utf8")) as T;
+    return JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(EA_FIXTURE_DIR, fixture), "utf8")) as T;
   }
-  const qs = new URLSearchParams({ platform: PLATFORM, ...params }).toString();
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  const url = `${BASE}/${endpoint}?${new URLSearchParams({ platform: PLATFORM, ...params })}`;
+  const order = (preferred ? [preferred] : (["plain", "browser"] as const)) as (keyof typeof HEADER_SETS)[];
+  const failures: string[] = [];
+  for (const name of order) {
+    const started = Date.now();
     try {
-      const res = await fetch(`${BASE}/${endpoint}?${qs}`, {
-        headers: HEADERS,
+      const res = await fetch(url, {
+        headers: HEADER_SETS[name],
         cache: "no-store",
-        signal: AbortSignal.timeout(20_000),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
       });
-      if (!res.ok) throw new Error(`EA ${endpoint} answered ${res.status}`);
-      return (await res.json()) as T;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as T;
+      preferred = name;
+      return data;
     } catch (err) {
-      lastError = err;
-      await new Promise((r) => setTimeout(r, attempt * 3000));
+      const e = err as Error;
+      const why = e.name === "TimeoutError" || e.name === "AbortError" ? `no answer in ${TIMEOUT_MS / 1000}s` : e.message;
+      failures.push(`${name} headers: ${why} (${Date.now() - started} ms)`);
     }
   }
-  throw lastError;
+  throw new Error(`EA ${endpoint} failed: ${failures.join("; ")}`);
 }
+
+export const eaHeaderMode = () => preferred;
 
 export const ea = {
   clubInfo: () => get<Record<string, Record<string, unknown>>>("clubs/info", { clubIds: CLUB_ID }, "info.json"),

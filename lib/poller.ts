@@ -1,7 +1,7 @@
 import type postgres from "postgres";
 import { CLUB_ID, DISCORD_WEBHOOK_URL, SITE_URL } from "./config";
 import { getSnapshot, setSnapshot, sql } from "./db";
-import { ea, type EaMatch } from "./ea";
+import { ea, eaHeaderMode, type EaMatch } from "./ea";
 
 const MATCH_TYPES = ["leagueMatch", "playoffMatch", "friendlyMatch"] as const;
 const n = (v: unknown) => (v === undefined || v === null || v === "" ? 0 : Number(v));
@@ -128,36 +128,54 @@ export async function pollOnce(): Promise<{ ok: boolean; newMatches: number; mes
   const [{ count: existing }] = await db`select count(*)::int as count from matches`;
   const firstRun = existing === 0;
 
-  for (const type of MATCH_TYPES) {
-    try {
-      const list = await ea.matches(type);
-      // oldest first so Discord posts arrive in order
-      for (const m of [...(Array.isArray(list) ? list : [])].sort((a, b) => n(a.timestamp) - n(b.timestamp))) {
-        if (await saveMatch(m, type)) {
-          newMatches++;
-          // don't spam Discord with old games on the very first run
-          if (!firstRun && Date.now() / 1000 - n(m.timestamp) < 6 * 3600) await announce(m);
-        }
+  const saveList = async (type: string, list: EaMatch[]) => {
+    // oldest first so Discord posts arrive in order
+    for (const m of [...(Array.isArray(list) ? list : [])].sort((a, b) => n(a.timestamp) - n(b.timestamp))) {
+      if (await saveMatch(m, type)) {
+        newMatches++;
+        // don't spam Discord with old games on the very first run
+        if (!firstRun && Date.now() / 1000 - n(m.timestamp) < 6 * 3600) await announce(m);
       }
-    } catch (err) {
-      if (type === "leagueMatch") errors.push(`matches: ${(err as Error).message}`);
-    }
-  }
-
-  const snap = async (key: string, fn: () => Promise<unknown>) => {
-    try {
-      await setSnapshot(key, await fn());
-    } catch (err) {
-      errors.push(`${key}: ${(err as Error).message}`);
     }
   };
-  await Promise.all([snap("info", ea.clubInfo), snap("overall", ea.overallStats), snap("members", ea.members), snap("career", ea.career)]);
-  const info = (await getSnapshot<Record<string, { name?: string }>>("info"))?.data;
-  const clubName = info?.[CLUB_ID]?.name;
-  if (clubName) await snap("search", () => ea.search(clubName));
+
+  // League games first, on their own: they matter most, and this call also
+  // finds out which request style EA accepts for the rest.
+  let eaReachable = true;
+  try {
+    await saveList("leagueMatch", await ea.matches("leagueMatch"));
+  } catch (err) {
+    errors.push((err as Error).message);
+    eaReachable = false;
+  }
+
+  if (eaReachable) {
+    const snap = async (key: string, fn: () => Promise<unknown>) => {
+      try {
+        await setSnapshot(key, await fn());
+      } catch (err) {
+        errors.push(`${key}: ${(err as Error).message}`);
+      }
+    };
+    const previous = (await getSnapshot<Record<string, { name?: string }>>("info"))?.data;
+    const clubName = previous?.[CLUB_ID]?.name ?? "Sarma gang";
+    await Promise.all([
+      ...MATCH_TYPES.filter((t) => t !== "leagueMatch").map((t) =>
+        ea.matches(t).then((list) => saveList(t, list)).catch(() => {
+          /* most clubs have no friendlies or playoffs: ignore */
+        }),
+      ),
+      snap("info", ea.clubInfo),
+      snap("overall", ea.overallStats),
+      snap("members", ea.members),
+      snap("career", ea.career),
+      snap("search", () => ea.search(clubName)),
+    ]);
+  }
 
   const ok = errors.length === 0;
-  const message = ok ? "ok" : errors.join("; ");
+  const mode = eaHeaderMode();
+  const message = (ok ? "ok" : errors.join("; ")) + (mode ? ` [${mode} headers]` : "");
   await db`insert into poll_log (ok, new_matches, message) values (${ok}, ${newMatches}, ${message})`;
   await db`delete from poll_log where id not in (select id from poll_log order by id desc limit 500)`;
   console.log(`[poll] ${ok ? "ok" : "partial"} · ${newMatches} new match(es)${ok ? "" : " · " + message}`);
