@@ -5,6 +5,8 @@ import { getClub } from "@/lib/stats";
 import { crestUrl } from "@/lib/ea-assets";
 
 export const dynamic = "force-dynamic";
+// a page that can't finish should fail quickly, not hang for minutes
+export const maxDuration = 20;
 
 export async function generateMetadata(): Promise<Metadata> {
   const club = await getClub();

@@ -1,4 +1,5 @@
 import type postgres from "postgres";
+import { cache } from "react";
 import { CLUB_ID, loadSettings } from "./config";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
@@ -68,7 +69,7 @@ export type Club = {
   updatedAt: number | null;
 };
 
-export async function getClub(): Promise<Club> {
+export const getClub = cache(async (): Promise<Club> => {
   const [info, overallSnap, searchSnap] = await Promise.all([
     getSnapshot<Record<string, Record<string, any>>>("info"),
     getSnapshot<Record<string, string>[]>("overall"),
@@ -112,7 +113,7 @@ export async function getClub(): Promise<Club> {
     form,
     updatedAt: info?.updatedAt ?? null,
   };
-}
+});
 
 export type Member = {
   gamertag: string;
@@ -144,7 +145,7 @@ export type Member = {
   controlsCpu: boolean;
 };
 
-export async function getMembers(): Promise<Member[]> {
+export const getMembers = cache(async (): Promise<Member[]> => {
   const db = sql();
   const [snap, cpuRows, cpuPlayerRows] = await Promise.all([
     getSnapshot<{ members: EaMember[] }>("members"),
@@ -192,7 +193,7 @@ export async function getMembers(): Promise<Member[]> {
       } satisfies Member;
     })
     .sort((a, b) => b.games - a.games);
-}
+});
 
 export async function getMatches(limit = 50): Promise<MatchRow[]> {
   return (await sql()`
