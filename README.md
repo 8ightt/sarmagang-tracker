@@ -1,7 +1,7 @@
 # Sarma gang tracker
 
 Live stats site for **Sarma gang**, our EA FC 27 Clubs team (PS5).
-Next.js on Vercel, data in Supabase, EA checked by a GitHub Actions workflow.
+Next.js on Vercel, data in Supabase, EA checked every 10 minutes by a GitHub Actions workflow.
 
 - **Club**: record, division, form, reputation, squad, recent results, tactics and kits
 - **Players**: sortable leaderboard and a profile per player with a match-by-match log
@@ -54,7 +54,18 @@ club's data from EA itself and posts it to the site's `/api/ingest` endpoint. In
 Then **Actions → Check EA for new matches → Run workflow** once, and open
 `/api/health` on the site: it shows how many matches are saved and when EA was last checked.
 
-### 4. Optional
+### 4. Check every 10 minutes
+
+GitHub runs scheduled workflows late, often hours apart, and EA keeps only the last
+10 games. Supabase starts the workflow every 10 minutes instead:
+
+1. Create a fine-grained token at **GitHub → Settings → Developer settings → Fine-grained
+   tokens**: repository access *only* `sarmagang-tracker`, permission **Actions: Read and write**.
+2. In the Supabase SQL Editor, paste `supabase/migrations/0002_schedule_ea_check.sql`,
+   replace both `PASTE_YOUR_GITHUB_TOKEN_HERE` with the token, and run it. The token is
+   kept encrypted in Supabase Vault.
+
+### 5. Optional
 
 - **Discord**: set `DISCORD_WEBHOOK_URL` and every new result gets posted to your channel.
 - **Positions, nicknames, bios, Pro pictures**: edit `config/settings.json`. Pictures go in
