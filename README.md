@@ -1,7 +1,7 @@
 # Sarma gang tracker
 
 Live stats site for **Sarma gang**, our EA FC 27 Clubs team (PS5).
-Next.js on Vercel, data in Supabase, EA checked every 30 minutes.
+Next.js on Vercel, data in Supabase, EA checked by a GitHub Actions workflow.
 
 - **Club**: record, division, form, reputation, squad, recent results, tactics and kits
 - **Players**: sortable leaderboard and a profile per player with a match-by-match log
@@ -45,8 +45,8 @@ red card in such a game can be moved to the CPU with the club password.
 
 ### 3. GitHub Actions (the regular EA check)
 
-Vercel's free plan only runs cron jobs once a day, so a GitHub workflow triggers the
-check every 30 minutes. In the repo: **Settings → Secrets and variables → Actions**, add
+EA's bot filter blocks requests from Vercel's servers, so the GitHub workflow fetches the
+club's data from EA itself and posts it to the site's `/api/ingest` endpoint. In the repo: **Settings → Secrets and variables → Actions**, add
 
 - `SITE_URL`: e.g. `https://sarmagang-tracker.vercel.app`
 - `CRON_SECRET`: the same value as in Vercel
