@@ -120,64 +120,93 @@ async function announce(m: EaMatch) {
   }
 }
 
-/** One check of EA: saves new matches and refreshes club and member totals. */
-export async function pollOnce(): Promise<{ ok: boolean; newMatches: number; message: string }> {
+export type MatchType = (typeof MATCH_TYPES)[number];
+
+/** Everything one check collected from EA. Parts that couldn't be fetched are simply missing. */
+export type EaPayload = {
+  source: string;
+  matches?: Partial<Record<MatchType, EaMatch[]>>;
+  info?: unknown;
+  overall?: unknown;
+  members?: unknown;
+  career?: unknown;
+  search?: unknown;
+  /** Problems the fetcher ran into, kept in the poll log. */
+  errors?: string[];
+};
+
+export type PollResult = { ok: boolean; newMatches: number; message: string };
+
+/** Saves a batch of EA data: new matches into the history, totals into snapshots. */
+export async function ingest(payload: EaPayload): Promise<PollResult> {
   const db = sql();
-  const errors: string[] = [];
+  const errors = [...(payload.errors ?? [])].map(String).slice(0, 20);
   let newMatches = 0;
   const [{ count: existing }] = await db`select count(*)::int as count from matches`;
   const firstRun = existing === 0;
 
-  const saveList = async (type: string, list: EaMatch[]) => {
+  for (const type of MATCH_TYPES) {
+    const list = payload.matches?.[type];
+    if (!Array.isArray(list)) continue;
     // oldest first so Discord posts arrive in order
-    for (const m of [...(Array.isArray(list) ? list : [])].sort((a, b) => n(a.timestamp) - n(b.timestamp))) {
+    for (const m of [...list].sort((a, b) => n(a.timestamp) - n(b.timestamp))) {
+      if (!m?.matchId || !m.clubs) continue;
       if (await saveMatch(m, type)) {
         newMatches++;
         // don't spam Discord with old games on the very first run
         if (!firstRun && Date.now() / 1000 - n(m.timestamp) < 6 * 3600) await announce(m);
       }
     }
-  };
-
-  // League games first, on their own: they matter most, and this call also
-  // finds out which request style EA accepts for the rest.
-  let eaReachable = true;
-  try {
-    await saveList("leagueMatch", await ea.matches("leagueMatch"));
-  } catch (err) {
-    errors.push((err as Error).message);
-    eaReachable = false;
   }
+  if (!Array.isArray(payload.matches?.leagueMatch)) errors.push("no league matches in this check");
 
-  if (eaReachable) {
-    const snap = async (key: string, fn: () => Promise<unknown>) => {
-      try {
-        await setSnapshot(key, await fn());
-      } catch (err) {
-        errors.push(`${key}: ${(err as Error).message}`);
-      }
-    };
-    const previous = (await getSnapshot<Record<string, { name?: string }>>("info"))?.data;
-    const clubName = previous?.[CLUB_ID]?.name ?? "Sarma gang";
-    await Promise.all([
-      ...MATCH_TYPES.filter((t) => t !== "leagueMatch").map((t) =>
-        ea.matches(t).then((list) => saveList(t, list)).catch(() => {
-          /* most clubs have no friendlies or playoffs: ignore */
-        }),
-      ),
-      snap("info", ea.clubInfo),
-      snap("overall", ea.overallStats),
-      snap("members", ea.members),
-      snap("career", ea.career),
-      snap("search", () => ea.search(clubName)),
-    ]);
+  for (const key of ["info", "overall", "members", "career", "search"] as const) {
+    const value = payload[key];
+    if (value !== undefined && value !== null) await setSnapshot(key, value);
   }
 
   const ok = errors.length === 0;
-  const mode = eaHeaderMode();
-  const message = (ok ? "ok" : errors.join("; ")) + (mode ? ` [${mode} headers]` : "");
+  const message = `${ok ? "ok" : errors.join("; ")} [${String(payload.source).slice(0, 40)}]`;
   await db`insert into poll_log (ok, new_matches, message) values (${ok}, ${newMatches}, ${message})`;
   await db`delete from poll_log where id not in (select id from poll_log order by id desc limit 500)`;
-  console.log(`[poll] ${ok ? "ok" : "partial"} · ${newMatches} new match(es)${ok ? "" : " · " + message}`);
+  console.log(`[poll] ${ok ? "ok" : "partial"} · ${newMatches} new match(es) · ${message}`);
   return { ok, newMatches, message };
+}
+
+/**
+ * Fetches from EA directly. EA's bot filter blocks Vercel's servers, so in production
+ * the GitHub Actions workflow fetches instead and posts the data to /api/ingest.
+ */
+export async function pollOnce(): Promise<PollResult> {
+  const payload: EaPayload = { source: "server", matches: {}, errors: [] };
+  try {
+    payload.matches!.leagueMatch = await ea.matches("leagueMatch");
+  } catch (err) {
+    payload.errors!.push((err as Error).message);
+    return ingest(payload);
+  }
+  const grab = async <K extends "info" | "overall" | "members" | "career" | "search">(key: K, fn: () => Promise<unknown>) => {
+    try {
+      payload[key] = await fn();
+    } catch (err) {
+      payload.errors!.push(`${key}: ${(err as Error).message}`);
+    }
+  };
+  const previous = (await getSnapshot<Record<string, { name?: string }>>("info"))?.data;
+  const clubName = previous?.[CLUB_ID]?.name ?? "Sarma gang";
+  await Promise.all([
+    ...MATCH_TYPES.filter((t) => t !== "leagueMatch").map((t) =>
+      ea.matches(t).then((list) => { payload.matches![t] = list; }).catch(() => {
+        /* most clubs have no friendlies or playoffs: ignore */
+      }),
+    ),
+    grab("info", ea.clubInfo),
+    grab("overall", ea.overallStats),
+    grab("members", ea.members),
+    grab("career", ea.career),
+    grab("search", () => ea.search(clubName)),
+  ]);
+  const mode = eaHeaderMode();
+  if (mode) payload.source = `server, ${mode} headers`;
+  return ingest(payload);
 }
