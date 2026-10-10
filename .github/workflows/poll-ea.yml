@@ -3,6 +3,8 @@ name: Check EA for new matches
 # EA only keeps a club's last 10 games, so check often enough that none slip through.
 # EA's bot filter blocks Vercel's servers, so this runner fetches the data itself
 # (connecting exactly like Chrome) and hands it to the site's /api/ingest endpoint.
+# Supabase starts it every 10 minutes (supabase/migrations/0002_schedule_ea_check.sql);
+# GitHub's own schedule is only a backup, since it often runs hours late.
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -21,11 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           sparse-checkout: scripts
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
