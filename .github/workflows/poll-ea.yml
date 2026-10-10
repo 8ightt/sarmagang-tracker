@@ -1,8 +1,6 @@
 name: Check EA for new matches
 
 # EA only keeps a club's last 10 games, so check often enough that none slip through.
-# Every 30 minutes stays inside the free Actions minutes of a private repo.
-# For a public repo you can change this to "*/15 * * * *".
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -22,10 +20,26 @@ jobs:
           SITE_URL: ${{ secrets.SITE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
+          # tolerate stray whitespace or a trailing slash in the secrets
+          SITE_URL="$(printf '%s' "$SITE_URL" | tr -d '[:space:]')"
+          SITE_URL="${SITE_URL%/}"
+          CRON_SECRET="$(printf '%s' "$CRON_SECRET" | tr -d '[:space:]')"
+
           if [ -z "$SITE_URL" ] || [ -z "$CRON_SECRET" ]; then
-            echo "Add the SITE_URL and CRON_SECRET repository secrets first."
+            echo "::error::Add the SITE_URL and CRON_SECRET repository secrets first."
             exit 1
           fi
-          curl --fail-with-body --silent --show-error --max-time 90 \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "${SITE_URL%/}/api/cron/poll"
+
+          status=$(curl --silent --show-error --max-time 90 -o body.txt -w '%{http_code}' \
+            -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL/api/cron/poll" || echo 000)
+          body=$(head -c 400 body.txt 2>/dev/null | tr '\n' ' ')
+          echo "HTTP $status: $body"
+
+          case "$status" in
+            200) echo "::notice::EA check ok: $body" ;;
+            401) echo "::error::HTTP 401 from the site: $body"; exit 1 ;;
+            402|404) echo "::error::HTTP $status: SITE_URL ($SITE_URL) is not the production address, e.g. https://sarmagang-tracker.vercel.app"; exit 1 ;;
+            503) echo "::error::HTTP 503 from the site: $body"; exit 1 ;;
+            502) echo "::error::The site could not reach EA: $body"; exit 1 ;;
+            *) echo "::error::HTTP $status from $SITE_URL: $body"; exit 1 ;;
+          esac
