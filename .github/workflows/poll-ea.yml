@@ -2,7 +2,7 @@ name: Check EA for new matches
 
 # EA only keeps a club's last 10 games, so check often enough that none slip through.
 # EA's bot filter blocks Vercel's servers, so this runner fetches the data itself
-# and hands it to the site's /api/ingest endpoint.
+# (connecting exactly like Chrome) and hands it to the site's /api/ingest endpoint.
 on:
   schedule:
     - cron: "*/30 * * * *"
@@ -21,62 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Fetch the club's data from EA
         run: |
-          set -u
-          BASE="https://proclubs.ea.com/api/fc"
-          mkdir -p ea
-          : > ea/errors.txt
-
-          fetch() { # fetch <name> <url> [optional]
-            for style in plain browser; do
-              if [ "$style" = plain ]; then
-                headers=(-H "User-Agent: sarmagang-tracker/1.0 (+https://github.com/${GITHUB_REPOSITORY})" -H "Accept: application/json")
-              else
-                headers=(-H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
-                         -H "Accept: application/json, text/plain, */*" -H "Accept-Language: en-GB,en;q=0.9"
-                         -H "Referer: https://www.ea.com/" -H "Origin: https://www.ea.com")
-              fi
-              code=$(curl --silent --compressed --max-time 15 "${headers[@]}" -o "ea/$1.json" -w '%{http_code}' "$2" || echo 000)
-              if [ "$code" = 200 ] && jq -e . "ea/$1.json" > /dev/null 2>&1; then
-                echo "$1: ok ($style headers)"
-                echo "$style" > ea/style.txt
-                return 0
-              fi
-              echo "$1: HTTP $code ($style headers)"
-              last="$1: HTTP $code"
-            done
-            rm -f "ea/$1.json"
-            # friendlies and playoffs are optional: most clubs never play them
-            [ "${3:-}" = optional ] || echo "$last" >> ea/errors.txt
-            return 1
-          }
-
-          fetch leagueMatch   "$BASE/clubs/matches?platform=$PLATFORM&clubIds=$CLUB_ID&matchType=leagueMatch&maxResultCount=10" || true
-          fetch playoffMatch  "$BASE/clubs/matches?platform=$PLATFORM&clubIds=$CLUB_ID&matchType=playoffMatch&maxResultCount=10" optional || true
-          fetch friendlyMatch "$BASE/clubs/matches?platform=$PLATFORM&clubIds=$CLUB_ID&matchType=friendlyMatch&maxResultCount=10" optional || true
-          fetch info    "$BASE/clubs/info?platform=$PLATFORM&clubIds=$CLUB_ID" || true
-          fetch overall "$BASE/clubs/overallStats?platform=$PLATFORM&clubIds=$CLUB_ID" || true
-          fetch members "$BASE/members/stats?platform=$PLATFORM&clubId=$CLUB_ID" || true
-          fetch career  "$BASE/members/career/stats?platform=$PLATFORM&clubId=$CLUB_ID" || true
-          name=$(jq -r --arg id "$CLUB_ID" '.[$id].name // empty' ea/info.json 2>/dev/null || true)
-          fetch search "$BASE/allTimeLeaderboard/search?platform=$PLATFORM&clubName=$(jq -rn --arg n "${name:-Sarma gang}" '$n|@uri')" || true
-
-          if [ ! -f ea/leagueMatch.json ]; then
-            echo "::error::EA refused this runner too: $(tr '\n' ';' < ea/errors.txt)"
-            exit 1
-          fi
-
-          # build one payload; parts that failed are left out
-          echo "{\"source\":\"github-actions, $(cat ea/style.txt) headers\",\"matches\":{}}" > payload.json
-          for t in leagueMatch playoffMatch friendlyMatch; do
-            [ -f "ea/$t.json" ] && jq --arg t "$t" --slurpfile v "ea/$t.json" '.matches[$t] = $v[0]' payload.json > p.tmp && mv p.tmp payload.json
-          done
-          for k in info overall members career search; do
-            [ -f "ea/$k.json" ] && jq --arg k "$k" --slurpfile v "ea/$k.json" '.[$k] = $v[0]' payload.json > p.tmp && mv p.tmp payload.json
-          done
-          jq --rawfile e ea/errors.txt '.errors = ($e | split("\n") | map(select(length > 0)))' payload.json > p.tmp && mv p.tmp payload.json
-          echo "payload: $(wc -c < payload.json) bytes"
+          pip install --quiet "curl_cffi>=0.7,<1"
+          python scripts/fetch-ea.py payload.json
 
       - name: Send it to the site
         env:
