@@ -10,6 +10,7 @@ Env:   CLUB_ID (default 837026), PLATFORM (default common-gen5)
 import json
 import os
 import sys
+import time
 import urllib.parse
 
 from curl_cffi import requests
@@ -26,6 +27,9 @@ headers = {
     "Accept-Language": "en-GB,en;q=0.9",
     "Referer": "https://www.ea.com/",
     "Origin": "https://www.ea.com",
+    # EA's edge servers cache identical requests for minutes; ask for a fresh answer
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
 }
 working_profile = None
 
@@ -33,7 +37,9 @@ working_profile = None
 def fetch(name, path, params, optional=False):
     """Returns parsed JSON, or None after logging why it failed."""
     global working_profile
-    url = f"{BASE}/{path}?{urllib.parse.urlencode({'platform': PLATFORM, **params})}"
+    # a unique stamp per request, so a cached copy (missing the latest game) is never served
+    stamp = int(time.time() * 1000)
+    url = f"{BASE}/{path}?{urllib.parse.urlencode({'platform': PLATFORM, **params, '_': stamp})}"
     profiles = [working_profile] if working_profile else PROFILES
     last = ""
     for profile in profiles:
