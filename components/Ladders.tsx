@@ -1,4 +1,7 @@
+import { CLUB_ID } from "@/lib/config";
 import { REPUTATION_TIERS, reputationName, reputationUrl } from "@/lib/ea-assets";
+import type { TopClub } from "@/lib/poller";
+import { Crest } from "./bits";
 
 /** Division 5 up to Elite (0), lowest first. */
 const DIVISIONS = [5, 4, 3, 2, 1, 0];
@@ -52,5 +55,47 @@ export function ReputationLadder({ tier }: { tier: number }) {
         {tier < REPUTATION_TIERS.length - 1 ? `Next: ${reputationName(tier + 1)}` : "Top tier reached"}
       </span>
     </div>
+  );
+}
+
+/** Where the club stands against EA's top 100 clubs by Skill Rating. */
+export function TopHundred({ clubs, us }: { clubs: TopClub[]; us: number | null }) {
+  const first = clubs[0];
+  const last = clubs[clubs.length - 1];
+  const mine = clubs.find((c) => c.clubId === CLUB_ID);
+  const gap = us !== null && last ? last.skillRating - us : null;
+  // our Skill Rating on a bar from 1000 up to #1
+  const floor = 1000;
+  const pct = (sr: number) => Math.max(0, Math.min(100, ((sr - floor) / Math.max(1, first.skillRating - floor)) * 100));
+  return (
+    <a className="card stack" href="/top-100" style={{ gap: 14, textDecoration: "none", color: "var(--text)" }}>
+      <div className="row between">
+        <span className="kpi-label">World top 100</span>
+        <span className="muted" style={{ fontSize: 13 }}>By Skill Rating →</span>
+      </div>
+      {mine ? (
+        <span className="display num accent" style={{ fontSize: 40, lineHeight: 1 }}>#{mine.rank}</span>
+      ) : (
+        <span className="display num" style={{ fontSize: 28, lineHeight: 1.1 }}>
+          {gap !== null ? `${gap} SR short` : "Not ranked"}
+        </span>
+      )}
+      <div className="stack" style={{ gap: 6 }}>
+        <div className="top100-bar">
+          <div className="top100-zone" style={{ left: `${pct(last.skillRating)}%` }} />
+          {us !== null ? <div className="top100-us" style={{ left: `${pct(us)}%` }} title={`Sarma gang ${us}`} /> : null}
+        </div>
+        <div className="row between muted" style={{ fontSize: 12 }}>
+          <span>You: {us ?? "–"}</span>
+          <span>#100: {last.skillRating}</span>
+          <span>#1: {first.skillRating}</span>
+        </div>
+      </div>
+      <div className="row" style={{ gap: 8, flexWrap: "nowrap", fontSize: 13 }}>
+        <span className="muted">#1</span>
+        <Crest id={first.crest} size={22} />
+        <strong style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{first.name}</strong>
+      </div>
+    </a>
   );
 }

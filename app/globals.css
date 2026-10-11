@@ -244,3 +244,8 @@ details > summary { cursor: pointer; color: var(--text-2); }
 .arch-stats > div { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line-2); padding-top: 6px; }
 .arch-stats dt { color: var(--muted); font-size: 13px; }
 .arch-stats dd { margin: 0; font-weight: 700; }
+
+/* world top 100 card: the shaded part of the bar is the top 100's Skill Rating range */
+.top100-bar { position: relative; height: 10px; background: #2a2a2a; border-radius: 5px; }
+.top100-zone { position: absolute; top: 0; bottom: 0; right: 0; background: var(--accent); opacity: .35; border-radius: 0 5px 5px 0; }
+.top100-us { position: absolute; top: -4px; width: 4px; height: 18px; margin-left: -2px; background: var(--accent); border-radius: 2px; }

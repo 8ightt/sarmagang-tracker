@@ -100,6 +100,11 @@ search = fetch("search", "allTimeLeaderboard/search", {"clubName": club_name})
 if search is not None:
     payload["search"] = search
 
+# the top 100 clubs by Skill Rating; changes slowly, so a failure here isn't an error
+top = fetch("leaderboard", "allTimeLeaderboard", {}, optional=True)
+if top is not None:
+    payload["leaderboard"] = top
+
 payload["source"] = f"github-actions, {working_profile}"
 payload["errors"] = errors
 with open(sys.argv[1] if len(sys.argv) > 1 else "payload.json", "w") as f:

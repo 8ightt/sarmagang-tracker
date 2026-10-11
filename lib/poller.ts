@@ -193,6 +193,28 @@ async function announce(m: EaMatch) {
 
 export type MatchType = (typeof MATCH_TYPES)[number];
 
+/** The fields of an allTimeLeaderboard entry the site uses. */
+function topClub(c: Record<string, unknown>) {
+  const kit = ((c.clubInfo as Record<string, unknown> | undefined)?.customKit ?? {}) as Record<string, unknown>;
+  return {
+    rank: n(c.rank),
+    clubId: String(c.clubId ?? ""),
+    name: String(c.clubName ?? ""),
+    crest: kit.crestAssetId ? String(kit.crestAssetId) : null,
+    skillRating: n(c.skillRating),
+    division: n(c.currentDivision),
+    reputationTier: n(c.reputationtier),
+    reputationLevel: n(c.reputationlevel),
+    games: n(c.gamesPlayed),
+    wins: n(c.wins),
+    ties: n(c.ties),
+    losses: n(c.losses),
+    goals: n(c.goals),
+    goalsAgainst: n(c.goalsAgainst),
+  };
+}
+export type TopClub = ReturnType<typeof topClub>;
+
 /** Everything one check collected from EA. Parts that couldn't be fetched are simply missing. */
 export type EaPayload = {
   source: string;
@@ -202,6 +224,8 @@ export type EaPayload = {
   members?: unknown;
   career?: unknown;
   search?: unknown;
+  /** allTimeLeaderboard: the top 100 clubs by Skill Rating */
+  leaderboard?: unknown;
   /** Skill Rating of recent opponents, by club id */
   opponents?: Record<string, { skillRating?: string | number | null }>;
   /** Problems the fetcher ran into, kept in the poll log. */
@@ -242,6 +266,10 @@ export async function ingest(payload: EaPayload): Promise<PollResult> {
   for (const key of ["info", "overall", "members", "career", "search"] as const) {
     const value = payload[key];
     if (value !== undefined && value !== null) await setSnapshot(key, value);
+  }
+  // every page loads all snapshots, so keep only what the site shows of the top 100 (~105 kB raw)
+  if (Array.isArray(payload.leaderboard) && payload.leaderboard.length) {
+    await setSnapshot("leaderboard", payload.leaderboard.map((c) => topClub(c as Record<string, unknown>)));
   }
 
   const ok = errors.length === 0;
@@ -299,6 +327,9 @@ export async function pollOnce(): Promise<PollResult> {
     grab("members", ea.members),
     grab("career", ea.career),
     grab("search", () => ea.search(clubName)),
+    ea.leaderboard().then((d) => { payload.leaderboard = d; }).catch(() => {
+      /* the top 100 changes slowly: try again next check */
+    }),
   ]);
   const mode = eaHeaderMode();
   if (mode) payload.source = `server, ${mode} headers`;

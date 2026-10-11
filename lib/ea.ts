@@ -86,6 +86,8 @@ export const ea = {
     get<Record<string, string>[]>("allTimeLeaderboard/search", { clubName }, "search.json"),
   members: () => get<{ members: EaMember[] }>("members/stats", { clubId: CLUB_ID }, "members.json"),
   career: () => get<{ members: EaMember[] }>("members/career/stats", { clubId: CLUB_ID }, "career.json"),
+  /** the top 100 clubs on the platform by Skill Rating */
+  leaderboard: () => get<Record<string, unknown>[]>("allTimeLeaderboard", {}, "leaderboard.json"),
   matches: (matchType: "leagueMatch" | "playoffMatch" | "friendlyMatch") =>
     get<EaMatch[]>(
       "clubs/matches",

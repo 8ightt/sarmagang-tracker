@@ -3,7 +3,7 @@ import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
 import { archetypeGroup, archetypeName, groupShort } from "@/lib/ea-assets";
 import { MIN_GAMES } from "@/lib/insights";
-import { AFK_SECONDS, getArchetypeSeason, getArchetypes, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
+import { AFK_SECONDS, getArchetypeSeason, getArchetypes, getCareer, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +16,13 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const members = await getMembers();
   const p = members.find((m) => m.gamertag === name);
   if (!p) notFound();
-  const [log, seasonCpuReds, tracked, archetypes, byArchetype] = await Promise.all([
+  const [log, seasonCpuReds, tracked, archetypes, byArchetype, career] = await Promise.all([
     getPlayerLog(name, 20),
     getSeasonCpuReds(name),
     getTracked(),
     getArchetypes(name),
     getArchetypeSeason(name),
+    getCareer(name),
   ]);
   const currentArchetype = log[0]?.archetype ?? null;
   const t = tracked.get(name);
@@ -57,6 +58,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           { label: "Clean sheets", value: t.cleanSheets, sub: `in ${t.games} saved games` },
           { label: "Conceded", value: t.conceded, sub: `${(t.conceded / t.games).toFixed(1)} per game while on the pitch` },
         ]
+      : []),
+    // members/career/stats: all seasons at the club; only worth a tile once it differs from this season
+    ...(career && career.games > p.games
+      ? [{ label: "All-time at the club", value: career.games, sub: `games · ${career.goals} goals · ${career.assists} assists (EA)` }]
       : []),
     ...(t?.afkGames ? [{ label: "AFK games", value: t.afkGames, sub: `${idleLabel(t.idleSeconds)} idle in saved games` }] : []),
   ];

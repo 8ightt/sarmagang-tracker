@@ -224,7 +224,7 @@ Path: `[].clubInfo.customKit`
 
 `GET https://proclubs.ea.com/api/fc/allTimeLeaderboard?platform=common-gen5`
 
-The top 100 clubs on the platform by Skill Rating (2441 down to 2132 on 2026-10-11). Not used by the site.
+The top 100 clubs on the platform by Skill Rating (2441 down to 2132 on 2026-10-11). Fetched every check; the site keeps the fields below that it shows (snapshot 'leaderboard').
 
 ### Each club
 
@@ -232,13 +232,13 @@ Path: `[]`
 
 | Field | How sure | What it is | Used on the site |
 |---|---|---|---|
-| `rank` | ✅ verified | 1-100 |  |
+| `rank` | ✅ verified | 1-100 | World top 100 card on the club page and /top-100 |
 | `clubId`, `clubName`, `platform` | ✅ verified | as in allTimeLeaderboard/search |  |
-| `skillRating` | ✅ verified | Skill Rating; the list is sorted by it |  |
+| `skillRating` | ✅ verified | Skill Rating; the list is sorted by it | how far the club is from #100 |
 | `currentDivision`, `bestDivision` | 🟡 assumed | 1 or 2 for every top club; see the warning on currentDivision in allTimeLeaderboard/search |  |
 | `bestFinishGroup` | ❓ unknown | always 0 |  |
 | `reputationtier` | ✅ verified | reputation tier 0-2 among the top 100 |  |
-| `reputationlevel` | 🟡 assumed | finer reputation level inside the tiers: tier 0 = level 3, tier 1 = levels 4-6, tier 2 = levels 7-8 *Note:* only here; overallStats and search give the tier alone |  |
+| `reputationlevel` | 🟡 assumed | finer reputation level inside the tiers: tier 0 = level 3, tier 1 = levels 4-6, tier 2 = levels 7-8 *Note:* only here; overallStats and search give the tier alone | /top-100 |
 | `wins`, `ties`, `losses`, `gamesPlayed`, `gamesPlayedPlayoff`, `goals`, `goalsAgainst`, `cleanSheets` | ✅ verified | the club's totals |  |
 | `goalsPerGame`, `goalsAgainstPerGame` | ✅ verified | goals and goals against divided by games |  |
 
@@ -305,7 +305,7 @@ Path: `members[]`
 | Field | How sure | What it is | Used on the site |
 |---|---|---|---|
 | `name`, `proPos`, `favoritePosition` | ✅ verified | as in members/stats |  |
-| `gamesPlayed`, `goals`, `assists`, `manOfTheMatch`, `ratingAve` | ✅ verified | all-time totals at this club (the same as this season so far) |  |
+| `gamesPlayed`, `goals`, `assists`, `manOfTheMatch`, `ratingAve` | ✅ verified | all-time totals at this club (the same as this season so far) | 'All-time at the club' tile on player pages, shown once it differs from this season |
 | `prevGoals` | 🟡 assumed | goals in the latest game |  |
 
 ### Squad by position

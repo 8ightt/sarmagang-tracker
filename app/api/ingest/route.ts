@@ -7,7 +7,7 @@ export const maxDuration = 60;
 
 /**
  * Receives EA data fetched elsewhere (the GitHub Actions workflow) and saves it.
- * Body: { source, matches: { leagueMatch: [...], ... }, info, overall, members, career, search, errors }
+ * Body: { source, matches: { leagueMatch: [...], ... }, info, overall, members, career, search, leaderboard, opponents, errors }
  */
 export async function POST(req: Request) {
   const denied = checkCronAuth(req);

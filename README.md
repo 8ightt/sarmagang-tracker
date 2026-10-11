@@ -3,7 +3,9 @@
 Live stats site for **Sarma gang**, our EA FC 27 Clubs team (PS5).
 Next.js on Vercel, data in Supabase, near-live: EA checked every 2 minutes while the club is playing.
 
-- **Club**: record, division and reputation ladders, season tracker, form, squad, recent results, tactics and kits
+- **Club**: record, division and reputation ladders, distance to EA's world top 100, season
+  tracker, form, squad, recent results, tactics and kits
+- **World top 100**: EA's 100 best clubs by Skill Rating, and how far Sarma gang is from #100
 - **Players**: sortable leaderboard (goals, assists, rating, clean sheets…) and a profile per
   player with a match-by-match log, clean sheets, goals conceded, saves by type and, for
   players who switch, results per archetype (Creator, Magician…)

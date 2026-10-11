@@ -280,21 +280,22 @@
     },
     "allTimeLeaderboard": {
       "query": "(platform only)",
-      "about": "The top 100 clubs on the platform by Skill Rating (2441 down to 2132 on 2026-10-11). Not used by the site.",
+      "about": "The top 100 clubs on the platform by Skill Rating (2441 down to 2132 on 2026-10-11). Fetched every check; the site keeps the fields below that it shows (snapshot 'leaderboard').",
       "sample": "leaderboard",
       "sections": [
         {
           "title": "Each club",
           "path": "[]",
           "fields": {
-            "rank": { "status": "verified", "meaning": "1-100" },
+            "rank": { "status": "verified", "meaning": "1-100", "usedFor": "World top 100 card on the club page and /top-100" },
             "clubId, clubName, platform": { "status": "verified", "meaning": "as in allTimeLeaderboard/search" },
-            "skillRating": { "status": "verified", "meaning": "Skill Rating; the list is sorted by it" },
+            "skillRating": { "status": "verified", "meaning": "Skill Rating; the list is sorted by it", "usedFor": "how far the club is from #100" },
             "currentDivision, bestDivision": { "status": "assumed", "meaning": "1 or 2 for every top club; see the warning on currentDivision in allTimeLeaderboard/search" },
             "bestFinishGroup": { "status": "unknown", "meaning": "always 0" },
             "reputationtier": { "status": "verified", "meaning": "reputation tier 0-2 among the top 100" },
             "reputationlevel": {
               "status": "assumed",
+              "usedFor": "/top-100",
               "meaning": "finer reputation level inside the tiers: tier 0 = level 3, tier 1 = levels 4-6, tier 2 = levels 7-8",
               "note": "only here; overallStats and search give the tier alone"
             },
@@ -351,7 +352,7 @@
           "path": "members[]",
           "fields": {
             "name, proPos, favoritePosition": { "status": "verified", "meaning": "as in members/stats" },
-            "gamesPlayed, goals, assists, manOfTheMatch, ratingAve": { "status": "verified", "meaning": "all-time totals at this club (the same as this season so far)" },
+            "gamesPlayed, goals, assists, manOfTheMatch, ratingAve": { "status": "verified", "meaning": "all-time totals at this club (the same as this season so far)", "usedFor": "'All-time at the club' tile on player pages, shown once it differs from this season" },
             "prevGoals": { "status": "assumed", "meaning": "goals in the latest game" }
           }
         },

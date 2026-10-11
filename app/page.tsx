@@ -1,15 +1,15 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
 import { currentSeason, loadSettings, playoffsWindow, promotionRule } from "@/lib/config";
 import { reputationName, reputationUrl } from "@/lib/ea-assets";
-import { DivisionLadder, ReputationLadder } from "@/components/Ladders";
-import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, lastPoll } from "@/lib/stats";
+import { DivisionLadder, ReputationLadder, TopHundred } from "@/components/Ladders";
+import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, getTop100, lastPoll } from "@/lib/stats";
 import { SeasonForm } from "@/components/Forms";
 import { Tactics } from "@/components/Tactics";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [club, members, recent, records, poll, tactics, season, playoffs] = await Promise.all([
+  const [club, members, recent, records, poll, tactics, season, playoffs, top100] = await Promise.all([
     getClub(),
     getMembers(),
     getMatches(5),
@@ -18,6 +18,7 @@ export default async function Home() {
     getTactics(),
     getSeason(),
     getSeasonPlayoffs(),
+    getTop100(),
   ]);
   // the season tracker follows the in-game lobby; EA's own division field lags behind
   const division = season?.division ?? club.division;
@@ -302,6 +303,7 @@ export default async function Home() {
       <section className="grid grid-270">
         <DivisionLadder current={division} best={club.bestDivision} promotions={club.promotions} relegations={club.relegations} />
         <ReputationLadder tier={club.reputationTier} />
+        {top100 ? <TopHundred clubs={top100.clubs} us={club.skillRating} /> : null}
       </section>
 
       <section className="grid grid-170">

@@ -4,6 +4,7 @@ import { CLUB_ID, currentSeason, inGameArchetypes, loadSettings, playoffsWindow,
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
 import { positionName } from "./ea-assets";
+import type { TopClub } from "./poller";
 
 /**
  * Player lines with the club's stat fixes applied. Falls back to EA's raw lines
@@ -451,6 +452,21 @@ export async function getArchetypeSeason(player: string): Promise<{ season: stri
   });
   rows.sort((a, b) => b.total.games - a.total.games);
   return { season: snap.season, asOf, rows };
+}
+
+/** A member's all-time totals at the club (members/career/stats); EA's numbers, incl. the CPU's for whoever runs it. */
+export async function getCareer(player: string) {
+  const snap = await getSnapshot<{ members?: Record<string, string>[] }>("career");
+  const m = snap?.data?.members?.find((x) => x.name === player);
+  if (!m) return null;
+  return { games: num(m.gamesPlayed), goals: num(m.goals), assists: num(m.assists), motm: num(m.manOfTheMatch), rating: num(m.ratingAve) };
+}
+
+/** The top 100 clubs by Skill Rating (allTimeLeaderboard), best first. */
+export async function getTop100(): Promise<{ clubs: TopClub[]; updatedAt: number } | null> {
+  const snap = await getSnapshot<TopClub[]>("leaderboard");
+  if (!snap?.data?.length) return null;
+  return { clubs: [...snap.data].sort((a, b) => a.rank - b.rank), updatedAt: snap.updatedAt };
 }
 
 export async function getSeasonCpuReds(player: string): Promise<number> {
