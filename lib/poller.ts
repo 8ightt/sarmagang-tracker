@@ -11,16 +11,23 @@ const n = (v: unknown) => (v === undefined || v === null || v === "" ? 0 : Numbe
  * that happens when he plays ANY, or is one of only two humans online.
  */
 export function cpuController(players: Record<string, string>[]): string | null {
-  const byPasses = players
-    .map((p) => ({ name: p.playername, att: n(p.passattempts), secs: n(p.secondsPlayed) }))
-    .filter((p) => p.secs > 0)
+  const live = players.filter((p) => n(p.secondsPlayed) > 0);
+  if (!live.length) return null;
+  // certain: EA's headline goals/assists/shots exceed the player's own counters only on the CPU controller's line
+  const extra = live
+    .map((p) => {
+      const own = ownStats(p);
+      return { name: p.playername, extra: own ? n(p.goals) - own.goals + (n(p.assists) - own.assists) + (n(p.shots) - own.shots) : 0 };
+    })
+    .sort((a, b) => b.extra - a.extra);
+  if (extra[0].extra > 0) return extra[0].name;
+  // otherwise a guess: the controller also makes the CPU's passes AND tackles, so both are far above a human's
+  const byPasses = live
+    .map((p) => ({ name: p.playername, att: n(p.passattempts), tackles: n(p.tackleattempts), mins: Math.max(1, n(p.secondsPlayed) / 60) }))
     .sort((a, b) => b.att - a.att);
-  if (!byPasses.length) return null;
   const top = byPasses[0];
   const second = byPasses[1]?.att ?? 0;
-  // scale the threshold for short games (opponent quit early etc.)
-  const minAttempts = Math.max(12, 45 * Math.min(1, top.secs / 60 / 90));
-  return top.att >= minAttempts && top.att >= 2.2 * Math.max(second, 1) ? top.name : null;
+  return top.att >= 12 && top.att / top.mins >= 0.6 && top.tackles / top.mins >= 0.15 && top.att >= 2.2 * Math.max(second, 1) ? top.name : null;
 }
 
 /**
