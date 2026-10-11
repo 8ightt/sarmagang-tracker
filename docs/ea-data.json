@@ -95,7 +95,8 @@
         "matchType": {
           "status": "assumed",
           "meaning": "1 = league match",
-          "evidence": "only league matches seen"
+          "evidence": "only league matches seen",
+          "promotionMatches": "verified 2026-10-11: promotion series games (Lier City, Division 4 → 3) come from the leagueMatch endpoint with matchType 1, so the site tells them apart only by replaying the season (points target reached)"
         },
         "TEAM": {
           "status": "unknown",
