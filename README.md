@@ -3,7 +3,7 @@
 Live stats site for **Sarma gang**, our EA FC 27 Clubs team (PS5).
 Next.js on Vercel, data in Supabase, near-live: EA checked every 2 minutes while the club is playing.
 
-- **Club**: record, division, season tracker, form, reputation, squad, recent results, tactics and kits
+- **Club**: record, division and reputation ladders, season tracker, form, squad, recent results, tactics and kits
 - **Players**: sortable leaderboard (goals, assists, rating, clean sheets…) and a profile per
   player with a match-by-match log, clean sheets, goals conceded, saves by type and, for
   players who switch, results per archetype (Creator, Magician…)
@@ -161,3 +161,6 @@ Other people's work this site builds on. Thank you!
   (`lib/lookups.js`) cracked two of EA's codes for us: which `archetypeid` is which FC 27
   archetype, and that a club's `regionId` is ASCII text in hex (e.g. 5719381 → "WEU").
   Both are noted in [docs/ea-data.json](docs/ea-data.json).
+- **[Pro Clubs Analytics](https://www.proclubsanalytics.com)**: the division and reputation
+  ladders on the club page follow their club overview, which also showed us the name of the
+  first reputation tier ("Hometown Heroes").

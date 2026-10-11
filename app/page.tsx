@@ -1,6 +1,7 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
 import { currentSeason, loadSettings, playoffsWindow } from "@/lib/config";
-import { reputationUrl } from "@/lib/ea-assets";
+import { reputationName, reputationUrl } from "@/lib/ea-assets";
+import { DivisionLadder, ReputationLadder } from "@/components/Ladders";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, lastPoll } from "@/lib/stats";
 import { SeasonForm } from "@/components/Forms";
 import { Tactics } from "@/components/Tactics";
@@ -53,7 +54,6 @@ export default async function Home() {
     { label: "Record", value: `${club.wins}–${club.draws}–${club.losses}`, sub: `W–D–L · ${winPct}% win rate` },
     { label: "Goals for", value: club.goalsFor, sub: `${perGame(club.goalsFor)} per game` },
     { label: "Goals against", value: club.goalsAgainst, sub: `${perGame(club.goalsAgainst)} per game` },
-    { label: "Division", value: division ?? "–", sub: `Best ${club.bestDivision ?? "–"} · ${club.promotions} promotion${club.promotions === 1 ? "" : "s"}, ${club.relegations} relegation${club.relegations === 1 ? "" : "s"}` },
     { label: "League points", value: club.points ?? "–", sub: "EA total" },
     { label: "Clean sheets", value: club.cleanSheets, sub: `In ${club.played} games` },
     { label: "Skill rating", value: club.skillRating ?? "–", sub: "EA club rating" },
@@ -75,10 +75,10 @@ export default async function Home() {
         </div>
         <div className="stack" style={{ alignItems: "flex-end" }}>
           <div className="row" style={{ gap: 12 }}>
-            <img src={reputationUrl(club.reputationTier)} alt={`Reputation tier ${club.reputationTier}`} width={52} height={52} />
+            <img src={reputationUrl(club.reputationTier)} alt={reputationName(club.reputationTier)} width={52} height={52} />
             <div>
               <div className="muted" style={{ fontSize: 13 }}>Reputation</div>
-              <div style={{ fontWeight: 700 }}>Tier {club.reputationTier}</div>
+              <div style={{ fontWeight: 700 }}>{reputationName(club.reputationTier)}</div>
             </div>
           </div>
           <div className="row" style={{ gap: 8 }}>
@@ -238,6 +238,11 @@ export default async function Home() {
           </details>
         </section>
       ) : null}
+
+      <section className="grid grid-270">
+        <DivisionLadder current={division} best={club.bestDivision} promotions={club.promotions} relegations={club.relegations} />
+        <ReputationLadder tier={club.reputationTier} />
+      </section>
 
       <section className="grid grid-170">
         {kpis.map((k) => (

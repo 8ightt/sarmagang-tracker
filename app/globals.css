@@ -188,3 +188,31 @@ details > summary { cursor: pointer; color: var(--text-2); }
   .filter-search .field input { flex: 1; min-width: 0; }
 }
 .pill[aria-current="true"] .dot { box-shadow: 0 0 0 2px var(--on-accent); }
+
+/* division and reputation ladders (club page) */
+.ladder { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+.ladder::before, .ladder::after { content: ""; position: absolute; top: 22px; left: 22px; height: 4px; border-radius: 2px; }
+.ladder::before { right: 22px; background: var(--line-2); }
+.ladder::after { width: calc((100% - 44px) * var(--fill) / 100); background: var(--accent); }
+.ladder-step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 44px; }
+.ladder-step .shield {
+  width: 40px; height: 46px; display: flex; align-items: center; justify-content: center; padding-bottom: 4px;
+  clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%);
+  background: var(--surface-2); color: var(--muted); font-weight: 900; font-size: 18px;
+}
+.ladder-step.done .shield { background: var(--line-2); color: var(--text-2); }
+.ladder-step.current .shield { background: var(--accent); color: var(--on-accent); transform: scale(1.18); }
+.ladder-step .rep-badge { opacity: 0.3; filter: grayscale(1); }
+.ladder-step.done .rep-badge { opacity: 0.7; filter: none; }
+.ladder-step.current .rep-badge { opacity: 1; filter: none; transform: scale(1.2); }
+.ladder-step:first-child { align-items: flex-start; }
+.ladder-step:last-child { align-items: flex-end; }
+.ladder-step:first-child .ladder-name { text-align: left; }
+.ladder-step:last-child .ladder-name { text-align: right; }
+.ladder-name { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; white-space: nowrap; }
+.ladder-step.current .ladder-name { color: var(--accent); }
+.ladder-name em { display: block; font-style: normal; font-weight: 800; color: var(--text-2); }
+.ladder-tag { font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 8px; background: var(--surface-2); color: var(--text-2); }
+.ladder-tag.up { background: rgba(7, 244, 104, 0.12); color: var(--accent); }
+.ladder-tag.down { background: var(--shame-line); color: var(--shame); }
+@media (max-width: 640px) { .ladder-name { white-space: normal; max-width: 52px; } }

@@ -10,6 +10,10 @@ export const flagUrl = (nationId?: string | number | null) =>
 export const reputationUrl = (tier?: string | number | null) =>
   `${MEDIA}/reputation-tier${Math.max(0, Math.min(3, Number(tier ?? 0)))}.png`;
 
+/** Club reputation tiers, lowest first (EA's reputationtier 0-3). Only names seen in-game are filled in. */
+export const REPUTATION_TIERS: (string | null)[] = ["Hometown Heroes", null, null, null];
+export const reputationName = (tier: number) => REPUTATION_TIERS[tier] ?? `Tier ${tier + 1}`;
+
 export const DEFAULT_MEMBER_IMG = `${MEDIA}/default-member.png`;
 
 /** EA's standard position numbering (the member stats `proPos` field). */
