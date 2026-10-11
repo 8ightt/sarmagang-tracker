@@ -404,8 +404,8 @@
         "meaning": "position number, see lib/ea-assets.ts POSITIONS (5 = CB, 14 = CM, 25 = ST)"
       },
       "proStyle": {
-        "status": "unknown",
-        "meaning": "-1 or 0"
+        "status": "useless",
+        "meaning": "-1 or 0, not the archetype: checked 2026-10-11, mo_nm plays Target (13) and shows 0, as do Pakst- (Spark) and EnEsC-37 (Magician). EA's API has no per-archetype season totals; the archetype is only on each match line (archetypeid). Season totals per archetype come from the in-game Archetypes > Statistics screen (config/archetype-stats.json)"
       },
       "favoritePosition": {
         "status": "verified",
