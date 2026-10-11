@@ -14,3 +14,6 @@ npm-debug.log*
 
 __pycache__/
 *.pyc
+
+# screenshots for Claude to read; local only
+inbox/
