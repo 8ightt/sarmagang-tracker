@@ -30,8 +30,10 @@ so nothing drops off.
 | Per player: games, goals, assists, ratings, MOTM, passes, tackles, red cards | Exact formation slot (e.g. CAM): set in `config/settings.json` |
 | Per match: every human player's line, team totals, who quit early, goals conceded, idle time, saves by type, archetype | The CPU teammates' own passes, tackles and cards |
 
-[docs/ea-data.json](docs/ea-data.json) lists every field EA sends, what it means and how
-sure we are of it (verified, assumed, unknown or useless).
+[docs/ea-api.md](docs/ea-api.md) maps every field EA sends, endpoint by endpoint: what it means,
+how sure we are of it (verified, assumed, unknown or useless) and where the site uses it. It's
+generated from [docs/ea-data.json](docs/ea-data.json) by `node scripts/ea-docs.mjs`; pass a folder
+of saved EA responses to list any field EA has added that the doc doesn't cover yet.
 
 ## Own stats vs EA's numbers
 
