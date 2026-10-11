@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { cache } from "react";
-import { CLUB_ID, currentSeason, loadSettings, playoffsWindow } from "./config";
+import { CLUB_ID, currentSeason, loadSettings, playoffsWindow, promotionRule } from "./config";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
 import { positionName } from "./ea-assets";
@@ -552,9 +552,6 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   const league = loadSettings().league;
   const maxChances = league.chances;
   const targetFor = (d: number, fallback: number) => league.targets[String(d)] ?? fallback;
-  // unknown divisions: one more win than the division below, as the series grows by one win per division
-  const promotionRule = (d: number) =>
-    league.promotion[String(d)] ?? { matches: Math.max(1, 8 - d), wins: Math.max(1, 7 - d), confirmed: false };
 
   let division = Number(state.division);
   let points = Number(state.points);
@@ -638,7 +635,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
             wins: series.wins,
             matches: promotionRule(division).matches,
             winsNeeded: promotionRule(division).wins,
-            confirmed: promotionRule(division).confirmed ?? false,
+            confirmed: promotionRule(division).confirmed,
             games: results.slice(results.length - series.played),
           }
         : null,

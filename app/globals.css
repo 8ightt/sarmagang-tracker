@@ -234,3 +234,7 @@ details > summary { cursor: pointer; color: var(--text-2); }
 @media (max-width: 560px) {
   .series { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.series-rules { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 14px; }
+.series-rules td { padding: 8px 10px; border-top: 1px solid var(--line-2); }
+.series-rules tr[aria-current] td { color: var(--accent); font-weight: 700; }
+.series-rules tr[aria-current] td.muted { font-weight: 400; }

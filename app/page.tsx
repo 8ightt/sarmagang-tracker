@@ -1,5 +1,5 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
-import { currentSeason, loadSettings, playoffsWindow } from "@/lib/config";
+import { currentSeason, loadSettings, playoffsWindow, promotionRule } from "@/lib/config";
 import { reputationName, reputationUrl } from "@/lib/ea-assets";
 import { DivisionLadder, ReputationLadder } from "@/components/Ladders";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, lastPoll } from "@/lib/stats";
@@ -201,6 +201,23 @@ export default async function Home() {
                 {`${promo.winsNeeded - promo.wins} more win${promo.winsNeeded - promo.wins === 1 ? "" : "s"} from ${promo.matches - promo.played} game${promo.matches - promo.played === 1 ? "" : "s"} to go up to ${divisionName(Math.max(0, season.division - 1))}. Fall short and the club stays in ${divisionName(season.division)}.`}
                 {promo.confirmed ? "" : " (Series length not confirmed yet: check the lobby.)"}
               </span>
+              <details>
+                <summary style={{ fontSize: 13 }}>Promotion match in every division</summary>
+                <table className="series-rules">
+                  <tbody>
+                    {[5, 4, 3, 2, 1].map((d) => {
+                      const r = promotionRule(d);
+                      return (
+                        <tr key={d} aria-current={d === season.division ? "true" : undefined}>
+                          <td>{divisionName(d)} → {divisionName(d - 1)}</td>
+                          <td className="num">Win {r.wins} of {r.matches}</td>
+                          <td className="muted">{r.confirmed ? "confirmed in the lobby" : "not confirmed yet"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </details>
             </div>
           ) : (
             <div className="row" style={{ gap: 32, alignItems: "flex-end" }}>

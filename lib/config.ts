@@ -76,6 +76,15 @@ export function loadSettings(): SiteSettings {
   };
 }
 
+/**
+ * The promotion match series for a division (Division 1 is the top numbered one; above it is
+ * Elite). Divisions missing from config/settings.json: one more win than the division below.
+ */
+export function promotionRule(division: number): { matches: number; wins: number; confirmed: boolean } {
+  const r = loadSettings().league.promotion[String(division)];
+  return r ? { ...r, confirmed: r.confirmed ?? false } : { matches: Math.max(1, 8 - division), wins: Math.max(1, 7 - division), confirmed: false };
+}
+
 /** The season running at `now` (seconds), else the latest one that has started. */
 export function currentSeason(now = Date.now() / 1000): ClubSeason | null {
   const started = loadSettings()
