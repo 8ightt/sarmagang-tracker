@@ -23,6 +23,34 @@ export function cpuController(players: Record<string, string>[]): string | null 
   return top.att >= minAttempts && top.att >= 2.2 * Math.max(second, 1) ? top.name : null;
 }
 
+/**
+ * EA's hidden per-player event counters ("id:count" pairs in match_event_aggregate_0..3).
+ * Unlike the headline stats they count only the human's own actions; see docs/ea-data.json.
+ * Returns null when the line has no counters.
+ */
+export function eventCounters(p: Record<string, string>): Map<number, number> | null {
+  const parts = [0, 1, 2, 3].flatMap((i) => (p[`match_event_aggregate_${i}`] ?? "").split(",")).filter((x) => x.includes(":"));
+  if (!parts.length) return null;
+  const counts = new Map<number, number>();
+  for (const part of parts) {
+    const [id, count] = part.split(":").map(Number);
+    if (Number.isFinite(id) && Number.isFinite(count)) counts.set(id, (counts.get(id) ?? 0) + count);
+  }
+  return counts;
+}
+
+const OWN_GOALS = 214;
+const OWN_ASSISTS = 11;
+const OWN_SHOTS = [217, 218];
+
+/** The player's own goals, assists and shots (without the CPU's), or null without counters. */
+export function ownStats(p: Record<string, string>) {
+  const c = eventCounters(p);
+  if (!c) return null;
+  const get = (id: number) => c.get(id) ?? 0;
+  return { goals: get(OWN_GOALS), assists: get(OWN_ASSISTS), shots: OWN_SHOTS.reduce((s, id) => s + get(id), 0) };
+}
+
 /** The kit colours EA sends with a match: body, trim, sleeve, extra. */
 function kitColors(club?: EaMatch["clubs"][string]): number[] | null {
   const kit = club?.details?.customKit;
@@ -58,35 +86,41 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
     opp_kit: kitColors(opp),
     raw: db.json(m as unknown as postgres.JSONValue),
   };
-  const players = ours.map((p) => ({
-    match_id: m.matchId,
-    player: p.playername,
-    pos: p.pos ?? null,
-    archetype: n(p.archetypeid),
-    rating: n(p.rating),
-    goals: n(p.goals),
-    assists: n(p.assists),
-    shots: n(p.shots),
-    passes_made: n(p.passesmade),
-    pass_attempts: n(p.passattempts),
-    tackles_made: n(p.tacklesmade),
-    tackle_attempts: n(p.tackleattempts),
-    saves: n(p.saves),
-    reds: n(p.redcards),
-    motm: n(p.mom) === 1,
-    seconds: n(p.secondsPlayed),
-    controls_cpu: p.playername === controller,
-    goals_conceded: n(p.goalsconceded),
-    clean_sheet: n(p.cleansheetsany) > 0,
-    idle_seconds: n(p.realtimeidle),
-    real_seconds: n(p.realtimegame),
-    reflex_saves: n(p.reflexSaves),
-    parry_saves: n(p.parrySaves),
-    punch_saves: n(p.punchSaves),
-    dive_saves: n(p.ballDiveSaves),
-    cross_saves: n(p.crossSaves),
-    direction_saves: n(p.goodDirectionSaves),
-  }));
+  const players = ours.map((p) => {
+    const own = ownStats(p);
+    return {
+      match_id: m.matchId,
+      player: p.playername,
+      pos: p.pos ?? null,
+      archetype: n(p.archetypeid),
+      rating: n(p.rating),
+      goals: n(p.goals),
+      assists: n(p.assists),
+      shots: n(p.shots),
+      passes_made: n(p.passesmade),
+      pass_attempts: n(p.passattempts),
+      tackles_made: n(p.tacklesmade),
+      tackle_attempts: n(p.tackleattempts),
+      saves: n(p.saves),
+      reds: n(p.redcards),
+      motm: n(p.mom) === 1,
+      seconds: n(p.secondsPlayed),
+      controls_cpu: p.playername === controller,
+      goals_conceded: n(p.goalsconceded),
+      clean_sheet: n(p.cleansheetsany) > 0,
+      idle_seconds: n(p.realtimeidle),
+      real_seconds: n(p.realtimegame),
+      reflex_saves: n(p.reflexSaves),
+      parry_saves: n(p.parrySaves),
+      punch_saves: n(p.punchSaves),
+      dive_saves: n(p.ballDiveSaves),
+      cross_saves: n(p.crossSaves),
+      direction_saves: n(p.goodDirectionSaves),
+      own_goals: own?.goals ?? null,
+      own_assists: own?.assists ?? null,
+      own_shots: own?.shots ?? null,
+    };
+  });
 
   return db.begin(async (tx) => {
     const [res] = await tx`
@@ -106,7 +140,8 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
           goals_conceded = excluded.goals_conceded, clean_sheet = excluded.clean_sheet,
           idle_seconds = excluded.idle_seconds, real_seconds = excluded.real_seconds,
           reflex_saves = excluded.reflex_saves, parry_saves = excluded.parry_saves, punch_saves = excluded.punch_saves,
-          dive_saves = excluded.dive_saves, cross_saves = excluded.cross_saves, direction_saves = excluded.direction_saves`;
+          dive_saves = excluded.dive_saves, cross_saves = excluded.cross_saves, direction_saves = excluded.direction_saves,
+          own_goals = excluded.own_goals, own_assists = excluded.own_assists, own_shots = excluded.own_shots`;
     }
     return Boolean(res?.inserted);
   });
@@ -121,10 +156,12 @@ async function announce(m: EaMatch) {
   const ga = n(us.goalsAgainst);
   const verdict = gf > ga ? "WIN" : gf < ga ? "LOSS" : "DRAW";
   const players = Object.values(m.players?.[CLUB_ID] ?? {});
-  const scorers = players
-    .filter((p) => n(p.goals) > 0)
-    .map((p) => (n(p.goals) > 1 ? `${p.playername} ×${p.goals}` : p.playername))
-    .join(", ");
+  const goalsOf = (p: Record<string, string>) => ownStats(p)?.goals ?? n(p.goals);
+  const cpuGoals = gf - players.reduce((s, p) => s + goalsOf(p), 0);
+  const scorers = [
+    ...players.filter((p) => goalsOf(p) > 0).map((p) => (goalsOf(p) > 1 ? `${p.playername} ×${goalsOf(p)}` : p.playername)),
+    ...(cpuGoals > 0 ? [cpuGoals > 1 ? `CPU ×${cpuGoals}` : "CPU"] : []),
+  ].join(", ");
   const motm = players.find((p) => n(p.mom) === 1)?.playername;
   const lines = [
     `**${verdict} ${gf}–${ga}** vs ${opp?.details?.name ?? "?"}`,

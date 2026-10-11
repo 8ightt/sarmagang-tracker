@@ -35,6 +35,7 @@ export default async function PlayersPage() {
       </div>
       <Leaderboard rows={rows} />
       <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+        Goals and assists are each player&apos;s own: the CPU&apos;s share is taken out for every game this site saved.
         Players marked ANY run the CPU teammates, so EA adds the CPU&apos;s passes, tackles and cards to their line.
         Compare them on goals, assists, rating and MOTM.
       </p>

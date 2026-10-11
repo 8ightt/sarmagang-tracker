@@ -58,6 +58,9 @@ export type MatchPlayer = {
   controls_cpu: boolean;
   /** true when the club corrected this line from the in-game screen */
   fixed: boolean;
+  /** EA's own numbers; on a +CPU line they include the CPU teammates' (goals/assists above don't) */
+  ea_goals: number;
+  ea_assists: number;
   /** the fields below are 0/false until supabase/migrations/0005 has been run */
   goals_conceded: number;
   clean_sheet: boolean;
@@ -180,8 +183,12 @@ export type Member = {
   photo?: string;
   games: number;
   winRate: number;
+  /** own goals/assists: EA's season totals minus the CPU's share in saved games */
   goals: number;
   assists: number;
+  /** EA's season totals, which include the CPU's goals/assists for whoever controls the CPU */
+  goalsEa: number;
+  assistsEa: number;
   rating: number;
   motm: number;
   redsEa: number;
@@ -203,13 +210,14 @@ export const getMembers = cache(async (): Promise<Member[]> => {
     getSnapshot<{ members: EaMember[] }>("members"),
     db`select player, sum(amount)::int as n from corrections where stat = 'reds' group by player`,
     db`select distinct player from match_players where controls_cpu`,
-    // how far the corrected lines differ from EA's, per player
+    // how far the own/corrected lines differ from EA's, per player
     fixesReady
       ? db`select player,
              sum(goals - ea_goals)::int as goals,
              sum(assists - ea_assists)::int as assists,
              sum(motm::int - ea_motm::int)::int as motm
-          from match_players_effective where fixed or motm <> ea_motm group by player`
+          from match_players_effective
+          where goals <> ea_goals or assists <> ea_assists or motm <> ea_motm group by player`
       : Promise.resolve([] as postgres.Row[]),
   ]);
   const members = snap?.data?.members ?? [];
@@ -238,9 +246,11 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         photo: s.photo,
         games: num(m.gamesPlayed),
         winRate: num(m.winRate),
-        // EA's season totals, corrected wherever the club fixed a match line
+        // EA's season totals minus the CPU's share (and with the club's fixes) in saved games
         goals: Math.max(0, num(m.goals) + fix.goals),
         assists: Math.max(0, num(m.assists) + fix.assists),
+        goalsEa: num(m.goals),
+        assistsEa: num(m.assists),
         rating: num(m.ratingAve),
         motm: Math.max(0, num(m.manOfTheMatch) + fix.motm),
         redsEa,

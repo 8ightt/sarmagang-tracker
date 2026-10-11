@@ -1,0 +1,466 @@
+{
+  "about": "What EA's Pro Clubs API actually gives us, and how sure we are of each field. Only mark a field 'verified' after checking it against real data, and note the evidence.",
+  "updated": "2026-10-11",
+  "evidence": {
+    "savedMatches": 14,
+    "playerLines": 98,
+    "note": "Player lines include both clubs. EA's API keeps only the last 10 matches per type, so everything older exists only in our database (matches.raw)."
+  },
+  "status": {
+    "verified": "Checked against real data; safe to build on.",
+    "assumed": "Meaning follows from the name or a few examples, not proven.",
+    "unknown": "Seen in the data, meaning not worked out.",
+    "useless": "Always the same value, or contradicts other fields."
+  },
+  "api": {
+    "base": "https://proclubs.ea.com/api/fc",
+    "auth": "none",
+    "platform": "every call needs ?platform=common-gen5 (current gen) or common-gen4",
+    "botFilter": "EA rejects clients whose TLS fingerprint doesn't match a browser; scripts/fetch-ea.py uses curl_cffi with impersonate='chrome'",
+    "caching": "EA's edge caches identical URLs for minutes; add a unique query param (e.g. _=timestamp)",
+    "notAvailable": [
+      "matches older than the last 10 per match type",
+      "minute-by-minute events, goal times, xG, heatmaps",
+      "Rush, Live Tournament and Drop In matches (empty for this club)",
+      "pro attributes (vproattr is 'NH')"
+    ]
+  },
+  "endpoints": {
+    "clubs/matches?clubIds=&matchType=leagueMatch|playoffMatch|friendlyMatch&maxResultCount=10": {
+      "match": {
+        "matchId": {
+          "status": "verified",
+          "meaning": "unique match id"
+        },
+        "timestamp": {
+          "status": "verified",
+          "meaning": "kick-off, unix seconds"
+        },
+        "timeAgo": {
+          "status": "verified",
+          "meaning": "{number, unit} relative to the request; not stored meaningfully"
+        }
+      },
+      "clubs[clubId]": {
+        "goals": {
+          "status": "verified",
+          "meaning": "goals scored (same as score)"
+        },
+        "goalsAgainst": {
+          "status": "verified"
+        },
+        "score": {
+          "status": "verified",
+          "meaning": "same as goals"
+        },
+        "result": {
+          "status": "verified",
+          "meaning": "outcome code",
+          "codes": {
+            "1": "win",
+            "2": "loss",
+            "4": "draw",
+            "16385": "win, opponent quit",
+            "10": "loss after quitting"
+          },
+          "evidence": "all 14 saved matches"
+        },
+        "winnerByDnf": {
+          "status": "verified",
+          "meaning": "1 = won because the other club quit"
+        },
+        "wins": {
+          "status": "verified",
+          "meaning": "1 if this club won this match"
+        },
+        "losses": {
+          "status": "verified"
+        },
+        "ties": {
+          "status": "verified"
+        },
+        "date": {
+          "status": "verified",
+          "meaning": "same as timestamp (within 2 s)"
+        },
+        "matchType": {
+          "status": "assumed",
+          "meaning": "1 = league match",
+          "evidence": "only league matches seen"
+        },
+        "TEAM": {
+          "status": "unknown",
+          "meaning": "usually 99070108 for us, once 112; opponents vary"
+        },
+        "gameNumber": {
+          "status": "useless",
+          "meaning": "always 0"
+        },
+        "season_id": {
+          "status": "useless",
+          "meaning": "always 0"
+        },
+        "details.name": {
+          "status": "verified"
+        },
+        "details.clubId": {
+          "status": "verified"
+        },
+        "details.regionId": {
+          "status": "unknown"
+        },
+        "details.teamId": {
+          "status": "unknown",
+          "meaning": "probably the base team the club was created from"
+        },
+        "details.customKit.crestAssetId": {
+          "status": "verified",
+          "meaning": "crest image id, see lib/ea-assets.ts crestUrl"
+        },
+        "details.customKit.stadName": {
+          "status": "verified",
+          "meaning": "stadium name; default clubs show 'Tier 1 Stadium' in their language"
+        },
+        "details.customKit.kitColor1-4": {
+          "status": "verified",
+          "meaning": "home kit colours as RGB ints (body, trim, sleeve, extra)",
+          "usedIn": "matches.our_kit / opp_kit"
+        },
+        "details.customKit.kitAColor1-4": {
+          "status": "verified",
+          "meaning": "away kit colours"
+        },
+        "details.customKit.kitThrdColor1-4": {
+          "status": "verified",
+          "meaning": "third kit colours"
+        },
+        "details.customKit.crestColor": {
+          "status": "assumed",
+          "meaning": "crest background colour, RGB int"
+        },
+        "details.customKit.kitId, customKitId, customAwayKitId, customThirdKitId, customKeeperKitId, seasonalTeamId, seasonalKitId, selectedKitType, dCustomKit": {
+          "status": "unknown",
+          "meaning": "kit design ids; no public image source"
+        }
+      },
+      "players[clubId][playerId]": {
+        "playername": {
+          "status": "verified",
+          "meaning": "gamertag"
+        },
+        "pos": {
+          "status": "verified",
+          "meaning": "broad group only: goalkeeper / defender / midfielder / forward"
+        },
+        "archetypeid": {
+          "status": "assumed",
+          "meaning": "FC 27 archetype played",
+          "seen": {
+            "2": "goalkeeper (mo_nm in goal)",
+            "3": "defender (x-LadruM-x, centre-back)",
+            "8": "midfielder",
+            "9": "midfielder",
+            "10": "midfielder/forward",
+            "11": "forward",
+            "13": "forward (mo_nm, 'target man' → Target?)"
+          },
+          "todo": "confirm each player's archetype in-game to finish the mapping"
+        },
+        "rating": {
+          "status": "verified",
+          "meaning": "match rating"
+        },
+        "goals": {
+          "status": "verified",
+          "meaning": "EA's goals; on the line of whoever controls the CPU this INCLUDES the CPU teammates' goals"
+        },
+        "assists": {
+          "status": "verified",
+          "meaning": "as goals: includes CPU assists on the controller's line"
+        },
+        "shots": {
+          "status": "verified",
+          "meaning": "as goals: includes CPU shots on the controller's line"
+        },
+        "passesmade": {
+          "status": "verified",
+          "meaning": "includes CPU on the controller's line"
+        },
+        "passattempts": {
+          "status": "verified",
+          "meaning": "includes CPU on the controller's line"
+        },
+        "tacklesmade": {
+          "status": "verified",
+          "meaning": "includes CPU on the controller's line"
+        },
+        "tackleattempts": {
+          "status": "verified",
+          "meaning": "includes CPU on the controller's line"
+        },
+        "redcards": {
+          "status": "verified",
+          "meaning": "may include CPU cards on the controller's line"
+        },
+        "mom": {
+          "status": "verified",
+          "meaning": "1 = man of the match"
+        },
+        "saves": {
+          "status": "verified"
+        },
+        "reflexSaves, parrySaves, punchSaves, ballDiveSaves, crossSaves, goodDirectionSaves": {
+          "status": "assumed",
+          "meaning": "saves by type; they add up to less than saves (mo_nm 16 of 21), the rest are untyped"
+        },
+        "goalsconceded": {
+          "status": "verified",
+          "meaning": "goals conceded while this player was on the pitch"
+        },
+        "cleansheetsany, cleansheetsdef, cleansheetsgk": {
+          "status": "unknown",
+          "meaning": "EA's clean-sheet flags; always 0 so far, no full-length clean sheet saved yet to check against"
+        },
+        "secondsPlayed": {
+          "status": "verified",
+          "meaning": "in-game seconds on the pitch (90 min ≈ 5400)"
+        },
+        "gameTime": {
+          "status": "verified",
+          "meaning": "same as secondsPlayed"
+        },
+        "realtimegame": {
+          "status": "assumed",
+          "meaning": "real-world seconds in the match (~15-17 min for 90)",
+          "note": "one outlier of 7052 s (EnEsC-37), maybe time in the lobby"
+        },
+        "realtimeidle": {
+          "status": "assumed",
+          "meaning": "real-world seconds idle (AFK); max seen 9 s"
+        },
+        "wins, losses": {
+          "status": "verified",
+          "meaning": "mirror the club result for this player"
+        },
+        "userResult": {
+          "status": "unknown",
+          "meaning": "0 on 95 lines, 6 on 3"
+        },
+        "namespace": {
+          "status": "unknown",
+          "meaning": "1 on 91 lines, 3 on 7; maybe platform"
+        },
+        "SCORE": {
+          "status": "verified",
+          "meaning": "club score repeated"
+        },
+        "vproattr": {
+          "status": "useless",
+          "meaning": "always 'NH' (attributes hidden in FC 27)"
+        },
+        "vprohackreason": {
+          "status": "useless",
+          "meaning": "always 0"
+        },
+        "match_event_aggregate_0..3": {
+          "status": "verified",
+          "meaning": "hidden per-player event counters, see matchEventCounters"
+        }
+      },
+      "aggregate[clubId]": {
+        "*": {
+          "status": "verified",
+          "meaning": "the club's player lines summed (human lines only; CPU stats only via the controller's line)"
+        }
+      }
+    },
+    "clubs/info?clubIds=": {
+      "name, clubId, regionId, teamId, customKit": {
+        "status": "verified",
+        "meaning": "same as match details"
+      }
+    },
+    "clubs/overallStats?clubIds=": {
+      "gamesPlayed, wins, ties, losses, goals, goalsAgainst": {
+        "status": "verified",
+        "meaning": "season totals"
+      },
+      "gamesPlayedPlayoff": {
+        "status": "verified"
+      },
+      "promotions, relegations": {
+        "status": "verified"
+      },
+      "skillRating": {
+        "status": "verified",
+        "meaning": "Elo-style rating used for matchmaking"
+      },
+      "reputationtier": {
+        "status": "verified"
+      },
+      "leagueAppearances": {
+        "status": "verified",
+        "meaning": "equals gamesPlayed so far"
+      },
+      "wstreak": {
+        "status": "verified",
+        "meaning": "current win streak"
+      },
+      "unbeatenstreak": {
+        "status": "verified"
+      },
+      "lastMatch0-9": {
+        "status": "verified",
+        "meaning": "recent results, 0 = newest",
+        "codes": {
+          "1": "win",
+          "2": "loss",
+          "3": "draw",
+          "-1": "none"
+        },
+        "note": "only 5 filled although more games were played; maybe resets with the season"
+      },
+      "lastOpponent0-9": {
+        "status": "verified",
+        "meaning": "club ids of recent opponents, 0 = newest",
+        "note": "back-to-back games against the same club count once, so it does NOT line up with lastMatch"
+      },
+      "bestDivision": {
+        "status": "useless",
+        "meaning": "'None' here, while search says 4"
+      },
+      "bestFinishGroup, finishesInDivision1-6Group1": {
+        "status": "unknown",
+        "meaning": "all 0 / None so far"
+      }
+    },
+    "allTimeLeaderboard/search?clubName=": {
+      "currentDivision": {
+        "status": "unknown",
+        "meaning": "says 5 while our season tracker says Division 4; check which is right in-game"
+      },
+      "bestDivision": {
+        "status": "assumed",
+        "meaning": "4"
+      },
+      "points": {
+        "status": "unknown",
+        "meaning": "24; not the current division points (tracker: 4)"
+      },
+      "cleanSheets": {
+        "status": "verified",
+        "meaning": "club clean sheets this season (3)"
+      },
+      "wins, losses, ties, gamesPlayed, gamesPlayedPlayoff, goals, goalsAgainst, promotions, relegations, reputationtier": {
+        "status": "verified",
+        "meaning": "same as overallStats"
+      },
+      "clubInfo": {
+        "status": "verified",
+        "meaning": "same as clubs/info"
+      }
+    },
+    "members/stats?clubId=": {
+      "positionCount": {
+        "status": "assumed",
+        "meaning": "members per favourite position"
+      },
+      "name": {
+        "status": "verified",
+        "meaning": "gamertag"
+      },
+      "proName, proHeight, proNationality, proOverall, proOverallStr": {
+        "status": "verified",
+        "meaning": "the pro's name, height cm, nation id, overall"
+      },
+      "proPos": {
+        "status": "verified",
+        "meaning": "position number, see lib/ea-assets.ts POSITIONS (5 = CB, 14 = CM, 25 = ST)"
+      },
+      "proStyle": {
+        "status": "unknown",
+        "meaning": "-1 or 0"
+      },
+      "favoritePosition": {
+        "status": "verified",
+        "meaning": "broad group"
+      },
+      "gamesPlayed, winRate, goals, assists, ratingAve, manOfTheMatch, redCards": {
+        "status": "verified",
+        "meaning": "season totals; include CPU stats for whoever controls the CPU"
+      },
+      "passesMade, passSuccessRate, tacklesMade, tackleSuccessRate, shotSuccessRate": {
+        "status": "verified",
+        "meaning": "season totals and %; include CPU for the controller"
+      },
+      "cleanSheetsDef, cleanSheetsGK": {
+        "status": "useless",
+        "meaning": "0 for everyone although the club has 3 clean sheets"
+      },
+      "prevGoals1-10": {
+        "status": "verified",
+        "meaning": "goals in each of the last 10 games, 1 = newest"
+      },
+      "prevGoals": {
+        "status": "assumed",
+        "meaning": "goals in the latest game (same as prevGoals1?)"
+      }
+    },
+    "members/career/stats?clubId=": {
+      "proPos, gamesPlayed, goals, assists, manOfTheMatch, ratingAve, prevGoals, favoritePosition": {
+        "status": "verified",
+        "meaning": "all-time totals for this club; fewer fields than members/stats"
+      }
+    }
+  },
+  "matchEventCounters": {
+    "format": "match_event_aggregate_0..3 hold 'id:count' pairs joined by commas; merge all four strings per player",
+    "distinctIdsSeen": 150,
+    "keyFinding": "The counters count the HUMAN's own actions. EA's headline goals/assists/shots add the CPU teammates' to the controller's line; the counters don't. So they give real per-player stats even for whoever plays ANY.",
+    "decoded": {
+      "214": {
+        "meaning": "own goals scored",
+        "status": "verified",
+        "evidence": "equals goals on 89/98 lines; all 9 mismatches are CPU-controller lines where the counter is lower",
+        "usedIn": "match_players.own_goals → match_players_effective.goals"
+      },
+      "11": {
+        "meaning": "own assists",
+        "status": "verified",
+        "evidence": "equals assists on 86/98 lines; all 12 mismatches are CPU-controller lines, counter lower",
+        "usedIn": "match_players.own_assists → match_players_effective.assists"
+      },
+      "217": {
+        "meaning": "own shots, part 1 (probably on target)",
+        "status": "verified",
+        "evidence": "217 + 218 equals shots on 85/98 lines; all 13 mismatches are CPU-controller lines, counter lower",
+        "usedIn": "match_players.own_shots → match_players_effective.shots"
+      },
+      "218": {
+        "meaning": "own shots, part 2 (probably off target)",
+        "status": "verified",
+        "evidence": "see 217",
+        "usedIn": "match_players.own_shots → match_players_effective.shots"
+      }
+    },
+    "derived": {
+      "cpuGoals": "club score minus the sum of counter 214 over the club's players (own goals by the opponent land here too); shown as “CPU” among the scorers on match pages and in Discord posts"
+    },
+    "candidates": {
+      "267": {
+        "guess": "goodDirectionSaves",
+        "evidence": "equal on all 98 lines but only 3 non-zero"
+      },
+      "56": {
+        "guess": "related to saves",
+        "evidence": "correlation 1.00 with saves, only 4 keeper lines"
+      },
+      "54, 268": {
+        "guess": "reflex or diving save",
+        "evidence": "1 non-zero line only"
+      }
+    },
+    "notYetDecoded": "passes and tackles do not match any single counter or pair; likely split by type (e.g. 174, 175, 215, 216). Revisit with 30+ matches.",
+    "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"
+  }
+}

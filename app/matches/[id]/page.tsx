@@ -17,7 +17,11 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const { match: m, players, team, cpuReds } = data;
   const [club, memberList] = await Promise.all([getClub(), getMembers()]);
   const members = new Map(memberList.map((x) => [x.gamertag, x]));
-  const scorers = players.filter((p) => p.goals > 0).map((p) => (p.goals > 1 ? `${p.player} ×${p.goals}` : p.player));
+  const cpuGoals = m.goals_for - players.reduce((s, p) => s + p.goals, 0);
+  const scorers = [
+    ...players.filter((p) => p.goals > 0).map((p) => (p.goals > 1 ? `${p.player} ×${p.goals}` : p.player)),
+    ...(cpuGoals > 0 ? [cpuGoals > 1 ? `CPU ×${cpuGoals}` : "CPU"] : []),
+  ];
   const motm = players.find((p) => p.motm);
   const ourKit = m.our_kit ?? club.kits[0]?.colors;
   const stat = (k: string) => [Number(team.us?.[k] ?? 0), Number(team.them?.[k] ?? 0)];
@@ -112,7 +116,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         <a href={`/players/${encodeURIComponent(p.player)}`}>{p.player}</a>
                         {p.motm ? <span className="chip">MOTM</span> : null}
                         {m.captain === p.player ? <span className="chip chip-ghost">C</span> : null}
-                        {p.controls_cpu ? <span className="chip chip-ghost" title="EA added the CPU teammates' stats to this line">+CPU</span> : null}
+                        {p.controls_cpu ? <span className="chip chip-ghost" title="EA added the CPU teammates' passes, tackles and cards to this line">+CPU</span> : null}
                         {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
                         {p.clean_sheet ? <span className="chip chip-ghost" title="EA credited a clean sheet">CS</span> : null}
                         {p.idle_seconds >= AFK_SECONDS ? (
@@ -128,7 +132,9 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                       )}
                     </td>
                     <td style={{ fontWeight: 700, color: p.motm ? "var(--accent)" : undefined }}>{p.rating.toFixed(1)}</td>
-                    <td>{p.goals}</td><td>{p.assists}</td><td>{p.shots}</td>
+                    <td title={p.goals !== p.ea_goals ? `EA: ${p.ea_goals} incl. CPU` : undefined}>{p.goals}</td>
+                    <td title={p.assists !== p.ea_assists ? `EA: ${p.ea_assists} incl. CPU` : undefined}>{p.assists}</td>
+                    <td>{p.shots}</td>
                     <td>{p.passes_made}{p.pass_attempts !== null ? `/${p.pass_attempts}` : ""}</td>
                     <td>{p.tackles_made}{p.tackle_attempts !== null ? `/${p.tackle_attempts}` : ""}</td>
                     <td>
@@ -147,9 +153,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           </table>
         </div>
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          EA&apos;s data adds every CPU teammate&apos;s goals, assists, passes, tackles and cards to one player&apos;s line (marked “+CPU”),
-          and only records forward/midfielder/defender/keeper. Use <a href="#fix">Fix stats</a> below with the numbers from the in-game
-          Player Performance screen to show the real lines and positions.
+          Goals, assists and shots are each player&apos;s own; goals the CPU teammates scored are listed as “CPU”.
+          EA still adds the CPU&apos;s passes, tackles and cards to one player&apos;s line (marked “+CPU”), and only records
+          forward/midfielder/defender/keeper. Use <a href="#fix">Fix stats</a> below with the numbers from the in-game
+          Player Performance screen to correct those.
         </p>
       </section>
 

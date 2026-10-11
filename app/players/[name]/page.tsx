@@ -20,7 +20,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const playing = members.filter((m) => m.games > 0);
   const squadRating = playing.length ? playing.reduce((s, m) => s + m.rating, 0) / playing.length : 0;
   const per = (v: number) => (p.games ? (v / p.games).toFixed(2) : "0");
-  const last10 = p.lastTenGoals;
+  // own goals from the saved games (EA's prevGoals include the CPU's for whoever controls it)
+  const last10 = log.length ? log.slice(0, 10).map((m) => m.goals).reverse() : p.lastTenGoals;
   const maxG = Math.max(1, ...last10);
   const cpu = p.controlsCpu ? " · incl. CPU" : "";
   const posCount = new Map<string, number>();
@@ -32,8 +33,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
 
   const tiles = [
     { label: "Games", value: p.games, sub: `${p.winRate}% win rate` },
-    { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game` },
-    { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game` },
+    { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game${p.goalsEa !== p.goals ? ` · EA: ${p.goalsEa} incl. CPU` : ""}` },
+    { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game${p.assistsEa !== p.assists ? ` · EA: ${p.assistsEa} incl. CPU` : ""}` },
     { label: "Avg rating", value: p.rating.toFixed(1), sub: `Squad avg ${squadRating.toFixed(1)}` },
     { label: "MOTM", value: p.motm, sub: p.games ? `${Math.round((p.motm / p.games) * 100)}% of games` : "" },
     { label: "Passes", value: p.passes.toLocaleString("en-GB"), sub: `${per(p.passes)} per game${cpu}` },
@@ -183,7 +184,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           <p className="muted">No saved matches for {p.gamertag} yet.</p>
         )}
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          “+CPU” = EA added the CPU teammates&apos; stats to his line that game. “Real stats” = corrected from the in-game screen.
+          Goals, assists and shots are the player&apos;s own. “+CPU” = EA added the CPU teammates&apos; passes, tackles and cards
+          to this line that game. “Real stats” = corrected from the in-game screen.
           Positions are EA&apos;s group (FWD/MID/DEF/GK) unless the exact one was entered with Fix stats on the match page.
         </p>
       </section>
