@@ -88,3 +88,88 @@ export async function removeTactic(_prev: ActionState, form: FormData): Promise<
   revalidatePath("/", "layout");
   return { ok: true, message: "Tactic removed." };
 }
+
+const intOrNull = (v: FormDataEntryValue | null) => {
+  const s = String(v ?? "").trim();
+  if (s === "") return null;
+  const n = Math.round(Number(s));
+  return Number.isFinite(n) && n >= 0 && n <= 999 ? n : null;
+};
+const ratingOrNull = (v: FormDataEntryValue | null) => {
+  const s = String(v ?? "").trim().replace(",", ".");
+  if (s === "") return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 && n <= 10 ? Math.round(n * 10) / 10 : null;
+};
+const POSITIONS = new Set(["GK", "CB", "LCB", "RCB", "LB", "RB", "LWB", "RWB", "CDM", "LDM", "RDM", "CM", "LCM", "RCM", "CAM", "LAM", "RAM", "LM", "RM", "LW", "RW", "CF", "ST", "LS", "RS"]);
+
+/**
+ * Saves the real lines from the in-game post-match screen. For each player:
+ * fix_<n>=on means "use my numbers", otherwise any earlier fix is removed.
+ */
+export async function saveStatFixes(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const err = checkPassword(form.get("password"));
+  if (err) return { ok: false, message: err };
+  const matchId = text(form, "matchId", 40);
+  const by = text(form, "by", 40) || null;
+  const db = sql();
+  const players = (await db`select player from match_players where match_id = ${matchId}`).map((r) => r.player as string);
+  if (!players.length) return { ok: false, message: "Match not found." };
+  const motmPlayer = text(form, "motm", 40);
+  let fixed = 0;
+  await db.begin(async (tx) => {
+    for (let i = 0; i < players.length; i++) {
+      const player = String(form.get(`player_${i}`) ?? "");
+      if (!players.includes(player)) continue;
+      if (form.get(`fix_${i}`) !== "on") {
+        await tx`delete from match_player_fixes where match_id = ${matchId} and player = ${player}`;
+        continue;
+      }
+      const pos = text(form, `position_${i}`, 4).toUpperCase();
+      const row = {
+        match_id: matchId,
+        player,
+        position: POSITIONS.has(pos) ? pos : null,
+        rating: ratingOrNull(form.get(`rating_${i}`)),
+        goals: intOrNull(form.get(`goals_${i}`)),
+        assists: intOrNull(form.get(`assists_${i}`)),
+        shots: intOrNull(form.get(`shots_${i}`)),
+        passes_made: intOrNull(form.get(`passes_${i}`)),
+        tackles_made: intOrNull(form.get(`tackles_${i}`)),
+        motm: motmPlayer === player,
+        updated_by: by,
+      };
+      await tx`
+        insert into match_player_fixes ${tx(row)}
+        on conflict (match_id, player) do update set
+          position = excluded.position, rating = excluded.rating, goals = excluded.goals,
+          assists = excluded.assists, shots = excluded.shots, passes_made = excluded.passes_made,
+          tackles_made = excluded.tackles_made, motm = excluded.motm,
+          updated_by = excluded.updated_by, updated_at = now()`;
+      fixed++;
+    }
+  });
+  revalidatePath("/", "layout");
+  return { ok: true, message: fixed ? `Saved the real stats for ${fixed} player(s).` : "Back to EA's numbers for this match." };
+}
+
+/** Sets the league season as shown in the lobby right now; later results are applied automatically. */
+export async function setSeasonState(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const err = checkPassword(form.get("password"));
+  if (err) return { ok: false, message: err };
+  const division = intOrNull(form.get("division"));
+  const points = intOrNull(form.get("points"));
+  const target = intOrNull(form.get("target"));
+  const chances = intOrNull(form.get("chances"));
+  if (division === null || division < 1 || division > 10) return { ok: false, message: "Division must be 1–10." };
+  if (points === null || target === null || target < 1) return { ok: false, message: "Enter the points and the target." };
+  if (chances === null || chances > 3) return { ok: false, message: "Chances must be 0–3." };
+  const now = Math.floor(Date.now() / 1000);
+  await sql()`
+    insert into season_state (id, division, points, chances, target, anchor_ts, updated_by, updated_at)
+    values (1, ${division}, ${points}, ${chances}, ${target}, ${now}, ${text(form, "by", 40) || null}, now())
+    on conflict (id) do update set division = excluded.division, points = excluded.points, chances = excluded.chances,
+      target = excluded.target, anchor_ts = excluded.anchor_ts, updated_by = excluded.updated_by, updated_at = now()`;
+  revalidatePath("/", "layout");
+  return { ok: true, message: `Season set: Division ${division}, ${points}/${target} points, ${chances} chance(s).` };
+}
