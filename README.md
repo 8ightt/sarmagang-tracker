@@ -82,7 +82,14 @@ Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
   Points targets per division and the chances you get back after surviving are set in
   `config/settings.json` under `league`.
 
-### 6. Optional
+### 6. Automatic migrations
+
+Add a `DATABASE_URL` repository secret in GitHub (same value as in Vercel). From then on
+the **Apply database migrations** workflow runs every new file in `supabase/migrations`
+when it's pushed, and remembers what ran in a `schema_migrations` table. Start it once by
+hand under Actions → Apply database migrations → Run workflow to catch up.
+
+### 7. Optional
 
 - **Discord**: set `DISCORD_WEBHOOK_URL` and every new result gets posted to your channel.
 - **Positions, nicknames, bios, Pro pictures**: edit `config/settings.json`. Pictures go in
