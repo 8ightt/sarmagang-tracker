@@ -80,3 +80,23 @@ export function currentSeason(now = Date.now() / 1000): ClubSeason | null {
     .sort((a, b) => a.start.localeCompare(b.start));
   return started[started.length - 1] ?? null;
 }
+
+/** A time (seconds) as YYYY-MM-DD in the site's time zone. */
+export const localDay = (ts: number) => new Date(ts * 1000).toLocaleDateString("en-CA", { timeZone: TIMEZONE });
+
+/** The season a game belongs to, by its date. */
+export function seasonOf(ts: number): ClubSeason | null {
+  const day = localDay(ts);
+  return loadSettings().seasons.find((x) => x.start <= day && day <= x.end) ?? null;
+}
+
+export type MatchKind = "league" | "playoffs" | "friendly";
+
+/** League, playoff (EA's playoff type or during a season's Playoffs) or friendly. */
+export function matchKind(ts: number, matchType: string): MatchKind {
+  if (matchType === "friendlyMatch") return "friendly";
+  if (matchType === "playoffMatch") return "playoffs";
+  const x = seasonOf(ts);
+  const win = x ? playoffsWindow(x) : null;
+  return win && ts >= win.from && ts <= win.to ? "playoffs" : "league";
+}

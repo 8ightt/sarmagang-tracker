@@ -359,7 +359,7 @@ export default async function Home() {
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Recent matches</h2>
-          <a href="/matches" style={{ fontWeight: 600 }}>All saved matches →</a>
+          <a href="/seasons" style={{ fontWeight: 600 }}>All saved matches →</a>
         </div>
         <div className="stack" style={{ gap: 8 }}>
           {recent.map((m) => (

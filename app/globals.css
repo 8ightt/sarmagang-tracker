@@ -131,7 +131,7 @@ tbody tr:hover { background: #161616; }
 /* forms */
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 input, select, button { font: inherit; }
-input[type="password"], input[type="text"], input[type="number"], select {
+input[type="password"], input[type="text"], input[type="number"], input[type="date"], select {
   min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text);
 }
 button { min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 700; cursor: pointer; }

@@ -35,7 +35,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
   return (
     <main className="wrap">
-      <a href="/matches" style={{ fontWeight: 600 }}>← All matches</a>
+      <a href="/seasons" style={{ fontWeight: 600 }}>← All matches</a>
 
       <section className="card stack" style={{ alignItems: "center", gap: 22, padding: "36px 28px" }}>
         <span className="eyebrow" style={{ textAlign: "center" }}>
