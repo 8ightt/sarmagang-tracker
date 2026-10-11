@@ -1,6 +1,15 @@
 {
   "about": "What EA's Pro Clubs API actually gives us, and how sure we are of each field. Only mark a field 'verified' after checking it against real data, and note the evidence.",
   "updated": "2026-10-11",
+  "thanks": [
+    {
+      "project": "frdceri/clubs-hub",
+      "url": "https://github.com/frdceri/clubs-hub",
+      "file": "lib/lookups.js",
+      "thanks": "Thank you for working these out and publishing them.",
+      "usedFor": "archetypeid → archetype names; regionId decoding"
+    }
+  ],
   "evidence": {
     "savedMatches": 14,
     "playerLines": 98,
@@ -107,7 +116,9 @@
           "status": "verified"
         },
         "details.regionId": {
-          "status": "unknown"
+          "status": "verified",
+          "meaning": "region as ASCII text in hex: 5719381 = 0x574555 = \"WEU\" (Western Europe); a trailing digit can mark a sub-region",
+          "source": "frdceri/clubs-hub lib/lookups.js (see thanks)"
         },
         "details.teamId": {
           "status": "unknown",
@@ -154,17 +165,25 @@
         },
         "archetypeid": {
           "status": "assumed",
-          "meaning": "FC 27 archetype played",
-          "seen": {
-            "2": "goalkeeper (mo_nm in goal)",
-            "3": "defender (x-LadruM-x, centre-back)",
-            "8": "midfielder",
-            "9": "midfielder",
-            "10": "midfielder/forward",
-            "11": "forward",
-            "13": "forward (mo_nm, 'target man' → Target?)"
+          "meaning": "FC 27 archetype played, numbered in the game's order (keepers, defenders, midfielders, forwards)",
+          "codes": {
+            "1": "Shot Stopper",
+            "2": "Sweeper Keeper",
+            "3": "Progressor",
+            "4": "Boss",
+            "5": "Marauder",
+            "6": "Disruptor",
+            "7": "Recycler",
+            "8": "Maestro",
+            "9": "Creator",
+            "10": "Spark",
+            "11": "Magician",
+            "12": "Finisher",
+            "13": "Target"
           },
-          "todo": "confirm each player's archetype in-game to finish the mapping"
+          "source": "frdceri/clubs-hub lib/lookups.js (see thanks)",
+          "evidence": "in our 98 lines 1-2 only on keepers, 3-5 on defenders, 6-10 on midfielders, 11-13 on forwards; mo_nm (a 'target man') plays 13",
+          "todo": "confirm with each player's in-game archetype, then mark verified"
         },
         "rating": {
           "status": "verified",

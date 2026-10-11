@@ -116,3 +116,12 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/poll
   site keeps showing what it has saved and picks up again on the next check.
 - Crests, flags and the reputation badge are loaded from EA's servers. This is a fan site,
   not affiliated with EA.
+
+## Thanks
+
+Other people's work this site builds on. Thank you!
+
+- **[frdceri/clubs-hub](https://github.com/frdceri/clubs-hub)**: their lookup tables
+  (`lib/lookups.js`) cracked two of EA's codes for us: which `archetypeid` is which FC 27
+  archetype, and that a club's `regionId` is ASCII text in hex (e.g. 5719381 → "WEU").
+  Both are noted in [docs/ea-data.json](docs/ea-data.json).
