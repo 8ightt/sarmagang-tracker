@@ -30,6 +30,9 @@ export type LeagueRules = {
   chancesAfterSurviving: number;
   /** points target per division, e.g. { "4": 9 } */
   targets: Record<string, number>;
+  /** the promotion match is a short series: this many games, this many wins to go up */
+  promotionMatches: number;
+  promotionWins: number;
 };
 
 /** An EA Clubs season, copied from the in-game Season Info screen. */
@@ -69,6 +72,8 @@ export function loadSettings(): SiteSettings {
       chances: league.chances ?? 3,
       chancesAfterSurviving: league.chancesAfterSurviving ?? 1,
       targets: league.targets ?? {},
+      promotionMatches: league.promotionMatches ?? 3,
+      promotionWins: league.promotionWins ?? 2,
     },
   };
 }

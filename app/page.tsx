@@ -152,11 +152,11 @@ export default async function Home() {
           {season.phase !== "league" ? (
             <div className="card-strong" style={{ border: `1px solid ${season.phase === "playoffs" ? "var(--accent)" : "var(--shame)"}` }}>
               <strong className="display" style={{ fontSize: 22, color: season.phase === "playoffs" ? "var(--accent)" : "var(--shame)" }}>
-                {season.phase === "playoffs" ? "Promotion playoff" : "Relegation match"}
+                {season.phase === "playoffs" ? "Promotion match" : "Relegation match"}
               </strong>
               <div className="text-2" style={{ marginTop: 6 }}>
-                {season.phase === "playoffs"
-                  ? `Points target reached. Win the playoff to go up to ${divisionName(Math.max(0, season.division - 1))}.`
+                {season.phase === "playoffs" && season.promotion
+                  ? `Points target reached. ${season.promotion.winsNeeded - season.promotion.wins} more win${season.promotion.winsNeeded - season.promotion.wins === 1 ? "" : "s"} from ${season.promotion.matches - season.promotion.played} game${season.promotion.matches - season.promotion.played === 1 ? "" : "s"} to go up to ${divisionName(Math.max(0, season.division - 1))}.`
                   : `Out of chances. Win the next game to stay in ${divisionName(season.division)}; lose it and you go down.`}
               </div>
             </div>
@@ -175,7 +175,7 @@ export default async function Home() {
               <span className="muted" style={{ fontSize: 13 }}>
                 {season.target - season.points > 0
                   ? `${season.target - season.points} more point${season.target - season.points === 1 ? "" : "s"} to go up: ${Math.ceil((season.target - season.points) / 3)} win${Math.ceil((season.target - season.points) / 3) === 1 ? "" : "s"}`
-                  : "Promotion reached"}
+                  : "Target reached: promotion match next"}
               </span>
             </div>
             <div className="stack" style={{ gap: 8, flex: "1 1 200px" }}>
@@ -218,9 +218,9 @@ export default async function Home() {
               {season.events
                 .map((e) => {
                   const label = {
-                    playoffs: "Reached the promotion playoff",
+                    playoffs: "Reached the promotion match",
                     promoted: `Promoted to ${divisionName(e.division)}`,
-                    "playoff-lost": "Lost the promotion playoff",
+                    "playoff-lost": "Missed promotion",
                     "relegation-match": "Out of chances: relegation match",
                     survived: "Won the relegation match",
                     relegated: `Relegated to ${divisionName(e.division)}`,
