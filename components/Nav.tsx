@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/players", label: "Players" },
   { href: "/matches", label: "Matches" },
   { href: "/records", label: "Records" },
+  { href: "/analysis", label: "Analysis" },
 ];
 
 export function Nav() {

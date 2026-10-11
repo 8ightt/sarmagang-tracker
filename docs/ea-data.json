@@ -293,7 +293,8 @@
       },
       "skillRating": {
         "status": "verified",
-        "meaning": "Elo-style rating used for matchmaking"
+        "meaning": "Elo-style rating used for matchmaking",
+        "usedIn": "matches.our_sr / opp_sr, saved when a match is first seen (games older than 3 h get none); /analysis opponent strength"
       },
       "reputationtier": {
         "status": "verified"
@@ -332,6 +333,10 @@
       "bestFinishGroup, finishesInDivision1-6Group1": {
         "status": "unknown",
         "meaning": "all 0 / None so far"
+      },
+      "otherClubs": {
+        "status": "verified",
+        "meaning": "works for any club id, but only ONE id per call: several comma-separated ids return HTTP 400"
       }
     },
     "allTimeLeaderboard/search?clubName=": {

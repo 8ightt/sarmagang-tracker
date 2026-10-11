@@ -80,6 +80,8 @@ export const eaHeaderMode = () => preferred;
 export const ea = {
   clubInfo: () => get<Record<string, Record<string, unknown>>>("clubs/info", { clubIds: CLUB_ID }, "info.json"),
   overallStats: () => get<Record<string, string>[]>("clubs/overallStats", { clubIds: CLUB_ID }, "overall.json"),
+  /** another club's totals (EA rejects several ids in one call) */
+  clubStats: (clubId: string) => get<Record<string, string>[]>("clubs/overallStats", { clubIds: clubId }, "overall.json"),
   search: (clubName: string) =>
     get<Record<string, string>[]>("allTimeLeaderboard/search", { clubName }, "search.json"),
   members: () => get<{ members: EaMember[] }>("members/stats", { clubId: CLUB_ID }, "members.json"),

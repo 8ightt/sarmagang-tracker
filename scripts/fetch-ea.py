@@ -83,6 +83,18 @@ for key, path, params in (
     if data is not None:
         payload[key] = data
 
+# opponents' Skill Rating for games from the last few hours, saved with the match
+recent = time.time() - 3 * 3600
+opponent_ids = sorted({
+    club for kind in ("leagueMatch", "playoffMatch") for m in payload["matches"].get(kind) or []
+    if int(m.get("timestamp", 0)) > recent for club in m.get("clubs", {}) if club != CLUB_ID
+})
+payload["opponents"] = {}
+for opp in opponent_ids:
+    data = fetch(f"opponent {opp}", "clubs/overallStats", {"clubIds": opp}, optional=True)
+    if data:
+        payload["opponents"][opp] = {"skillRating": data[0].get("skillRating")}
+
 club_name = (payload.get("info") or {}).get(CLUB_ID, {}).get("name") or "Sarma gang"
 search = fetch("search", "allTimeLeaderboard/search", {"clubName": club_name})
 if search is not None:

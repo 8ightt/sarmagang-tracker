@@ -57,8 +57,11 @@ function kitColors(club?: EaMatch["clubs"][string]): number[] | null {
   return kit ? [kit.kitColor1, kit.kitColor2, kit.kitColor3, kit.kitColor4].map(n) : null;
 }
 
+/** Only games this recent get today's Skill Ratings; older ones would get misleading values. */
+const SR_WINDOW_SECONDS = 3 * 3600;
+
 /** Saves one match; returns true if it wasn't in the database yet. */
-async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
+async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): Promise<boolean> {
   const us = m.clubs[CLUB_ID];
   if (!us) return false;
   const oppId = Object.keys(m.clubs).find((k) => k !== CLUB_ID) ?? "";
@@ -84,6 +87,7 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
     team: db.json({ us: m.aggregate?.[CLUB_ID] ?? null, them: m.aggregate?.[oppId] ?? null } as postgres.JSONValue),
     our_kit: kitColors(us),
     opp_kit: kitColors(opp),
+    our_sr: Date.now() / 1000 - n(m.timestamp) < SR_WINDOW_SECONDS ? ourSr : null,
     raw: db.json(m as unknown as postgres.JSONValue),
   };
   const players = ours.map((p) => {
@@ -126,7 +130,7 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
     const [res] = await tx`
       insert into matches ${tx(row)}
       on conflict (id) do update set raw = excluded.raw, team = excluded.team, minutes = excluded.minutes,
-        our_kit = excluded.our_kit, opp_kit = excluded.opp_kit
+        our_kit = excluded.our_kit, opp_kit = excluded.opp_kit, our_sr = coalesce(matches.our_sr, excluded.our_sr)
       returning (xmax = 0) as inserted`;
     if (players.length) {
       await tx`
@@ -191,6 +195,8 @@ export type EaPayload = {
   members?: unknown;
   career?: unknown;
   search?: unknown;
+  /** Skill Rating of recent opponents, by club id */
+  opponents?: Record<string, { skillRating?: string | number | null }>;
   /** Problems the fetcher ran into, kept in the poll log. */
   errors?: string[];
 };
@@ -204,6 +210,8 @@ export async function ingest(payload: EaPayload): Promise<PollResult> {
   let newMatches = 0;
   const [{ count: existing }] = await db`select count(*)::int as count from matches`;
   const firstRun = existing === 0;
+  const overall = Array.isArray(payload.overall) ? (payload.overall[0] as Record<string, string> | undefined) : undefined;
+  const ourSr = overall?.skillRating ? n(overall.skillRating) : null;
 
   for (const type of MATCH_TYPES) {
     const list = payload.matches?.[type];
@@ -211,7 +219,7 @@ export async function ingest(payload: EaPayload): Promise<PollResult> {
     // oldest first so Discord posts arrive in order
     for (const m of [...list].sort((a, b) => n(a.timestamp) - n(b.timestamp))) {
       if (!m?.matchId || !m.clubs) continue;
-      if (await saveMatch(m, type)) {
+      if (await saveMatch(m, type, ourSr)) {
         newMatches++;
         // don't spam Discord with old games on the very first run
         if (!firstRun && Date.now() / 1000 - n(m.timestamp) < 6 * 3600) await announce(m);
@@ -219,6 +227,10 @@ export async function ingest(payload: EaPayload): Promise<PollResult> {
     }
   }
   if (!Array.isArray(payload.matches?.leagueMatch)) errors.push("no league matches in this check");
+
+  for (const [club, o] of Object.entries(payload.opponents ?? {})) {
+    if (o?.skillRating) await db`update matches set opp_sr = ${n(o.skillRating)} where opp_id = ${club} and opp_sr is null`;
+  }
 
   for (const key of ["info", "overall", "members", "career", "search"] as const) {
     const value = payload[key];
@@ -254,7 +266,22 @@ export async function pollOnce(): Promise<PollResult> {
   };
   const previous = (await getSnapshot<Record<string, { name?: string }>>("info"))?.data;
   const clubName = previous?.[CLUB_ID]?.name ?? "Sarma gang";
+  const recent = Date.now() / 1000 - SR_WINDOW_SECONDS;
+  const opponentIds = [
+    ...new Set(
+      (payload.matches!.leagueMatch ?? [])
+        .filter((m) => n(m.timestamp) > recent)
+        .flatMap((m) => Object.keys(m.clubs ?? {}))
+        .filter((club) => club !== CLUB_ID),
+    ),
+  ];
+  payload.opponents = {};
   await Promise.all([
+    ...opponentIds.map((club) =>
+      ea.clubStats(club).then((d) => { payload.opponents![club] = { skillRating: d?.[0]?.skillRating }; }).catch(() => {
+        /* opponent strength is optional */
+      }),
+    ),
     ...MATCH_TYPES.filter((t) => t !== "leagueMatch").map((t) =>
       ea.matches(t).then((list) => { payload.matches![t] = list; }).catch(() => {
         /* most clubs have no friendlies or playoffs: ignore */
