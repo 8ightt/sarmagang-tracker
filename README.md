@@ -69,7 +69,17 @@ Then run `supabase/migrations/0003_live_schedule.sql` the same way (no token nee
 checks every 2 minutes while the club is playing (a game in the last 2 hours) and every
 10 minutes otherwise. Open pages refresh themselves every 30 seconds.
 
-### 5. Optional
+### 5. Real stats and the season tracker
+
+Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
+
+- **Fix stats** on every match page: EA's data puts every CPU teammate's numbers on one
+  player's line and only records forward/midfielder/defender/keeper. Copy the real lines and
+  exact positions from the in-game Player Performance screen; totals and records follow.
+- **Season tracker** on the club page: points to promotion and chances left
+  (win +3, draw +1, loss −1 chance), worked out from every league result.
+
+### 6. Optional
 
 - **Discord**: set `DISCORD_WEBHOOK_URL` and every new result gets posted to your channel.
 - **Positions, nicknames, bios, Pro pictures**: edit `config/settings.json`. Pictures go in
