@@ -513,7 +513,7 @@ export type Season = {
   results: { id: string; ts: number; result: "W" | "D" | "L"; opp: string; score: string; type: string }[];
   events: SeasonEvent[];
   /** during the promotion match series */
-  promotion: { played: number; wins: number; matches: number; winsNeeded: number; confirmed: boolean } | null;
+  promotion: { played: number; wins: number; matches: number; winsNeeded: number; confirmed: boolean; games: Season["results"] } | null;
   setAt: number;
   setBy: string | null;
 };
@@ -629,7 +629,14 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     events,
     promotion:
       phase === "playoffs"
-        ? { played: series.played, wins: series.wins, matches: promotionRule(division).matches, winsNeeded: promotionRule(division).wins, confirmed: promotionRule(division).confirmed ?? false }
+        ? {
+            played: series.played,
+            wins: series.wins,
+            matches: promotionRule(division).matches,
+            winsNeeded: promotionRule(division).wins,
+            confirmed: promotionRule(division).confirmed ?? false,
+            games: results.slice(results.length - series.played),
+          }
         : null,
     setAt: new Date(state.updated_at).getTime(),
     setBy: (state.updated_by as string) ?? null,

@@ -21,6 +21,7 @@ export default async function Home() {
   ]);
   // the season tracker follows the in-game lobby; EA's own division field lags behind
   const division = season?.division ?? club.division;
+  const promo = season?.phase === "playoffs" ? season.promotion : null;
   const settings = loadSettings();
   const clubSeason = currentSeason();
   const nowSec = Date.now() / 1000;
@@ -142,67 +143,109 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {season ? (
-        <section className="card stack" style={{ gap: 18 }}>
+      {/* during the Season Playoffs the Playoffs card above takes over: league points are paused */}
+      {season && !playoffs ? (
+        <section className="card stack" style={{ gap: 18, border: promo ? "1px solid var(--accent)" : undefined }}>
           <div className="section-head">
-            <h2 className="display">{divisionName(season.division)} season</h2>
-            <span className="muted" style={{ fontSize: 13 }}>Win +3 · Draw +1 · Loss −1 chance</span>
+            <h2 className="display">
+              {promo ? `Promotion match · ${divisionName(season.division)} → ${divisionName(Math.max(0, season.division - 1))}` : `${divisionName(season.division)} season`}
+            </h2>
+            <span className="muted" style={{ fontSize: 13 }}>
+              {promo ? `Win ${promo.winsNeeded} of ${promo.matches} to go up` : "Win +3 · Draw +1 · Loss −1 chance"}
+            </span>
           </div>
           {seasonLine ? <span className="text-2" style={{ fontSize: 14, marginTop: -8 }}>{seasonLine}</span> : null}
-          {season.phase !== "league" ? (
-            <div className="card-strong" style={{ border: `1px solid ${season.phase === "playoffs" ? "var(--accent)" : "var(--shame)"}` }}>
-              <strong className="display" style={{ fontSize: 22, color: season.phase === "playoffs" ? "var(--accent)" : "var(--shame)" }}>
-                {season.phase === "playoffs" ? "Promotion match" : "Relegation match"}
+          {season.phase === "relegation" ? (
+            <div className="card-strong" style={{ border: "1px solid var(--shame)" }}>
+              <strong className="display" style={{ fontSize: 22, color: "var(--shame)" }}>
+                Relegation match
               </strong>
               <div className="text-2" style={{ marginTop: 6 }}>
-                {season.phase === "playoffs" && season.promotion
-                  ? `Points target reached. ${season.promotion.winsNeeded - season.promotion.wins} more win${season.promotion.winsNeeded - season.promotion.wins === 1 ? "" : "s"} from ${season.promotion.matches - season.promotion.played} game${season.promotion.matches - season.promotion.played === 1 ? "" : "s"} to go up to ${divisionName(Math.max(0, season.division - 1))}.${season.promotion.confirmed ? "" : " (Series length not confirmed yet: check the lobby.)"}`
-                  : `Out of chances. Win the next game to stay in ${divisionName(season.division)}; lose it and you go down.`}
+                {`Out of chances. Win the next game to stay in ${divisionName(season.division)}; lose it and you go down.`}
               </div>
             </div>
           ) : null}
-          <div className="row" style={{ gap: 32, alignItems: "flex-end" }}>
-            <div className="stack" style={{ gap: 8, flex: "2 1 320px" }}>
-              <div className="row between">
-                <span className="text-2">Points to promotion</span>
-                <span className="display num" style={{ fontSize: 40 }}>
-                  {season.points}<span className="muted" style={{ fontSize: 24 }}>/{season.target}</span>
+          {promo ? (
+            <div className="stack" style={{ gap: 16 }}>
+              <div className="row between" style={{ alignItems: "flex-end" }}>
+                <div className="stack" style={{ gap: 4 }}>
+                  <span className="text-2">Wins</span>
+                  <span className="display num" style={{ fontSize: 40, lineHeight: 1 }}>
+                    {promo.wins}<span className="muted" style={{ fontSize: 24 }}>/{promo.winsNeeded}</span>
+                  </span>
+                </div>
+                <div className="stack" style={{ gap: 4, textAlign: "right" }}>
+                  <span className="text-2">Games left</span>
+                  <span className="display num" style={{ fontSize: 40, lineHeight: 1 }}>{promo.matches - promo.played}</span>
+                </div>
+              </div>
+              <div className="series" style={{ ["--n" as string]: promo.matches }}>
+                {Array.from({ length: promo.matches }, (_, i) => {
+                  const g = promo.games[i];
+                  return g ? (
+                    <a key={i} href={`/matches/${g.id}`} className={`series-slot is-${g.result}`}>
+                      <span className="series-n">Game {i + 1}</span>
+                      <ResultBadge r={g.result} />
+                      <span className="num" style={{ fontWeight: 700 }}>{g.score}</span>
+                      <span className="series-opp">{g.opp}</span>
+                    </a>
+                  ) : (
+                    <div key={i} className={`series-slot${i === promo.played ? " is-next" : ""}`}>
+                      <span className="series-n">Game {i + 1}</span>
+                      <span className="series-empty">{i === promo.played ? "Next" : "–"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <span className="text-2" style={{ fontSize: 14 }}>
+                {`${promo.winsNeeded - promo.wins} more win${promo.winsNeeded - promo.wins === 1 ? "" : "s"} from ${promo.matches - promo.played} game${promo.matches - promo.played === 1 ? "" : "s"} to go up to ${divisionName(Math.max(0, season.division - 1))}. Fall short and the club stays in ${divisionName(season.division)}.`}
+                {promo.confirmed ? "" : " (Series length not confirmed yet: check the lobby.)"}
+              </span>
+            </div>
+          ) : (
+            <div className="row" style={{ gap: 32, alignItems: "flex-end" }}>
+              <div className="stack" style={{ gap: 8, flex: "2 1 320px" }}>
+                <div className="row between">
+                  <span className="text-2">Points to promotion</span>
+                  <span className="display num" style={{ fontSize: 40 }}>
+                    {season.points}<span className="muted" style={{ fontSize: 24 }}>/{season.target}</span>
+                  </span>
+                </div>
+                <div className="bar" style={{ height: 14 }} role="img" aria-label={`${season.points} of ${season.target} points`}>
+                  <div style={{ width: `${Math.min(100, Math.round((season.points / season.target) * 100))}%` }} />
+                </div>
+                <span className="muted" style={{ fontSize: 13 }}>
+                  {season.target - season.points > 0
+                    ? `${season.target - season.points} more point${season.target - season.points === 1 ? "" : "s"} to go up: ${Math.ceil((season.target - season.points) / 3)} win${Math.ceil((season.target - season.points) / 3) === 1 ? "" : "s"}`
+                    : "Target reached"}
                 </span>
               </div>
-              <div className="bar" style={{ height: 14 }} role="img" aria-label={`${season.points} of ${season.target} points`}>
-                <div style={{ width: `${Math.min(100, Math.round((season.points / season.target) * 100))}%` }} />
+              <div className="stack" style={{ gap: 8, flex: "1 1 200px" }}>
+                <span className="text-2">Chances left</span>
+                <div className="row" style={{ gap: 10 }} role="img" aria-label={`${season.chances} of ${season.maxChances} chances left`}>
+                  {Array.from({ length: season.maxChances }, (_, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: i < season.chances ? "var(--accent)" : "transparent",
+                        border: `2px solid ${i < season.chances ? "var(--accent)" : "var(--line-2)"}`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="muted" style={{ fontSize: 13 }}>
+                  {season.chances === 0
+                    ? "None left: relegation match next"
+                    : season.chances === 1
+                      ? "Last chance: one more loss means a relegation match"
+                      : `${season.chances} losses left before a relegation match`}
+                </span>
               </div>
-              <span className="muted" style={{ fontSize: 13 }}>
-                {season.target - season.points > 0
-                  ? `${season.target - season.points} more point${season.target - season.points === 1 ? "" : "s"} to go up: ${Math.ceil((season.target - season.points) / 3)} win${Math.ceil((season.target - season.points) / 3) === 1 ? "" : "s"}`
-                  : "Target reached"}
-              </span>
             </div>
-            <div className="stack" style={{ gap: 8, flex: "1 1 200px" }}>
-              <span className="text-2">Chances left</span>
-              <div className="row" style={{ gap: 10 }} role="img" aria-label={`${season.chances} of ${season.maxChances} chances left`}>
-                {Array.from({ length: season.maxChances }, (_, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      background: i < season.chances ? "var(--accent)" : "transparent",
-                      border: `2px solid ${i < season.chances ? "var(--accent)" : "var(--line-2)"}`,
-                    }}
-                  />
-                ))}
-              </div>
-              <span className="muted" style={{ fontSize: 13 }}>
-                {season.chances === 0
-                  ? "None left: relegation match next"
-                  : season.chances === 1
-                    ? "Last chance: one more loss means a relegation match"
-                    : `${season.chances} losses left before a relegation match`}
-              </span>
-            </div>
-          </div>
+          )}
           {season.results.length ? (
             <div className="row" style={{ gap: 8 }}>
               <span className="text-2" style={{ fontSize: 13 }}>This season</span>
