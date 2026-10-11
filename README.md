@@ -76,8 +76,11 @@ Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
 - **Fix stats** on every match page: EA's data puts every CPU teammate's numbers on one
   player's line and only records forward/midfielder/defender/keeper. Copy the real lines and
   exact positions from the in-game Player Performance screen; totals and records follow.
-- **Season tracker** on the club page: points to promotion and chances left
-  (win +3, draw +1, loss −1 chance), worked out from every league result.
+- **Season tracker** on the club page, worked out from every result: win +3 points,
+  draw +1, loss −1 chance. Reaching the division's target means the Playoffs (win to go up);
+  losing the last chance means a relegation match (win to stay, lose to go down).
+  Points targets per division and the chances you get back after surviving are set in
+  `config/settings.json` under `league`.
 
 ### 6. Optional
 
