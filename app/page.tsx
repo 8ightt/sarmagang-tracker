@@ -23,6 +23,8 @@ export default async function Home() {
   // the season tracker follows the in-game lobby; EA's own division field lags behind
   const division = season?.division ?? club.division;
   const promo = season?.phase === "playoffs" ? season.promotion : null;
+  // EA's bestDivision runs a division behind (as currentDivision does), so the tracker's division counts too
+  const bestDivision = [club.bestDivision, division].filter((d): d is number => d !== null).reduce((a, b) => Math.min(a, b), Infinity);
   const settings = loadSettings();
   const clubSeason = currentSeason();
   const nowSec = Date.now() / 1000;
@@ -301,7 +303,7 @@ export default async function Home() {
       ) : null}
 
       <section className="grid grid-270">
-        <DivisionLadder current={division} best={club.bestDivision} promotions={club.promotions} relegations={club.relegations} />
+        <DivisionLadder current={division} best={Number.isFinite(bestDivision) ? bestDivision : null} promotions={club.promotions} relegations={club.relegations} />
         <ReputationLadder tier={club.reputationTier} />
         {top100 ? <TopHundred clubs={top100.clubs} us={club.skillRating} /> : null}
       </section>

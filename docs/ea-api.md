@@ -173,7 +173,7 @@ Path: `[]`
 | `gamesPlayed`, `wins`, `ties`, `losses`, `goals`, `goalsAgainst` | ✅ verified | season totals (league games) | club page tiles |
 | `leagueAppearances` | ✅ verified | equals gamesPlayed so far |  |
 | `gamesPlayedPlayoff` | 🟡 assumed | games in EA's playoff type; 0 so far (promotion games count as league) |  |
-| `promotions`, `relegations` | ✅ verified | promotions and relegations (2 and 1 on 2026-10-11) | division ladder |
+| `promotions`, `relegations` | ✅ verified | promotions and relegations; promotions went 2 → 3 in the first poll after the promotion to Division 3, so unlike the division fields this one is up to date | division ladder |
 | `skillRating` | ✅ verified | Elo-style rating used for matchmaking; matches the in-game Season Info (1438 on 2026-10-11) | club page; matches.our_sr / opp_sr, saved when a game is first seen (opponents looked up for games under 3 h old); /analysis opponent strength |
 | `reputationtier` | ✅ verified | reputation tier, 0-3; 0 = Hometown Heroes | reputation badge and ladder |
 | `wstreak` | ✅ verified | current win streak | club page |
@@ -198,9 +198,9 @@ Path: `[]`
 |---|---|---|---|
 | `clubId`, `clubName` | ✅ verified | club id and name |  |
 | `platform` | ✅ verified | common-gen5 or common-gen4 |  |
-| `currentDivision` | ⛔ useless | says 5, but the in-game League Lobby showed Division 4 on 2026-10-11, matching our season tracker; don't use it for the current division |  |
-| `bestDivision` | 🟡 assumed | best division reached (4) | division ladder |
-| `points` | ❓ unknown | 29 on 2026-10-11 (24 a day earlier); not the current division's points (tracker: 10 of 9) | club page 'League points, EA total' |
+| `currentDivision` | ⛔ useless | runs one division behind: said 5 while the lobby showed Division 4, then 4 right after promotion to Division 3 (2026-10-11, the poll after the promotion game). Use the season tracker for the current division |  |
+| `bestDivision` | 🟡 assumed | best division reached, but one division behind like currentDivision (still 4 after promotion to 3) | division ladder 'best' tag, together with the tracker's division |
+| `points` | ❓ unknown | 24, then 29 and 32 on 2026-10-11 (+3 after the promotion win, unchanged after a loss); not the current division's points | club page 'League points, EA total' |
 | `cleanSheets` | ✅ verified | club clean sheets this season | club page |
 | `wins`, `losses`, `ties`, `gamesPlayed`, `gamesPlayedPlayoff`, `goals`, `goalsAgainst`, `promotions`, `relegations`, `reputationtier` | ✅ verified | same as clubs/overallStats |  |
 
