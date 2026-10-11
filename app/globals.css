@@ -153,3 +153,38 @@ details > summary { cursor: pointer; color: var(--text-2); }
   .wrap { padding: 0 16px; }
   .kpi-value { font-size: 34px; }
 }
+
+/* filters (Seasons page) */
+.season-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line); }
+.season-tabs a { padding: 10px 16px; margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--text-2); text-decoration: none; font-weight: 700; }
+.season-tabs a:hover { color: var(--text); }
+.season-tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.filter-bar { display: flex; flex-direction: column; gap: 14px; padding: 16px 20px; }
+.filter-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.filter-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); min-width: 64px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--text-2); text-decoration: none; font-weight: 700; font-size: 14px; }
+.pill:hover { color: var(--text); border-color: var(--muted); }
+.pill[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.pill.is-empty { opacity: 0.45; }
+.pill .count { font-size: 12px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); }
+.pill[aria-current="true"] .count { background: rgba(0, 0, 0, 0.18); color: var(--on-accent); }
+.pill .dot { width: 10px; height: 10px; border-radius: 3px; }
+.filter-search { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filter-search .field { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--bg); }
+.filter-search .field:focus-within { border-color: var(--accent); }
+.filter-search .field input { border: 0; background: transparent; min-height: 38px; padding: 0; color: var(--text); outline: none; color-scheme: dark; }
+.filter-search .field span { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.filter-search button { min-height: 40px; padding: 6px 16px; }
+.active-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.active-filters a.chip-x { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: 13px; font-weight: 700; text-decoration: none; }
+.active-filters a.chip-x:hover { background: var(--line-2); }
+.active-filters a.chip-x b { color: var(--muted); font-weight: 800; }
+@media (max-width: 640px) {
+  .filter-label { min-width: 100%; }
+  .filter-search .field { flex: 1 1 100%; }
+  .filter-search .field.date { flex: 1 1 calc(50% - 4px); padding: 0 10px; }
+  .filter-search .field.date span { display: none; }
+  .filter-search button { flex: 1 1 100%; }
+  .filter-search .field input { flex: 1; min-width: 0; }
+}
+.pill[aria-current="true"] .dot { box-shadow: 0 0 0 2px var(--on-accent); }

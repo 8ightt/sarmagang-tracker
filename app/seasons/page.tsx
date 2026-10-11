@@ -35,23 +35,45 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
   const q = one("q").trim().toLowerCase();
 
   const [club, all] = await Promise.all([getClub(), getMatches(5000)]);
-  const matches = all.filter((m) => {
+  type Skip = "type" | "result";
+  const keep = (m: (typeof all)[number], skip?: Skip) => {
     const ts = Number(m.ts);
     const d = localDay(ts);
     if (season && seasonOf(ts)?.name !== season.name) return false;
-    if (kind && matchKind(ts, m.match_type) !== kind) return false;
-    if (result && m.result !== result) return false;
+    if (skip !== "type" && kind && matchKind(ts, m.match_type) !== kind) return false;
+    if (skip !== "result" && result && m.result !== result) return false;
     if (from && d < from) return false;
     if (to && d > to) return false;
     if (q && !m.opp_name.toLowerCase().includes(q)) return false;
     return true;
-  });
+  };
+  const matches = all.filter((m) => keep(m));
+  // counts on each pill ignore that pill's own group, so you can see what switching would give
+  const byType = all.filter((m) => keep(m, "type"));
+  const byResult = all.filter((m) => keep(m, "result"));
   const w = matches.filter((m) => m.result === "W").length;
   const d = matches.filter((m) => m.result === "D").length;
   const l = matches.filter((m) => m.result === "L").length;
   const gf = matches.reduce((s, m) => s + m.goals_for, 0);
   const ga = matches.reduce((s, m) => s + m.goals_against, 0);
-  const filtered = Boolean(kind || result || from || to || q);
+
+  const state = { season: season ? season.name : "all", type: kind as string, result, from, to, q: one("q").trim() };
+  const defaultSeason = current?.name ?? "all";
+  const href = (change: Partial<typeof state>) => {
+    const next = { ...state, ...change };
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(next)) if (v && !(k === "season" && v === defaultSeason)) qs.set(k, v);
+    return `/seasons${qs.size ? `?${qs}` : ""}`;
+  };
+  const short = (v: string) => new Date(`${v}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const active = [
+    kind && { label: KINDS.find((k) => k.value === kind)!.label, clear: href({ type: "" }) },
+    result && { label: RESULTS.find((r) => r.value === result)!.label, clear: href({ result: "" }) },
+    from && { label: `From ${short(from)}`, clear: href({ from: "" }) },
+    to && { label: `To ${short(to)}`, clear: href({ to: "" }) },
+    state.q && { label: `“${state.q}”`, clear: href({ q: "" }) },
+  ].filter(Boolean) as { label: string; clear: string }[];
+  const dotColor: Record<string, string> = { W: "var(--accent)", D: "var(--muted)", L: "#c4485a" };
 
   return (
     <main className="wrap">
@@ -65,47 +87,70 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
         </span>
       </div>
 
-      <form method="get" className="card stack" style={{ gap: 12 }}>
-        <div className="inline-form" style={{ alignItems: "flex-end", gap: 12 }}>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="kpi-label">Season</span>
-            <select name="season" defaultValue={season ? season.name : "all"}>
-              <option value="all">All seasons</option>
-              {[...seasons].reverse().map((x) => <option key={x.name} value={x.name}>{x.name}</option>)}
-            </select>
-          </label>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="kpi-label">Type</span>
-            <select name="type" defaultValue={kind}>
-              <option value="">All types</option>
-              {KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
-            </select>
-          </label>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="kpi-label">Result</span>
-            <select name="result" defaultValue={result}>
-              <option value="">All results</option>
-              {RESULTS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-            </select>
-          </label>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="kpi-label">From</span>
-            <input type="date" name="from" defaultValue={from} />
-          </label>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="kpi-label">To</span>
-            <input type="date" name="to" defaultValue={to} />
-          </label>
-          <label className="stack" style={{ gap: 4, flex: "1 1 180px" }}>
-            <span className="kpi-label">Opponent</span>
-            <input type="text" name="q" defaultValue={one("q")} placeholder="Club name" />
-          </label>
-          <button type="submit">Filter</button>
-          {filtered || seasonParam !== (current?.name ?? "all") ? (
-            <a href="/seasons" className="text-2" style={{ fontSize: 14, alignSelf: "center" }}>Reset</a>
+      <div className="stack" style={{ gap: 16 }}>
+        <nav className="season-tabs" aria-label="Season">
+          {[...seasons].reverse().map((x) => (
+            <a key={x.name} href={href({ season: x.name })} aria-current={season?.name === x.name ? "page" : undefined}>{x.name}</a>
+          ))}
+          <a href={href({ season: "all" })} aria-current={!season ? "page" : undefined}>All seasons</a>
+        </nav>
+
+        <div className="card filter-bar">
+          <div className="filter-group" role="group" aria-label="Match type">
+            <span className="filter-label">Type</span>
+            <a className="pill" href={href({ type: "" })} aria-current={!kind}>All <span className="count">{byType.length}</span></a>
+            {KINDS.map((k) => {
+              const n = byType.filter((m) => matchKind(Number(m.ts), m.match_type) === k.value).length;
+              return (
+                <a key={k.value} className={`pill${n ? "" : " is-empty"}`} href={href({ type: k.value })} aria-current={kind === k.value}>
+                  {k.label} <span className="count">{n}</span>
+                </a>
+              );
+            })}
+          </div>
+          <div className="filter-group" role="group" aria-label="Result">
+            <span className="filter-label">Result</span>
+            <a className="pill" href={href({ result: "" })} aria-current={!result}>All <span className="count">{byResult.length}</span></a>
+            {RESULTS.map((r) => {
+              const n = byResult.filter((m) => m.result === r.value).length;
+              return (
+                <a key={r.value} className={`pill${n ? "" : " is-empty"}`} href={href({ result: r.value })} aria-current={result === r.value}>
+                  <span className="dot" style={{ background: dotColor[r.value] }} />
+                  {r.label} <span className="count">{n}</span>
+                </a>
+              );
+            })}
+          </div>
+          <form method="get" action="/seasons" className="filter-search">
+            {state.season !== defaultSeason ? <input type="hidden" name="season" value={state.season} /> : null}
+            {kind ? <input type="hidden" name="type" value={kind} /> : null}
+            {result ? <input type="hidden" name="result" value={result} /> : null}
+            <label className="field" style={{ flex: "1 1 220px" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ color: "var(--muted)" }}>
+                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+              </svg>
+              <input type="text" name="q" defaultValue={state.q} placeholder="Search opponent" aria-label="Opponent" style={{ flex: 1 }} />
+            </label>
+            <label className="field date" aria-label="From">
+              <span>From</span>
+              <input type="date" name="from" defaultValue={from} />
+            </label>
+            <label className="field date" aria-label="To">
+              <span>To</span>
+              <input type="date" name="to" defaultValue={to} />
+            </label>
+            <button type="submit">Search</button>
+          </form>
+          {active.length ? (
+            <div className="active-filters">
+              {active.map((a) => (
+                <a key={a.label} className="chip-x" href={a.clear} aria-label={`Remove ${a.label}`}>{a.label} <b>✕</b></a>
+              ))}
+              <a href={href({ type: "", result: "", from: "", to: "", q: "" })} className="text-2" style={{ fontSize: 13 }}>Clear all</a>
+            </div>
           ) : null}
         </div>
-      </form>
+      </div>
 
       <section className="grid grid-170">
         <div className="card">
