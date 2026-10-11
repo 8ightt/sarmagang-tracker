@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CaptainForm, CpuRedButton } from "@/components/Forms";
+import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
 import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { groupShort } from "@/lib/ea-assets";
 import { getClub, getMatch, getMembers } from "@/lib/stats";
@@ -105,16 +105,21 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         <a href={`/players/${encodeURIComponent(p.player)}`}>{p.player}</a>
                         {p.motm ? <span className="chip">MOTM</span> : null}
                         {m.captain === p.player ? <span className="chip chip-ghost">C</span> : null}
-                        {p.controls_cpu ? <span className="chip chip-ghost" title="Ran the CPU teammates this game">+CPU</span> : null}
+                        {p.controls_cpu ? <span className="chip chip-ghost" title="EA added the CPU teammates' stats to this line">+CPU</span> : null}
+                        {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
                       </div>
                     </td>
                     <td>
-                      {p.controls_cpu && mem?.position ? <PosLabel position={mem.position} role={mem.role || "ANY"} /> : <span className="text-2">{groupShort(p.pos)}</span>}
+                      {p.position ? (
+                        <PosLabel position={p.position} />
+                      ) : (
+                        <span className="text-2" title="EA only records the group; set the exact position with Fix stats">{groupShort(p.pos)}</span>
+                      )}
                     </td>
                     <td style={{ fontWeight: 700, color: p.motm ? "var(--accent)" : undefined }}>{p.rating.toFixed(1)}</td>
                     <td>{p.goals}</td><td>{p.assists}</td><td>{p.shots}</td>
-                    <td>{p.passes_made}/{p.pass_attempts}</td>
-                    <td>{p.tackles_made}/{p.tackle_attempts}</td>
+                    <td>{p.passes_made}{p.pass_attempts !== null ? `/${p.pass_attempts}` : ""}</td>
+                    <td>{p.tackles_made}{p.tackle_attempts !== null ? `/${p.tackle_attempts}` : ""}</td>
                     <td>{p.saves || "–"}</td>
                     <td>{p.reds ? <CpuRedButton matchId={m.id} player={p.player} isCpu={cpuReds.has(p.player)} /> : <span className="muted">–</span>}</td>
                   </tr>
@@ -124,9 +129,33 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           </table>
         </div>
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          “+CPU” marks whoever ran the CPU teammates (playing ANY, or one of only two humans), so his passes, tackles and cards include theirs.
-          A red card he didn&apos;t get himself can be moved to the CPU.
+          EA&apos;s data adds every CPU teammate&apos;s goals, assists, passes, tackles and cards to one player&apos;s line (marked “+CPU”),
+          and only records forward/midfielder/defender/keeper. Use <a href="#fix">Fix stats</a> below with the numbers from the in-game
+          Player Performance screen to show the real lines and positions.
         </p>
+      </section>
+
+      <section className="card stack" id="fix">
+        <h2 className="display" style={{ fontSize: 22 }}>Fix stats</h2>
+        <p className="text-2" style={{ margin: 0 }}>
+          Copy the real numbers from the in-game <strong>Player Performance</strong> screen. Tick “Correct” for each player you enter;
+          unticked players keep EA&apos;s numbers. Season totals and records update with your numbers.
+        </p>
+        <FixStatsForm
+          matchId={m.id}
+          rows={players.map((p) => ({
+            player: p.player,
+            fixed: Boolean(p.fixed),
+            position: p.position ?? null,
+            rating: p.rating,
+            goals: p.goals,
+            assists: p.assists,
+            shots: p.shots,
+            passes: p.passes_made,
+            tackles: p.tackles_made,
+            motm: p.motm,
+          }))}
+        />
       </section>
 
       <section className="card stack">

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
+import { groupShort } from "@/lib/ea-assets";
 import { getMembers, getPlayerLog, getSeasonCpuReds } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const last10 = p.lastTenGoals;
   const maxG = Math.max(1, ...last10);
   const cpu = p.controlsCpu ? " · incl. CPU" : "";
+  const posCount = new Map<string, number>();
+  for (const m of log) {
+    const key = m.position || groupShort(m.pos);
+    if (key) posCount.set(key, (posCount.get(key) ?? 0) + 1);
+  }
+  const positionsPlayed = [...posCount.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ×${n}`).join(" · ");
 
   const tiles = [
     { label: "Games", value: p.games, sub: `${p.winRate}% win rate` },
@@ -111,7 +118,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
       </section>
 
       <section className="stack">
-        <h2 className="display">Match log</h2>
+        <div className="section-head">
+          <h2 className="display">Match log</h2>
+          {positionsPlayed ? <span className="text-2">Played: {positionsPlayed}</span> : null}
+        </div>
         {log.length ? (
           <div className="table-box">
             <table>
@@ -129,13 +139,14 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                         <span className="muted" style={{ fontSize: 13 }}>{when(m.ts)}</span>
                         {m.motm ? <span className="chip">MOTM</span> : null}
                         {m.controls_cpu ? <span className="chip chip-ghost">+CPU</span> : null}
+                        {m.fixed ? <span className="chip chip-ghost">Real stats</span> : null}
                       </a>
                     </td>
-                    <td className="text-2">{m.pos}</td>
+                    <td>{m.position ? <PosLabel position={m.position} /> : <span className="text-2">{groupShort(m.pos)}</span>}</td>
                     <td style={{ fontWeight: 700 }}>{m.rating.toFixed(1)}</td>
                     <td>{m.goals}</td><td>{m.assists}</td><td>{m.shots}</td>
-                    <td>{m.passes_made}/{m.pass_attempts}</td>
-                    <td>{m.tackles_made}/{m.tackle_attempts}</td>
+                    <td>{m.passes_made}{m.pass_attempts !== null ? `/${m.pass_attempts}` : ""}</td>
+                    <td>{m.tackles_made}{m.tackle_attempts !== null ? `/${m.tackle_attempts}` : ""}</td>
                   </tr>
                 ))}
               </tbody>
@@ -145,7 +156,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           <p className="muted">No saved matches for {p.gamertag} yet.</p>
         )}
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          “+CPU” = he was running the CPU teammates that game (playing ANY or short-handed), so his passes and tackles include theirs.
+          “+CPU” = EA added the CPU teammates&apos; stats to his line that game. “Real stats” = corrected from the in-game screen.
+          Positions are EA&apos;s group (FWD/MID/DEF/GK) unless the exact one was entered with Fix stats on the match page.
         </p>
       </section>
 
