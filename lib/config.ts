@@ -82,7 +82,7 @@ export function loadSettings(): SiteSettings {
  */
 export function promotionRule(division: number): { matches: number; wins: number; confirmed: boolean } {
   const r = loadSettings().league.promotion[String(division)];
-  return r ? { ...r, confirmed: r.confirmed ?? false } : { matches: Math.max(1, 8 - division), wins: Math.max(1, 7 - division), confirmed: false };
+  return r ? { ...r, confirmed: r.confirmed ?? false } : { matches: Math.max(1, 7 - division), wins: Math.max(1, 6 - division), confirmed: false };
 }
 
 /** The season running at `now` (seconds), else the latest one that has started. */
