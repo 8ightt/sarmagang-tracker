@@ -7,10 +7,32 @@
       "nickname": "The Engine",
       "bio": "Plays ANY and runs the CPU teammates, so their passes, tackles and cards land on his line too."
     },
-    "mo_nm": { "nickname": "Big Game Mo", "bio": "Target man who happily goes in goal when the squad is short." },
-    "EnEsC-37": { "nickname": "Mr Efficient", "bio": "Best goal-involvement rate in the club." },
-    "Pakst-": { "nickname": "The Sniper", "bio": "Doesn't shoot often, but when he does…" },
-    "x-LadruM-x": { "nickname": "The Wall", "bio": "The club's first real centre-back." },
-    "RUPPADOR": { "nickname": "New Signing", "bio": "Scored on his debut." }
+    "mo_nm": {
+      "nickname": "Big Game Mo",
+      "bio": "Target man who happily goes in goal when the squad is short."
+    },
+    "EnEsC-37": {
+      "nickname": "Mr Efficient",
+      "bio": "Best goal-involvement rate in the club."
+    },
+    "Pakst-": {
+      "nickname": "The Sniper",
+      "bio": "Doesn't shoot often, but when he does…"
+    },
+    "x-LadruM-x": {
+      "nickname": "The Wall",
+      "bio": "The club's first real centre-back."
+    },
+    "RUPPADOR": {
+      "nickname": "New Signing",
+      "bio": "Scored on his debut."
+    }
+  },
+  "league": {
+    "chances": 3,
+    "chancesAfterSurviving": 1,
+    "targets": {
+      "4": 9
+    }
   }
 }

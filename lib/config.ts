@@ -23,13 +23,32 @@ export type PlayerSettings = {
   photo?: string;
 };
 
+export type LeagueRules = {
+  /** safety chances at the start of a season */
+  chances: number;
+  /** chances you get back after winning a relegation match */
+  chancesAfterSurviving: number;
+  /** points target per division, e.g. { "4": 9 } */
+  targets: Record<string, number>;
+};
+
 export type SiteSettings = {
   tagline?: string;
   players: Record<string, PlayerSettings>;
+  league: LeagueRules;
 };
 
 /** Edit config/settings.json and push: the site redeploys with the change. */
 export function loadSettings(): SiteSettings {
   const s = siteSettings as Partial<SiteSettings>;
-  return { tagline: s.tagline, players: s.players ?? {} };
+  const league = (s.league ?? {}) as Partial<LeagueRules>;
+  return {
+    tagline: s.tagline,
+    players: s.players ?? {},
+    league: {
+      chances: league.chances ?? 3,
+      chancesAfterSurviving: league.chancesAfterSurviving ?? 1,
+      targets: league.targets ?? {},
+    },
+  };
 }

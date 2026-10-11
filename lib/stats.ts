@@ -361,28 +361,42 @@ export async function getRecords() {
 }
 
 
-export type SeasonEvent = { ts: number; kind: "promoted" | "season-over"; division: number };
+export type SeasonEvent = {
+  ts: number;
+  kind: "playoffs" | "promoted" | "playoff-lost" | "relegation-match" | "survived" | "relegated";
+  division: number;
+};
+
+/** league: playing for points; relegation: out of chances, next game decides; playoffs: target reached */
+export type SeasonPhase = "league" | "relegation" | "playoffs";
 
 export type Season = {
   division: number;
+  phase: SeasonPhase;
   points: number;
   target: number;
   chances: number;
   maxChances: number;
-  /** league results since the state was last set, newest last */
-  results: { id: string; ts: number; result: "W" | "D" | "L"; opp: string; score: string }[];
+  /** results since the season started (or the state was last set), newest last */
+  results: { id: string; ts: number; result: "W" | "D" | "L"; opp: string; score: string; type: string }[];
   events: SeasonEvent[];
   setAt: number;
   setBy: string | null;
 };
 
-const MAX_CHANCES = 3;
 const POINTS = { W: 3, D: 1, L: 0 } as const;
+/** Division 1 is the highest numbered tier; above it is Elite (shown as 0). */
+const LOWEST_DIVISION = 5;
+export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
 
 /**
- * League season from the last known state plus every league result since:
- * win +3 points, draw +1, loss -1 chance. Hitting the target promotes the club
- * and starts a new season; running out of chances ends the season (same division).
+ * The league season, replayed from the last known state through every result since.
+ *
+ * - League: win +3 points, draw +1, loss -1 chance.
+ * - Reaching the division's points target qualifies for the Playoffs; winning there promotes.
+ * - Losing the last chance means a relegation match: win and you stay (with some chances
+ *   back), lose and you go down a division.
+ * Points targets per division and the chances you get back are in config/settings.json.
  */
 export const getSeason = cache(async (): Promise<Season | null> => {
   const db = sql();
@@ -391,36 +405,78 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   const [state] = await db`select division, points, chances, target, anchor_ts, updated_by, updated_at from season_state where id = 1`;
   if (!state) return null;
   const games = (await db`
-    select id, ts, result, opp_name, goals_for, goals_against from matches
-    where match_type = 'leagueMatch' and ts > ${Number(state.anchor_ts)} order by ts asc`) as unknown as (MatchRow & { opp_name: string })[];
+    select id, ts, result, opp_name, goals_for, goals_against, match_type from matches
+    where match_type in ('leagueMatch', 'playoffMatch') and ts > ${Number(state.anchor_ts)} order by ts asc`) as unknown as (MatchRow & {
+    opp_name: string;
+  })[];
 
-  let { division, points, chances } = state as { division: number; points: number; chances: number };
-  const target = Number(state.target);
+  const league = loadSettings().league;
+  const maxChances = league.chances;
+  const targetFor = (d: number, fallback: number) => league.targets[String(d)] ?? fallback;
+
+  let division = Number(state.division);
+  let points = Number(state.points);
+  let chances = Number(state.chances);
+  let target = Number(state.target);
+  let phase: SeasonPhase = points >= target ? "playoffs" : chances <= 0 ? "relegation" : "league";
   const events: SeasonEvent[] = [];
   let results: Season["results"] = [];
+  const newSeason = (d: number) => {
+    division = d;
+    points = 0;
+    chances = maxChances;
+    target = targetFor(d, target);
+    phase = "league";
+    results = [];
+  };
+
   for (const g of games) {
-    results.push({ id: g.id, ts: Number(g.ts), result: g.result, opp: g.opp_name, score: `${g.goals_for}–${g.goals_against}` });
+    const ts = Number(g.ts);
+    results.push({ id: g.id, ts, result: g.result, opp: g.opp_name, score: `${g.goals_for}–${g.goals_against}`, type: g.match_type });
+
+    if (phase === "playoffs") {
+      if (g.result === "W") {
+        events.push({ ts, kind: "promoted", division: Math.max(0, division - 1) });
+        newSeason(Math.max(0, division - 1));
+      } else if (g.result === "L") {
+        events.push({ ts, kind: "playoff-lost", division });
+        newSeason(division);
+      }
+      continue;
+    }
+
+    if (phase === "relegation") {
+      if (g.result === "W") {
+        chances = league.chancesAfterSurviving;
+        phase = "league";
+        events.push({ ts, kind: "survived", division });
+      } else if (g.result === "L") {
+        const down = Math.min(LOWEST_DIVISION, division + 1);
+        events.push({ ts, kind: "relegated", division: down });
+        newSeason(down);
+      }
+      continue;
+    }
+
     points += POINTS[g.result];
     if (g.result === "L") chances -= 1;
     if (points >= target) {
-      division = Math.max(1, division - 1);
-      events.push({ ts: Number(g.ts), kind: "promoted", division });
-      points = 0;
-      chances = MAX_CHANCES;
-      results = [];
+      phase = "playoffs";
+      events.push({ ts, kind: "playoffs", division });
     } else if (chances <= 0) {
-      events.push({ ts: Number(g.ts), kind: "season-over", division });
-      points = 0;
-      chances = MAX_CHANCES;
-      results = [];
+      chances = 0;
+      phase = "relegation";
+      events.push({ ts, kind: "relegation-match", division });
     }
   }
+
   return {
     division,
+    phase,
     points,
     target,
     chances,
-    maxChances: MAX_CHANCES,
+    maxChances,
     results,
     events,
     setAt: new Date(state.updated_at).getTime(),
