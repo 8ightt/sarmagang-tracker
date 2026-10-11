@@ -3,10 +3,14 @@
 Live stats site for **Sarma gang**, our EA FC 27 Clubs team (PS5).
 Next.js on Vercel, data in Supabase, near-live: EA checked every 2 minutes while the club is playing.
 
-- **Club**: record, division, form, reputation, squad, recent results, tactics and kits
-- **Players**: sortable leaderboard and a profile per player with a match-by-match log
-- **Matches**: every game the site has saved, with team stats, player ratings and the captain
+- **Club**: record, division, season tracker, form, reputation, squad, recent results, tactics and kits
+- **Players**: sortable leaderboard (goals, assists, rating, clean sheets…) and a profile per
+  player with a match-by-match log, clean sheets, goals conceded and saves by type
+- **Matches**: every game the site has saved, with both clubs' kits, team stats, player
+  ratings, goals the CPU scored, keepers' saves by type, AFK flags and the captain
 - **Records**: hall of fame, single-game records, streaks and the hall of shame
+- **Analysis**: form, results with and without each player, best duos, positions, and
+  results against stronger and weaker opponents (by EA Skill Rating)
 
 ## Why it saves matches itself
 
@@ -18,14 +22,28 @@ so nothing drops off.
 
 | Available from EA | Not available, so the site lets the club fill it in |
 |---|---|
-| Club record, division, points, streaks, reputation tier | Captain per match |
-| Crest, stadium name, kit colours | Tactics (saved with their in-game share codes) |
+| Club record, division, points, streaks, reputation tier, Skill Rating | Captain per match |
+| Crest, stadium name, kit colours (ours and the opponent's) | Tactics (saved with their in-game share codes) |
 | Per player: games, goals, assists, ratings, MOTM, passes, tackles, red cards | Exact formation slot (e.g. CAM): set in `config/settings.json` |
-| Per match: every human player's line, team totals, who quit early | Anything about the CPU teammates |
+| Per match: every human player's line, team totals, who quit early, goals conceded, idle time, saves by type, archetype | The CPU teammates' own passes, tackles and cards |
 
-**Playing ANY:** EA puts the CPU teammates' passes, tackles and cards on the line of
-whoever controls them. The site detects that player per match (marked **+CPU**), and any
-red card in such a game can be moved to the CPU with the club password.
+[docs/ea-data.json](docs/ea-data.json) lists every field EA sends, what it means and how
+sure we are of it (verified, assumed, unknown or useless).
+
+## Own stats vs EA's numbers
+
+When a player runs the CPU teammates (playing ANY, or one of only two humans), EA adds the
+CPU's goals, assists, shots, passes, tackles and cards to that player's line. Each player
+line also carries hidden event counters that count **only the human's own** actions. The
+site uses them for goals (counter 214), assists (11) and shots (217 + 218), so:
+
+- Goals, assists and shots everywhere are each player's own. Goals the CPU scored show as
+  **CPU** among the scorers on match pages and in Discord posts.
+- Season totals take the CPU's share out for every game the site saved; EA's figure stays
+  visible as "EA: n incl. CPU". Games from before the site saved matches can't be corrected.
+- Passes, tackles and cards still include the CPU's for whoever controls it. The site marks
+  that line **+CPU**, a red card in such a game can be moved to the CPU with the club
+  password, and **Fix stats** takes the real numbers from the in-game screen.
 
 ## Setup
 
@@ -46,7 +64,10 @@ red card in such a game can be moved to the CPU with the club password.
 ### 3. GitHub Actions (the regular EA check)
 
 EA's bot filter blocks requests from Vercel's servers, so the GitHub workflow fetches the
-club's data from EA itself and posts it to the site's `/api/ingest` endpoint. In the repo: **Settings → Secrets and variables → Actions**, add
+club's data from EA itself and posts it to the site's `/api/ingest` endpoint. For games from
+the last 3 hours it also fetches each opponent's Skill Rating (one call per opponent; EA
+only gives today's rating, so it's saved right after the game). In the repo:
+**Settings → Secrets and variables → Actions**, add
 
 - `SITE_URL`: e.g. `https://sarmagang-tracker.vercel.app`
 - `CRON_SECRET`: the same value as in Vercel
@@ -73,9 +94,9 @@ checks every 2 minutes while the club is playing (a game in the last 2 hours) an
 
 Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
 
-- **Fix stats** on every match page: EA's data puts every CPU teammate's numbers on one
-  player's line and only records forward/midfielder/defender/keeper. Copy the real lines and
-  exact positions from the in-game Player Performance screen; totals and records follow.
+- **Fix stats** on every match page: EA puts the CPU teammates' passes, tackles and cards on
+  one player's line and only records forward/midfielder/defender/keeper. Copy the real lines
+  and exact positions from the in-game Player Performance screen; totals and records follow.
 - **Season tracker** on the club page, worked out from every result: win +3 points,
   draw +1, loss −1 chance. Reaching the division's target means the Playoffs (win to go up);
   losing the last chance means a relegation match (win to stay, lose to go down).
@@ -88,6 +109,10 @@ Add a `DATABASE_URL` repository secret in GitHub (same value as in Vercel). From
 the **Apply database migrations** workflow runs every new file in `supabase/migrations`
 when it's pushed, and remembers what ran in a `schema_migrations` table. Start it once by
 hand under Actions → Apply database migrations → Run workflow to catch up.
+
+Migrations that add columns also fill them from the EA data already saved
+(`matches.raw`), so new stats cover past games too. Push a migration before the code that
+uses it: the pages work without the new columns, but saving matches doesn't.
 
 ### 7. Optional
 
@@ -104,7 +129,8 @@ npm run dev
 ```
 
 Set `EA_FIXTURE_DIR=./fixtures` to use the saved EA responses in `fixtures/` instead of the
-live API, then trigger a check with:
+live API. They're trimmed samples without the hidden event counters, so own goals, assists
+and shots fall back to EA's numbers. Trigger a check with:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/poll
