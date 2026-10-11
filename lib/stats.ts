@@ -355,6 +355,33 @@ export const getTracked = cache(async (): Promise<Map<string, Tracked>> => {
   );
 });
 
+export type ArchetypeRow = {
+  archetype: number;
+  games: number;
+  w: number;
+  d: number;
+  l: number;
+  rating: number;
+  goals: number;
+  assists: number;
+  motm: number;
+  saves: number;
+};
+
+/** One player's saved games split by the archetype they played, most played first. */
+export async function getArchetypes(player: string): Promise<ArchetypeRow[]> {
+  const db = sql();
+  const rows = await db`
+    select mp.archetype, count(*)::int as games,
+           count(*) filter (where m.result = 'W')::int as w, count(*) filter (where m.result = 'D')::int as d,
+           count(*) filter (where m.result = 'L')::int as l, avg(mp.rating)::float as rating,
+           sum(mp.goals)::int as goals, sum(mp.assists)::int as assists, sum(mp.motm::int)::int as motm, sum(mp.saves)::int as saves
+    from ${db(await playersTable())} mp join matches m on m.id = mp.match_id
+    where mp.player = ${player} and mp.seconds > 0
+    group by mp.archetype order by games desc, rating desc`;
+  return rows as unknown as ArchetypeRow[];
+}
+
 export async function getSeasonCpuReds(player: string): Promise<number> {
   const [r] = await sql()`select amount from corrections where match_id is null and player = ${player} and stat = 'reds'`;
   return r ? Number(r.amount) : 0;

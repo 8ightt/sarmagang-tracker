@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
-import { groupShort } from "@/lib/ea-assets";
-import { AFK_SECONDS, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
+import { archetypeName, groupShort } from "@/lib/ea-assets";
+import { MIN_GAMES } from "@/lib/insights";
+import { AFK_SECONDS, getArchetypes, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const members = await getMembers();
   const p = members.find((m) => m.gamertag === name);
   if (!p) notFound();
-  const [log, seasonCpuReds, tracked] = await Promise.all([getPlayerLog(name, 20), getSeasonCpuReds(name), getTracked()]);
+  const [log, seasonCpuReds, tracked, archetypes] = await Promise.all([
+    getPlayerLog(name, 20),
+    getSeasonCpuReds(name),
+    getTracked(),
+    getArchetypes(name),
+  ]);
   const t = tracked.get(name);
   const playing = members.filter((m) => m.games > 0);
   const squadRating = playing.length ? playing.reduce((s, m) => s + m.rating, 0) / playing.length : 0;
@@ -140,6 +146,44 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
             </div>
           ))}
           <span className="muted" style={{ fontSize: 13 }}>EA doesn&apos;t give every save a type; those are counted as Other.</span>
+        </section>
+      ) : null}
+
+      {archetypes.length > 1 ? (
+        <section className="stack">
+          <div className="section-head">
+            <h2 className="display">By archetype</h2>
+            <span className="muted" style={{ fontSize: 13 }}>From the saved games, most played first</span>
+          </div>
+          <div className="table-box">
+            <table>
+              <thead>
+                <tr><th>Archetype</th><th>Games</th><th>W-D-L</th><th>Avg rating</th><th>Goals</th><th>Assists</th><th>G+A per game</th><th>MOTM</th>{archetypes.some((a) => a.saves) ? <th>Saves per game</th> : null}</tr>
+              </thead>
+              <tbody>
+                {archetypes.map((a) => (
+                  <tr key={a.archetype}>
+                    <td>
+                      <strong>{archetypeName(a.archetype)}</strong>
+                      {a.games < MIN_GAMES ? <span className="chip chip-ghost" style={{ marginLeft: 8 }}>small sample</span> : null}
+                    </td>
+                    <td>{a.games}</td>
+                    <td>{a.w}-{a.d}-{a.l}</td>
+                    <td style={{ fontWeight: 700 }}>{a.rating.toFixed(1)}</td>
+                    <td>{a.goals}</td>
+                    <td>{a.assists}</td>
+                    <td>{((a.goals + a.assists) / a.games).toFixed(2)}</td>
+                    <td>{a.motm}</td>
+                    {archetypes.some((x) => x.saves) ? <td>{(a.saves / a.games).toFixed(1)}</td> : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            EA&apos;s season totals can&apos;t be split by archetype, so this only covers games the site saved. Goals and assists are
+            the player&apos;s own. Under {MIN_GAMES} games says little.
+          </p>
         </section>
       ) : null}
 

@@ -164,7 +164,7 @@
           "meaning": "broad group only: goalkeeper / defender / midfielder / forward"
         },
         "archetypeid": {
-          "status": "assumed",
+          "status": "verified",
           "meaning": "FC 27 archetype played, numbered in the game's order (keepers, defenders, midfielders, forwards)",
           "codes": {
             "1": "Shot Stopper",
@@ -183,7 +183,8 @@
           },
           "source": "frdceri/clubs-hub lib/lookups.js (see thanks)",
           "evidence": "in our 98 lines 1-2 only on keepers, 3-5 on defenders, 6-10 on midfielders, 11-13 on forwards; mo_nm (a 'target man') plays 13",
-          "todo": "confirm with each player's in-game archetype, then mark verified"
+          "confirmed": "2026-10-11 by the club: dirty8ightt Creator (midfield) and Magician (up front), mo_nm Target",
+          "usedFor": "By archetype table on player pages"
         },
         "rating": {
           "status": "verified",

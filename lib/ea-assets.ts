@@ -22,6 +22,13 @@ export const positionName = (proPos?: string | number | null) => {
   return Number.isFinite(n) && POSITIONS[n] ? POSITIONS[n] : "";
 };
 
+/** FC 27 archetypes by EA's `archetypeid` (from frdceri/clubs-hub, confirmed by the club). */
+const ARCHETYPES = [
+  "", "Shot Stopper", "Sweeper Keeper", "Progressor", "Boss", "Marauder", "Disruptor",
+  "Recycler", "Maestro", "Creator", "Spark", "Magician", "Finisher", "Target",
+];
+export const archetypeName = (id?: number | null) => (id && ARCHETYPES[id]) || (id ? `Archetype ${id}` : "Unknown");
+
 /** Broad group EA records per match. */
 export const groupShort = (pos?: string) =>
   ({ goalkeeper: "GK", defender: "DEF", midfielder: "MID", forward: "FWD" } as Record<string, string>)[pos ?? ""] ?? "";

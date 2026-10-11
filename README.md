@@ -5,7 +5,8 @@ Next.js on Vercel, data in Supabase, near-live: EA checked every 2 minutes while
 
 - **Club**: record, division, season tracker, form, reputation, squad, recent results, tactics and kits
 - **Players**: sortable leaderboard (goals, assists, rating, clean sheets…) and a profile per
-  player with a match-by-match log, clean sheets, goals conceded and saves by type
+  player with a match-by-match log, clean sheets, goals conceded, saves by type and, for
+  players who switch, results per archetype (Creator, Magician…)
 - **Matches**: every game the site has saved, with both clubs' kits, team stats, player
   ratings, goals the CPU scored, keepers' saves by type, AFK flags and the captain
 - **Records**: hall of fame, single-game records, streaks and the hall of shame
