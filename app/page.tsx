@@ -1,20 +1,24 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
 import { loadSettings } from "@/lib/config";
 import { reputationUrl } from "@/lib/ea-assets";
-import { getClub, getMatches, getMembers, getRecords, getTactics, lastPoll } from "@/lib/stats";
+import { getClub, getMatches, getMembers, getRecords, getSeason, getTactics, lastPoll } from "@/lib/stats";
+import { SeasonForm } from "@/components/Forms";
 import { Tactics } from "@/components/Tactics";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [club, members, recent, records, poll, tactics] = await Promise.all([
+  const [club, members, recent, records, poll, tactics, season] = await Promise.all([
     getClub(),
     getMembers(),
     getMatches(5),
     getRecords(),
     lastPoll(),
     getTactics(),
+    getSeason(),
   ]);
+  // the season tracker follows the in-game lobby; EA's own division field lags behind
+  const division = season?.division ?? club.division;
   const settings = loadSettings();
   const playing = members.filter((m) => m.games > 0);
   const top = (key: "goals" | "assists" | "motm") => [...playing].sort((a, b) => b[key] - a[key])[0];
@@ -27,8 +31,8 @@ export default async function Home() {
     { label: "Record", value: `${club.wins}–${club.draws}–${club.losses}`, sub: `W–D–L · ${winPct}% win rate` },
     { label: "Goals for", value: club.goalsFor, sub: `${perGame(club.goalsFor)} per game` },
     { label: "Goals against", value: club.goalsAgainst, sub: `${perGame(club.goalsAgainst)} per game` },
-    { label: "Division", value: club.division ?? "–", sub: `Best ${club.bestDivision ?? "–"} · ${club.promotions} promotion${club.promotions === 1 ? "" : "s"}` },
-    { label: "League points", value: club.points ?? "–", sub: "This season" },
+    { label: "Division", value: division ?? "–", sub: `Best ${club.bestDivision ?? "–"} · ${club.promotions} promotion${club.promotions === 1 ? "" : "s"}, ${club.relegations} relegation${club.relegations === 1 ? "" : "s"}` },
+    { label: "League points", value: club.points ?? "–", sub: "EA total" },
     { label: "Clean sheets", value: club.cleanSheets, sub: `In ${club.played} games` },
     { label: "Skill rating", value: club.skillRating ?? "–", sub: "EA club rating" },
   ];
@@ -39,7 +43,7 @@ export default async function Home() {
         <div className="row" style={{ gap: 28 }}>
           <Crest id={club.crestAssetId} size={150} alt={`${club.name} crest`} />
           <div className="stack" style={{ gap: 10 }}>
-            <span className="eyebrow">EA FC 27 · Clubs · Division {club.division ?? "–"}</span>
+            <span className="eyebrow">EA FC 27 · Clubs · Division {division ?? "–"}</span>
             <h1 className="display">{club.name}</h1>
             {settings.tagline ? <span style={{ fontSize: 19, fontWeight: 500 }}>{settings.tagline}</span> : null}
             <span className="text-2">
@@ -61,6 +65,74 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {season ? (
+        <section className="card stack" style={{ gap: 18 }}>
+          <div className="section-head">
+            <h2 className="display">Division {season.division} season</h2>
+            <span className="muted" style={{ fontSize: 13 }}>Win +3 · Draw +1 · Loss −1 chance</span>
+          </div>
+          <div className="row" style={{ gap: 32, alignItems: "flex-end" }}>
+            <div className="stack" style={{ gap: 8, flex: "2 1 320px" }}>
+              <div className="row between">
+                <span className="text-2">Points to promotion</span>
+                <span className="display num" style={{ fontSize: 40 }}>
+                  {season.points}<span className="muted" style={{ fontSize: 24 }}>/{season.target}</span>
+                </span>
+              </div>
+              <div className="bar" style={{ height: 14 }} role="img" aria-label={`${season.points} of ${season.target} points`}>
+                <div style={{ width: `${Math.min(100, Math.round((season.points / season.target) * 100))}%` }} />
+              </div>
+              <span className="muted" style={{ fontSize: 13 }}>
+                {season.target - season.points > 0
+                  ? `${season.target - season.points} more point${season.target - season.points === 1 ? "" : "s"} to go up: ${Math.ceil((season.target - season.points) / 3)} win${Math.ceil((season.target - season.points) / 3) === 1 ? "" : "s"}`
+                  : "Promotion reached"}
+              </span>
+            </div>
+            <div className="stack" style={{ gap: 8, flex: "1 1 200px" }}>
+              <span className="text-2">Chances left</span>
+              <div className="row" style={{ gap: 10 }} role="img" aria-label={`${season.chances} of ${season.maxChances} chances left`}>
+                {Array.from({ length: season.maxChances }, (_, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      background: i < season.chances ? "var(--accent)" : "transparent",
+                      border: `2px solid ${i < season.chances ? "var(--accent)" : "var(--line-2)"}`,
+                    }}
+                  />
+                ))}
+              </div>
+              <span className="muted" style={{ fontSize: 13 }}>
+                {season.chances === 1 ? "Last chance: one more loss ends the season" : `${season.chances} losses left this season`}
+              </span>
+            </div>
+          </div>
+          {season.results.length ? (
+            <div className="row" style={{ gap: 8 }}>
+              <span className="text-2" style={{ fontSize: 13 }}>This season</span>
+              {season.results.map((r) => (
+                <a key={r.id} href={`/matches/${r.id}`} title={`${r.score} vs ${r.opp}`} style={{ textDecoration: "none" }}>
+                  <ResultBadge r={r.result} />
+                </a>
+              ))}
+            </div>
+          ) : null}
+          {season.events.length ? (
+            <span className="text-2" style={{ fontSize: 14 }}>
+              {season.events.map((e) => (e.kind === "promoted" ? `Promoted to Division ${e.division} (${when(e.ts)})` : `Season ended in Division ${e.division} (${when(e.ts)})`)).join(" · ")}
+            </span>
+          ) : null}
+          <details>
+            <summary style={{ fontSize: 13 }}>Doesn&apos;t match the lobby? Set it from the game</summary>
+            <div style={{ marginTop: 12 }}>
+              <SeasonForm division={season.division} points={season.points} target={season.target} chances={season.chances} />
+            </div>
+          </details>
+        </section>
+      ) : null}
 
       <section className="grid grid-170">
         {kpis.map((k) => (
