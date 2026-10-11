@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
-import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
+import { Crest, Flag, KitShirt, PosLabel, ResultBadge, when } from "@/components/bits";
 import { groupShort } from "@/lib/ea-assets";
-import { getClub, getMatch, getMembers } from "@/lib/stats";
+import { AFK_SECONDS, getClub, getMatch, getMembers, idleLabel, saveBreakdown } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +19,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const members = new Map(memberList.map((x) => [x.gamertag, x]));
   const scorers = players.filter((p) => p.goals > 0).map((p) => (p.goals > 1 ? `${p.player} ×${p.goals}` : p.player));
   const motm = players.find((p) => p.motm);
+  const ourKit = m.our_kit ?? club.kits[0]?.colors;
   const stat = (k: string) => [Number(team.us?.[k] ?? 0), Number(team.them?.[k] ?? 0)];
   const rows = [
     { label: "Shots", v: stat("shots") },
@@ -39,7 +40,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         </span>
         <div className="row" style={{ justifyContent: "center", gap: 28, width: "100%" }}>
           <div className="stack" style={{ flex: "1 1 220px", alignItems: "center", gap: 10 }}>
-            <Crest id={club.crestAssetId} size={104} alt={`${club.name} crest`} />
+            <div className="row" style={{ gap: 6, flexWrap: "nowrap" }}>
+              <Crest id={club.crestAssetId} size={104} alt={`${club.name} crest`} />
+              {ourKit ? <KitShirt colors={ourKit} size={52} /> : null}
+            </div>
             <span className="display" style={{ fontSize: 28, textAlign: "center" }}>{club.name}</span>
             <span className="text-2" style={{ textAlign: "center" }}>{scorers.join(" · ") || "No scorers"}</span>
           </div>
@@ -48,7 +52,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             <ResultBadge r={m.result} />
           </div>
           <div className="stack" style={{ flex: "1 1 220px", alignItems: "center", gap: 10 }}>
-            <Crest id={m.opp_crest} size={104} alt={`${m.opp_name} crest`} />
+            <div className="row" style={{ gap: 6, flexWrap: "nowrap" }}>
+              {m.opp_kit ? <KitShirt colors={m.opp_kit} size={52} /> : null}
+              <Crest id={m.opp_crest} size={104} alt={`${m.opp_name} crest`} />
+            </div>
             <span className="display" style={{ fontSize: 28, textAlign: "center" }}>{m.opp_name}</span>
           </div>
         </div>
@@ -107,6 +114,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         {m.captain === p.player ? <span className="chip chip-ghost">C</span> : null}
                         {p.controls_cpu ? <span className="chip chip-ghost" title="EA added the CPU teammates' stats to this line">+CPU</span> : null}
                         {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
+                        {p.clean_sheet ? <span className="chip chip-ghost" title="EA credited a clean sheet">CS</span> : null}
+                        {p.idle_seconds >= AFK_SECONDS ? (
+                          <span className="chip chip-shame" title="Real-world time EA counted as idle">AFK {idleLabel(p.idle_seconds)}</span>
+                        ) : null}
                       </div>
                     </td>
                     <td>
@@ -120,7 +131,14 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                     <td>{p.goals}</td><td>{p.assists}</td><td>{p.shots}</td>
                     <td>{p.passes_made}{p.pass_attempts !== null ? `/${p.pass_attempts}` : ""}</td>
                     <td>{p.tackles_made}{p.tackle_attempts !== null ? `/${p.tackle_attempts}` : ""}</td>
-                    <td>{p.saves || "–"}</td>
+                    <td>
+                      {p.saves || "–"}
+                      {p.saves ? (
+                        <div className="muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                          {saveBreakdown(p).map((x) => `${x.n} ${x.label.toLowerCase()}`).join(" · ")}
+                        </div>
+                      ) : null}
+                    </td>
                     <td>{p.reds ? <CpuRedButton matchId={m.id} player={p.player} isCpu={cpuReds.has(p.player)} /> : <span className="muted">–</span>}</td>
                   </tr>
                 );

@@ -1,12 +1,12 @@
 import { Crest, Flag } from "@/components/bits";
-import { getClub, getMembers, getRecords, savedMatchCount } from "@/lib/stats";
+import { getClub, getMembers, getRecords, getTracked, savedMatchCount } from "@/lib/stats";
 import { when } from "@/components/bits";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Records" };
 
 export default async function RecordsPage() {
-  const [club, allMembers, rec, saved] = await Promise.all([getClub(), getMembers(), getRecords(), savedMatchCount()]);
+  const [club, allMembers, rec, saved, tracked] = await Promise.all([getClub(), getMembers(), getRecords(), savedMatchCount(), getTracked()]);
   const members = allMembers.filter((m) => m.games > 0);
   const by = <K extends keyof (typeof members)[number]>(key: K, min = 0, dir: 1 | -1 = 1) =>
     [...members].filter((m) => m.games >= min).sort((a, b) => (Number(b[key]) - Number(a[key])) * dir);
@@ -26,6 +26,12 @@ export default async function RecordsPage() {
     },
     { cat: "Best passer", note: "pass completion, 5+ games", list: by("passPct", 5), v: (m: any) => `${m.passPct}%` },
     { cat: "Most clinical", note: "shot success, 5+ games", list: by("shotPct", 5), v: (m: any) => `${m.shotPct}%` },
+    {
+      cat: "Most clean sheets",
+      note: "saved games",
+      list: [...members].filter((m) => tracked.get(m.gamertag)?.cleanSheets).sort((a, b) => tracked.get(b.gamertag)!.cleanSheets - tracked.get(a.gamertag)!.cleanSheets),
+      v: (m: any) => tracked.get(m.gamertag)?.cleanSheets ?? 0,
+    },
   ];
 
   const shame = [

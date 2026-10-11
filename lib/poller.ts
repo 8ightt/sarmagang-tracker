@@ -23,6 +23,12 @@ export function cpuController(players: Record<string, string>[]): string | null 
   return top.att >= minAttempts && top.att >= 2.2 * Math.max(second, 1) ? top.name : null;
 }
 
+/** The kit colours EA sends with a match: body, trim, sleeve, extra. */
+function kitColors(club?: EaMatch["clubs"][string]): number[] | null {
+  const kit = club?.details?.customKit;
+  return kit ? [kit.kitColor1, kit.kitColor2, kit.kitColor3, kit.kitColor4].map(n) : null;
+}
+
 /** Saves one match; returns true if it wasn't in the database yet. */
 async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
   const us = m.clubs[CLUB_ID];
@@ -48,6 +54,8 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
     dnf: n(us.winnerByDnf) === 1,
     minutes: Math.round(Math.max(0, ...ours.map((p) => n(p.secondsPlayed))) / 60),
     team: db.json({ us: m.aggregate?.[CLUB_ID] ?? null, them: m.aggregate?.[oppId] ?? null } as postgres.JSONValue),
+    our_kit: kitColors(us),
+    opp_kit: kitColors(opp),
     raw: db.json(m as unknown as postgres.JSONValue),
   };
   const players = ours.map((p) => ({
@@ -68,12 +76,23 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
     motm: n(p.mom) === 1,
     seconds: n(p.secondsPlayed),
     controls_cpu: p.playername === controller,
+    goals_conceded: n(p.goalsconceded),
+    clean_sheet: n(p.cleansheetsany) > 0,
+    idle_seconds: n(p.realtimeidle),
+    real_seconds: n(p.realtimegame),
+    reflex_saves: n(p.reflexSaves),
+    parry_saves: n(p.parrySaves),
+    punch_saves: n(p.punchSaves),
+    dive_saves: n(p.ballDiveSaves),
+    cross_saves: n(p.crossSaves),
+    direction_saves: n(p.goodDirectionSaves),
   }));
 
   return db.begin(async (tx) => {
     const [res] = await tx`
       insert into matches ${tx(row)}
-      on conflict (id) do update set raw = excluded.raw, team = excluded.team, minutes = excluded.minutes
+      on conflict (id) do update set raw = excluded.raw, team = excluded.team, minutes = excluded.minutes,
+        our_kit = excluded.our_kit, opp_kit = excluded.opp_kit
       returning (xmax = 0) as inserted`;
     if (players.length) {
       await tx`
@@ -83,7 +102,11 @@ async function saveMatch(m: EaMatch, matchType: string): Promise<boolean> {
           assists = excluded.assists, shots = excluded.shots, passes_made = excluded.passes_made,
           pass_attempts = excluded.pass_attempts, tackles_made = excluded.tackles_made,
           tackle_attempts = excluded.tackle_attempts, saves = excluded.saves, reds = excluded.reds,
-          motm = excluded.motm, seconds = excluded.seconds, controls_cpu = excluded.controls_cpu`;
+          motm = excluded.motm, seconds = excluded.seconds, controls_cpu = excluded.controls_cpu,
+          goals_conceded = excluded.goals_conceded, clean_sheet = excluded.clean_sheet,
+          idle_seconds = excluded.idle_seconds, real_seconds = excluded.real_seconds,
+          reflex_saves = excluded.reflex_saves, parry_saves = excluded.parry_saves, punch_saves = excluded.punch_saves,
+          dive_saves = excluded.dive_saves, cross_saves = excluded.cross_saves, direction_saves = excluded.direction_saves`;
     }
     return Boolean(res?.inserted);
   });

@@ -1,12 +1,13 @@
 import { Leaderboard } from "@/components/Leaderboard";
 import { flagUrl } from "@/lib/ea-assets";
-import { getMembers } from "@/lib/stats";
+import { getMembers, getTracked } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Players" };
 
 export default async function PlayersPage() {
-  const rows = (await getMembers())
+  const [members, tracked] = await Promise.all([getMembers(), getTracked()]);
+  const rows = members
     .filter((m) => m.games > 0)
     .map((m) => ({
       gamertag: m.gamertag,
@@ -23,6 +24,7 @@ export default async function PlayersPage() {
       motm: m.motm,
       passPct: m.passPct,
       tackles: m.tackles,
+      cleanSheets: tracked.get(m.gamertag)?.cleanSheets ?? 0,
       controlsCpu: m.controlsCpu,
     }));
   return (

@@ -30,6 +30,9 @@ export type MatchRow = {
   minutes: number;
   team: { us: Record<string, number> | null; them: Record<string, number> | null } | null;
   captain?: string | null;
+  /** kit colours EA sent with the match (body, trim, sleeve, extra); null before migration 0005 */
+  our_kit?: number[] | null;
+  opp_kit?: number[] | null;
 };
 
 export type MatchPlayer = {
@@ -55,7 +58,41 @@ export type MatchPlayer = {
   controls_cpu: boolean;
   /** true when the club corrected this line from the in-game screen */
   fixed: boolean;
+  /** the fields below are 0/false until supabase/migrations/0005 has been run */
+  goals_conceded: number;
+  clean_sheet: boolean;
+  /** real-world seconds EA counted as idle */
+  idle_seconds: number;
+  real_seconds: number;
+  reflex_saves: number;
+  parry_saves: number;
+  punch_saves: number;
+  dive_saves: number;
+  cross_saves: number;
+  direction_saves: number;
 };
+
+/** Idle this long in one game counts as AFK. */
+export const AFK_SECONDS = 60;
+
+export const SAVE_TYPES = [
+  { key: "reflex_saves", label: "Reflex" },
+  { key: "dive_saves", label: "Diving" },
+  { key: "parry_saves", label: "Parry" },
+  { key: "punch_saves", label: "Punch" },
+  { key: "cross_saves", label: "Cross claimed" },
+  { key: "direction_saves", label: "Positioning" },
+] as const;
+
+/** A keeper's saves split by type; EA leaves some saves untyped ("Other"). */
+export function saveBreakdown(p: Pick<MatchPlayer, "saves" | (typeof SAVE_TYPES)[number]["key"]>) {
+  const parts: { label: string; n: number }[] = SAVE_TYPES.map((t) => ({ label: t.label, n: Number(p[t.key] ?? 0) }));
+  const other = p.saves - parts.reduce((a, b) => a + b.n, 0);
+  if (other > 0) parts.push({ label: "Other", n: other });
+  return parts.filter((x) => x.n > 0);
+}
+
+export const idleLabel = (secs: number) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
 
 export type Club = {
   name: string;
@@ -221,19 +258,30 @@ export const getMembers = cache(async (): Promise<Member[]> => {
     .sort((a, b) => b.games - a.games);
 });
 
+/** Whether supabase/migrations/0005 (conceded, idle time, save types, kits) has been run. */
+const extrasReady = cache(async (): Promise<boolean> => {
+  const [r] = await sql()`
+    select exists (select 1 from information_schema.columns where table_name = 'matches' and column_name = 'opp_kit') as ok`;
+  return Boolean(r?.ok);
+});
+
+const kitColumns = (ready: boolean) => sql().unsafe(ready ? "m.our_kit, m.opp_kit" : "null as our_kit, null as opp_kit");
+
 export async function getMatches(limit = 50): Promise<MatchRow[]> {
+  const kits = kitColumns(await extrasReady());
   return (await sql()`
     select m.id, m.ts, m.match_type, m.opp_id, m.opp_name, m.opp_crest, m.goals_for, m.goals_against,
-           m.result, m.dnf, m.minutes, m.team, n.captain
+           m.result, m.dnf, m.minutes, m.team, n.captain, ${kits}
     from matches m left join match_notes n on n.match_id = m.id
     order by m.ts desc limit ${limit}`) as unknown as MatchRow[];
 }
 
 export async function getMatch(id: string) {
   const db = sql();
+  const kits = kitColumns(await extrasReady());
   const [match] = (await db`
     select m.id, m.ts, m.match_type, m.opp_id, m.opp_name, m.opp_crest, m.goals_for, m.goals_against,
-           m.result, m.dnf, m.minutes, m.team, n.captain
+           m.result, m.dnf, m.minutes, m.team, n.captain, ${kits}
     from matches m left join match_notes n on n.match_id = m.id where m.id = ${id}`) as unknown as MatchRow[];
   if (!match) return null;
   const t = await playersTable();
@@ -259,6 +307,43 @@ export async function getPlayerLog(gamertag: string, limit = 20): Promise<LogRow
     from ${db(t)} mp join matches m on m.id = mp.match_id
     where mp.player = ${gamertag} order by m.ts desc limit ${limit}`) as unknown as LogRow[];
 }
+
+export type Tracked = {
+  games: number;
+  conceded: number;
+  cleanSheets: number;
+  afkGames: number;
+  idleSeconds: number;
+  saves: number;
+  saveTypes: { label: string; n: number }[];
+};
+
+/** Per-player totals over the saved matches, for stats EA's season totals don't have. */
+export const getTracked = cache(async (): Promise<Map<string, Tracked>> => {
+  if (!(await extrasReady())) return new Map();
+  const db = sql();
+  const rows = await db`
+    select player, count(*)::int as games, sum(goals_conceded)::int as conceded, sum(clean_sheet::int)::int as clean_sheets,
+           count(*) filter (where idle_seconds >= ${AFK_SECONDS})::int as afk_games, sum(idle_seconds)::int as idle_seconds,
+           sum(saves)::int as saves, sum(reflex_saves)::int as reflex_saves, sum(dive_saves)::int as dive_saves,
+           sum(parry_saves)::int as parry_saves, sum(punch_saves)::int as punch_saves,
+           sum(cross_saves)::int as cross_saves, sum(direction_saves)::int as direction_saves
+    from ${db(await playersTable())} group by player`;
+  return new Map(
+    rows.map((r) => [
+      r.player as string,
+      {
+        games: r.games,
+        conceded: r.conceded,
+        cleanSheets: r.clean_sheets,
+        afkGames: r.afk_games,
+        idleSeconds: r.idle_seconds,
+        saves: r.saves,
+        saveTypes: saveBreakdown(r as unknown as MatchPlayer),
+      },
+    ]),
+  );
+});
 
 export async function getSeasonCpuReds(player: string): Promise<number> {
   const [r] = await sql()`select amount from corrections where match_id is null and player = ${player} and stat = 'reds'`;
@@ -344,6 +429,16 @@ export async function getRecords() {
   const reds = await db`select player, sum(reds)::int as n from ${db(t)} group by player having sum(reds) > 0 order by n desc`;
   if (reds.length)
     out.shame.push({ label: "Red cards in saved games", value: String(reds[0].n), who: reds[0].player as string, detail: reds.map((r) => `${r.player} ${r.n}`).join(" · ") });
+
+  if (await extrasReady()) {
+    const idle = await best(db`
+      select mp.player, mp.match_id, mp.idle_seconds, m.ts, m.opp_name, m.opp_crest, m.goals_for, m.goals_against, m.dnf
+      from ${db(t)} mp join matches m on m.id = mp.match_id
+      where mp.idle_seconds >= ${AFK_SECONDS} order by mp.idle_seconds desc limit 1`);
+    if (idle) {
+      out.shame.push({ label: "Longest AFK", value: idleLabel(idle.idle_seconds), who: idle.player, detail: vs(idle), matchId: idle.match_id, crest: idle.opp_crest });
+    }
+  }
 
   let w = 0, u = 0, l = 0;
   for (const m of matches) {

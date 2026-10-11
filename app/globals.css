@@ -101,6 +101,7 @@ a.card:hover { border-color: var(--line-2); }
 .badge-L { background: var(--loss); color: var(--loss-text); }
 .chip { display: inline-block; font-size: 12px; font-weight: 800; border-radius: 4px; padding: 2px 6px; background: var(--accent); color: var(--on-accent); }
 .chip-ghost { background: var(--surface-2); color: var(--text-2); }
+.chip-shame { background: var(--shame-line); color: var(--shame); }
 
 /* tables */
 .table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }

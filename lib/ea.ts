@@ -38,7 +38,7 @@ export type EaMatch = {
       goalsAgainst: string;
       result?: string;
       winnerByDnf?: string;
-      details?: { name?: string; clubId?: number; teamId?: number; customKit?: { crestAssetId?: string } };
+      details?: { name?: string; clubId?: number; teamId?: number; customKit?: { crestAssetId?: string; kitColor1?: string; kitColor2?: string; kitColor3?: string; kitColor4?: string } };
     }
   >;
   players: Record<string, Record<string, Record<string, string>>>;

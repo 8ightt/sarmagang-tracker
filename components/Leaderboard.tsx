@@ -17,6 +17,8 @@ export type BoardRow = {
   motm: number;
   passPct: number;
   tackles: number;
+  /** from the saved matches, not EA's season totals */
+  cleanSheets: number;
   controlsCpu: boolean;
 };
 
@@ -28,6 +30,7 @@ const METRICS = [
   { id: "motm", label: "MOTM" },
   { id: "passPct", label: "Pass %", fmt: (v: number) => `${v}%` },
   { id: "tackles", label: "Tackles", perGame: true, cpuSkewed: true },
+  { id: "cleanSheets", label: "Clean sheets", note: "in saved games" },
 ] as const;
 
 type MetricId = (typeof METRICS)[number]["id"];
@@ -68,7 +71,7 @@ export function Leaderboard({ rows }: { rows: BoardRow[] }) {
               <div style={{ minWidth: 120, textAlign: "right" }}>
                 <div className="display num" style={{ fontSize: 36, fontWeight: 900 }}>{"fmt" in m ? m.fmt(v) : v}</div>
                 <div className="muted" style={{ fontSize: 13 }}>
-                  {"perGame" in m && m.perGame && r.games ? `${(v / r.games).toFixed(2)} per game` : m.label}
+                  {"perGame" in m && m.perGame && r.games ? `${(v / r.games).toFixed(2)} per game` : "note" in m ? m.note : m.label}
                   {skewed ? " · incl. CPU" : ""}
                 </div>
               </div>

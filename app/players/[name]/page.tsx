@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
 import { groupShort } from "@/lib/ea-assets";
-import { getMembers, getPlayerLog, getSeasonCpuReds } from "@/lib/stats";
+import { AFK_SECONDS, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const members = await getMembers();
   const p = members.find((m) => m.gamertag === name);
   if (!p) notFound();
-  const [log, seasonCpuReds] = await Promise.all([getPlayerLog(name, 20), getSeasonCpuReds(name)]);
+  const [log, seasonCpuReds, tracked] = await Promise.all([getPlayerLog(name, 20), getSeasonCpuReds(name), getTracked()]);
+  const t = tracked.get(name);
   const playing = members.filter((m) => m.games > 0);
   const squadRating = playing.length ? playing.reduce((s, m) => s + m.rating, 0) / playing.length : 0;
   const per = (v: number) => (p.games ? (v / p.games).toFixed(2) : "0");
@@ -42,7 +43,15 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
       value: p.redsCpu ? `${p.reds}` : p.redsEa,
       sub: p.redsCpu ? `${p.redsEa} on EA · ${p.redsCpu} were the CPU's` : p.controlsCpu ? "EA total · may include CPU cards" : "",
     },
+    ...(t?.games
+      ? [
+          { label: "Clean sheets", value: t.cleanSheets, sub: `in ${t.games} saved games` },
+          { label: "Conceded", value: t.conceded, sub: `${(t.conceded / t.games).toFixed(1)} per game while on the pitch` },
+        ]
+      : []),
+    ...(t?.afkGames ? [{ label: "AFK games", value: t.afkGames, sub: `${idleLabel(t.idleSeconds)} idle in saved games` }] : []),
   ];
+  const maxSave = Math.max(1, ...(t?.saveTypes ?? []).map((x) => x.n));
 
   return (
     <main className="wrap">
@@ -117,6 +126,22 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
         </div>
       </section>
 
+      {t?.saves ? (
+        <section className="card stack">
+          <div className="section-head">
+            <h2 className="display" style={{ fontSize: 26 }}>Saves by type</h2>
+            <span className="muted" style={{ fontSize: 13 }}>{t.saves} saves in {t.games} saved games</span>
+          </div>
+          {t.saveTypes.map((x) => (
+            <div key={x.label} className="stack" style={{ gap: 6 }}>
+              <div className="row between"><span>{x.label}</span><span className="num">{x.n}</span></div>
+              <div className="bar"><div style={{ width: `${Math.round((x.n / maxSave) * 100)}%` }} /></div>
+            </div>
+          ))}
+          <span className="muted" style={{ fontSize: 13 }}>EA doesn&apos;t give every save a type; those are counted as Other.</span>
+        </section>
+      ) : null}
+
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Match log</h2>
@@ -140,6 +165,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                         {m.motm ? <span className="chip">MOTM</span> : null}
                         {m.controls_cpu ? <span className="chip chip-ghost">+CPU</span> : null}
                         {m.fixed ? <span className="chip chip-ghost">Real stats</span> : null}
+                        {m.clean_sheet ? <span className="chip chip-ghost">CS</span> : null}
+                        {m.idle_seconds >= AFK_SECONDS ? <span className="chip chip-shame">AFK {idleLabel(m.idle_seconds)}</span> : null}
                       </a>
                     </td>
                     <td>{m.position ? <PosLabel position={m.position} /> : <span className="text-2">{groupShort(m.pos)}</span>}</td>
