@@ -106,7 +106,10 @@ Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
 - **Season dates**: each EA season's dates and when its end-of-season Playoffs open go in
   `config/settings.json` under `seasons` (copied from the in-game Season Info screen); the
   club page shows them with a countdown. These Season Playoffs are separate from the
-  promotion playoff and are played in the highest division the club reached.
+  promotion playoff: about 15 games in the highest division the club reached, until the
+  season ends. While they run, the club page shows a Playoffs card (games, W-D-L, points,
+  Skill Rating change) and league points and chances stay paused. Playoff games still count
+  in every other stat.
 
 ### 6. Automatic migrations
 

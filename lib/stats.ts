@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { cache } from "react";
-import { CLUB_ID, loadSettings } from "./config";
+import { CLUB_ID, currentSeason, loadSettings, playoffsWindow } from "./config";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
 import { positionName } from "./ea-assets";
@@ -529,6 +529,7 @@ export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
  * - Losing the last chance means a relegation match: win and you stay (with some chances
  *   back), lose and you go down a division.
  * Points targets per division and the chances you get back are in config/settings.json.
+ * Games during a season's end-of-season Playoffs are left out (see getSeasonPlayoffs).
  */
 export const getSeason = cache(async (): Promise<Season | null> => {
   const db = sql();
@@ -562,8 +563,11 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     results = [];
   };
 
+  // games in the end-of-season Playoffs don't move league points or chances
+  const windows = loadSettings().seasons.map(playoffsWindow).filter((w) => w !== null);
   for (const g of games) {
     const ts = Number(g.ts);
+    if (windows.some((w) => ts >= w.from && ts <= w.to)) continue;
     results.push({ id: g.id, ts, result: g.result, opp: g.opp_name, score: `${g.goals_for}–${g.goals_against}`, type: g.match_type });
 
     if (phase === "playoffs") {
@@ -613,5 +617,65 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     events,
     setAt: new Date(state.updated_at).getTime(),
     setBy: (state.updated_by as string) ?? null,
+  };
+});
+
+export type SeasonPlayoffs = {
+  name: string;
+  from: number;
+  to: number;
+  planned: number | null;
+  games: { id: string; ts: number; result: "W" | "D" | "L"; opp: string; score: string }[];
+  w: number;
+  d: number;
+  l: number;
+  points: number;
+  gf: number;
+  ga: number;
+  /** our Skill Rating saved with the last game before the Playoffs, and the latest one */
+  srStart: number | null;
+  srNow: number | null;
+};
+
+/**
+ * The current season's end-of-season Playoffs: every league or playoff game between the
+ * start in config/settings.json and the season's last day. Null before they start.
+ */
+export const getSeasonPlayoffs = cache(async (): Promise<SeasonPlayoffs | null> => {
+  const x = currentSeason();
+  const win = x ? playoffsWindow(x) : null;
+  if (!x || !win || Date.now() / 1000 < win.from) return null;
+  const db = sql();
+  const [srCols] = await db`
+    select exists (select 1 from information_schema.columns where table_name = 'matches' and column_name = 'our_sr') as ok`;
+  const rows = await db`
+    select id, ts, result, opp_name, goals_for, goals_against from matches
+    where match_type in ('leagueMatch', 'playoffMatch') and ts >= ${win.from} and ts <= ${win.to} order by ts asc`;
+  const [before] = srCols?.ok
+    ? await db`select our_sr from matches where our_sr is not null and ts < ${win.from} order by ts desc limit 1`
+    : [];
+  const club = await getClub();
+  const games = rows.map((r) => ({
+    id: r.id as string,
+    ts: Number(r.ts),
+    result: r.result as "W" | "D" | "L",
+    opp: r.opp_name as string,
+    score: `${r.goals_for}–${r.goals_against}`,
+  }));
+  const count = (r: "W" | "D" | "L") => games.filter((g) => g.result === r).length;
+  return {
+    name: x.name,
+    from: win.from,
+    to: win.to,
+    planned: x.playoffsMatches ?? null,
+    games,
+    w: count("W"),
+    d: count("D"),
+    l: count("L"),
+    points: games.reduce((s, g) => s + POINTS[g.result], 0),
+    gf: rows.reduce((s, r) => s + Number(r.goals_for), 0),
+    ga: rows.reduce((s, r) => s + Number(r.goals_against), 0),
+    srStart: before?.our_sr ?? null,
+    srNow: club.skillRating,
   };
 });

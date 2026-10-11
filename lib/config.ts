@@ -40,7 +40,15 @@ export type ClubSeason = {
   end: string;
   /** when the end-of-season Playoffs open, ISO time (the lobby only shows a countdown) */
   playoffsStart?: string;
+  /** games in the Season Playoffs (about 15, played until the season ends) */
+  playoffsMatches?: number;
 };
+
+/** Start and end (seconds) of a season's end-of-season Playoffs, if known. */
+export function playoffsWindow(x: ClubSeason): { from: number; to: number } | null {
+  if (!x.playoffsStart) return null;
+  return { from: Date.parse(x.playoffsStart) / 1000, to: Date.parse(`${x.end}T23:59:59Z`) / 1000 };
+}
 
 export type SiteSettings = {
   tagline?: string;

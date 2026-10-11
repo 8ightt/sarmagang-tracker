@@ -1,14 +1,14 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
-import { currentSeason, loadSettings } from "@/lib/config";
+import { currentSeason, loadSettings, playoffsWindow } from "@/lib/config";
 import { reputationUrl } from "@/lib/ea-assets";
-import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getTactics, lastPoll } from "@/lib/stats";
+import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, lastPoll } from "@/lib/stats";
 import { SeasonForm } from "@/components/Forms";
 import { Tactics } from "@/components/Tactics";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [club, members, recent, records, poll, tactics, season] = await Promise.all([
+  const [club, members, recent, records, poll, tactics, season, playoffs] = await Promise.all([
     getClub(),
     getMembers(),
     getMatches(5),
@@ -16,14 +16,16 @@ export default async function Home() {
     lastPoll(),
     getTactics(),
     getSeason(),
+    getSeasonPlayoffs(),
   ]);
   // the season tracker follows the in-game lobby; EA's own division field lags behind
   const division = season?.division ?? club.division;
   const settings = loadSettings();
   const clubSeason = currentSeason();
   const nowSec = Date.now() / 1000;
-  const playoffsAt = clubSeason?.playoffsStart ? Date.parse(clubSeason.playoffsStart) / 1000 : null;
-  const seasonEnd = clubSeason ? Date.parse(`${clubSeason.end}T23:59:59`) / 1000 : null;
+  const playoffsWin = clubSeason ? playoffsWindow(clubSeason) : null;
+  const playoffsAt = playoffsWin?.from ?? null;
+  const seasonEnd = clubSeason ? (playoffsWin?.to ?? Date.parse(`${clubSeason.end}T23:59:59Z`) / 1000) : null;
   const dayLabel = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   const countdown = (secs: number) => {
     const d = Math.floor(secs / 86400);
@@ -39,7 +41,7 @@ export default async function Home() {
           ? ""
           : nowSec < playoffsAt
             ? ` · Season Playoffs start in about ${countdown(playoffsAt - nowSec)}, in the highest division reached`
-            : " · Season Playoffs are on");
+            : " · Season Playoffs are on: league points and chances are paused");
   const playing = members.filter((m) => m.games > 0);
   const top = (key: "goals" | "assists" | "motm") => [...playing].sort((a, b) => b[key] - a[key])[0];
   const lethal = [...playing].filter((m) => m.games >= 10).sort((a, b) => (b.goals + b.assists) / b.games - (a.goals + a.assists) / a.games)[0];
@@ -85,6 +87,60 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {playoffs ? (
+        <section className="card stack" style={{ gap: 18, border: "1px solid var(--accent)" }}>
+          <div className="section-head">
+            <h2 className="display">{playoffs.name} Playoffs</h2>
+            <span className="muted" style={{ fontSize: 13 }}>
+              {division !== null ? `${divisionName(division)} · ` : ""}until {new Date(playoffs.to * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}
+            </span>
+          </div>
+          <div className="grid grid-170">
+            <div>
+              <div className="kpi-label">Played</div>
+              <div className="display kpi-value num">
+                {playoffs.games.length}
+                {playoffs.planned ? <span className="muted" style={{ fontSize: 24 }}>/{playoffs.planned}</span> : null}
+              </div>
+              <div className="kpi-sub">{playoffs.w}-{playoffs.d}-{playoffs.l} W-D-L</div>
+            </div>
+            <div>
+              <div className="kpi-label">Points</div>
+              <div className="display kpi-value num">{playoffs.points}</div>
+              <div className="kpi-sub">Win 3 · Draw 1</div>
+            </div>
+            <div>
+              <div className="kpi-label">Goals</div>
+              <div className="display kpi-value num">{playoffs.gf}–{playoffs.ga}</div>
+              <div className="kpi-sub">for–against</div>
+            </div>
+            <div>
+              <div className="kpi-label">Skill Rating</div>
+              <div className="display kpi-value num">{playoffs.srNow ?? "–"}</div>
+              <div className="kpi-sub">
+                {playoffs.srStart !== null && playoffs.srNow !== null
+                  ? `${playoffs.srNow - playoffs.srStart >= 0 ? "+" : ""}${playoffs.srNow - playoffs.srStart} since the Playoffs started`
+                  : "EA club rating"}
+              </div>
+            </div>
+          </div>
+          {playoffs.games.length ? (
+            <div className="row" style={{ gap: 8 }}>
+              <span className="text-2" style={{ fontSize: 13 }}>Playoff games</span>
+              {playoffs.games.map((g) => (
+                <a key={g.id} href={`/matches/${g.id}`} title={`${g.score} vs ${g.opp}`} style={{ textDecoration: "none" }}>
+                  <ResultBadge r={g.result} />
+                </a>
+              ))}
+            </div>
+          ) : null}
+          <span className="muted" style={{ fontSize: 13 }}>
+            Played in the highest division reached this season. The final placing (top 1%, 5%, 10%, 25%, 50%) decides the
+            rewards and where the club starts next season.
+          </span>
+        </section>
+      ) : null}
 
       {season ? (
         <section className="card stack" style={{ gap: 18 }}>
