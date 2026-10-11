@@ -361,8 +361,8 @@
     },
     "allTimeLeaderboard/search?clubName=": {
       "currentDivision": {
-        "status": "unknown",
-        "meaning": "says 5 while our season tracker says Division 4; check which is right in-game"
+        "status": "useless",
+        "meaning": "says 5, but the in-game League Lobby showed Division 4 (4/9 pts, 3 chances) on 2026-10-11, matching our season tracker; don't use it for the current division"
       },
       "bestDivision": {
         "status": "assumed",
