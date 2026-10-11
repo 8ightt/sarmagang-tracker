@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
-import { archetypeName, groupShort } from "@/lib/ea-assets";
+import { archetypeGroup, archetypeName, groupShort } from "@/lib/ea-assets";
 import { MIN_GAMES } from "@/lib/insights";
-import { AFK_SECONDS, getArchetypes, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
+import { AFK_SECONDS, getArchetypeSeason, getArchetypes, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +16,14 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const members = await getMembers();
   const p = members.find((m) => m.gamertag === name);
   if (!p) notFound();
-  const [log, seasonCpuReds, tracked, archetypes] = await Promise.all([
+  const [log, seasonCpuReds, tracked, archetypes, byArchetype] = await Promise.all([
     getPlayerLog(name, 20),
     getSeasonCpuReds(name),
     getTracked(),
     getArchetypes(name),
+    getArchetypeSeason(name),
   ]);
+  const currentArchetype = log[0]?.archetype ?? null;
   const t = tracked.get(name);
   const playing = members.filter((m) => m.games > 0);
   const squadRating = playing.length ? playing.reduce((s, m) => s + m.rating, 0) / playing.length : 0;
@@ -149,10 +151,81 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
         </section>
       ) : null}
 
+      {byArchetype ? (
+        <section className="stack">
+          <div className="section-head">
+            <h2 className="display">{byArchetype.season} by archetype</h2>
+            <span className="muted" style={{ fontSize: 13 }}>Whole season, most played first</span>
+          </div>
+          <div className="grid grid-270">
+            {byArchetype.rows.map((a) => {
+              const t = a.total;
+              const g = a.inGame;
+              const keeper = archetypeGroup(a.archetype) === "Keeper";
+              const total = byArchetype.rows.reduce((n, x) => n + x.total.games, 0);
+              const stats: [string, string | number][] = keeper
+                ? [
+                    ["Saves", t.saves],
+                    ["Saves per game", t.games ? (t.saves / t.games).toFixed(1) : "–"],
+                    ["Conceded", t.conceded],
+                    ["Conceded per game", t.games ? (t.conceded / t.games).toFixed(1) : "–"],
+                    ["Clean sheets", t.cleanSheets],
+                    ["Save %", g?.savePct !== undefined ? `${g.savePct}%` : "–"],
+                    ["MOTM", t.motm],
+                  ]
+                : [
+                    ["Goals", t.goals],
+                    ["Assists", t.assists],
+                    ["G+A per game", t.games ? ((t.goals + t.assists) / t.games).toFixed(2) : "–"],
+                    ["MOTM", t.motm],
+                    ["Passes", t.passes],
+                    ["Tackles", t.tackles],
+                    ["Interceptions", g?.interceptions ?? "–"],
+                    ["Shots per game", g?.avgShots ?? "–"],
+                    ["Conversion", g?.conversionPct !== undefined ? `${g.conversionPct}%` : "–"],
+                    ["Pass success", g?.passPct !== undefined ? `${g.passPct}%` : "–"],
+                    ["Tackle success", g?.tacklePct !== undefined ? `${g.tacklePct}%` : "–"],
+                  ];
+              return (
+                <div key={a.archetype} className="card stack" style={{ gap: 14, border: a.archetype === currentArchetype ? "1px solid var(--accent)" : undefined }}>
+                  <div className="row between" style={{ alignItems: "flex-start" }}>
+                    <div className="stack" style={{ gap: 2 }}>
+                      <span className="kpi-label">{archetypeGroup(a.archetype)}</span>
+                      <strong className="display" style={{ fontSize: 24 }}>{archetypeName(a.archetype)}</strong>
+                    </div>
+                    {a.archetype === currentArchetype ? <span className="chip">Current</span> : null}
+                  </div>
+                  <div className="stack" style={{ gap: 6 }}>
+                    <div className="row between">
+                      <span className="text-2">Games</span>
+                      <span className="display num" style={{ fontSize: 32, lineHeight: 1 }}>{t.games}</span>
+                    </div>
+                    <div className="bar" role="img" aria-label={`${t.games} of ${total} games`}>
+                      <div style={{ width: `${total ? Math.round((t.games / total) * 100) : 0}%` }} />
+                    </div>
+                    <span className="muted" style={{ fontSize: 12 }}>{total ? Math.round((t.games / total) * 100) : 0}% of the season</span>
+                  </div>
+                  <dl className="arch-stats">
+                    {stats.map(([k, v]) => (
+                      <div key={k}><dt>{k}</dt><dd className="num">{v}</dd></div>
+                    ))}
+                  </dl>
+                </div>
+              );
+            })}
+          </div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            From the in-game Archetypes › Statistics screen ({when(byArchetype.asOf)}), plus every game the site saved since.
+            Percentages and shots are the game&apos;s, as of then. Goals and assists here are EA&apos;s, so they include the CPU&apos;s for
+            whoever runs it.
+          </p>
+        </section>
+      ) : null}
+
       {archetypes.length > 1 ? (
         <section className="stack">
           <div className="section-head">
-            <h2 className="display">By archetype</h2>
+            <h2 className="display">{byArchetype ? "Saved games by archetype" : "By archetype"}</h2>
             <span className="muted" style={{ fontSize: 13 }}>From the saved games, most played first</span>
           </div>
           <div className="table-box">
@@ -181,8 +254,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
             </table>
           </div>
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-            EA&apos;s season totals can&apos;t be split by archetype, so this only covers games the site saved. Goals and assists are
-            the player&apos;s own. Under {MIN_GAMES} games says little.
+            {byArchetype ? "Only the games the site saved, with results and ratings the in-game screen doesn't show." : "EA's season totals can't be split by archetype, so this only covers games the site saved."}{" "}
+            Goals and assists are the player&apos;s own. Under {MIN_GAMES} games says little.
           </p>
         </section>
       ) : null}

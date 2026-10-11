@@ -31,6 +31,8 @@ const ARCHETYPES = [
   "", "Shot Stopper", "Sweeper Keeper", "Progressor", "Boss", "Marauder", "Disruptor",
   "Recycler", "Maestro", "Creator", "Spark", "Magician", "Finisher", "Target",
 ];
+/** The position group an archetype belongs to, as the in-game archetype screen groups them. */
+export const archetypeGroup = (id: number) => (id <= 2 ? "Keeper" : id <= 6 ? "Defender" : id <= 9 ? "Midfielder" : "Forward");
 export const archetypeName = (id?: number | null) => (id && ARCHETYPES[id]) || (id ? `Archetype ${id}` : "Unknown");
 
 /** Broad group EA records per match. */

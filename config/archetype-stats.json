@@ -1,0 +1,22 @@
+{
+  "_readme": "Season totals per archetype, copied from the in-game Archetypes > Statistics screen (one screenshot per archetype). asOf is when the screenshots were taken: games the site saves after that are added on top. Percentages and averages are the game's own, as of asOf.",
+  "players": {
+    "mo_nm": {
+      "season": "Season 1",
+      "asOf": "2026-10-11T21:24:00+02:00",
+      "archetypes": {
+        "13": {
+          "matches": 13, "goals": 16, "assists": 3, "motm": 2, "passesMade": 140, "tackles": 16, "interceptions": 10,
+          "conversionPct": 38, "passPct": 75, "tacklePct": 34, "avgPasses": 14.3, "avgTackles": 3.5, "avgShots": 3.2
+        },
+        "12": {
+          "matches": 20, "goals": 19, "assists": 10, "motm": 2, "passesMade": 242, "tackles": 11, "interceptions": 16,
+          "conversionPct": 38, "passPct": 80, "tacklePct": 18, "avgPasses": 14.9, "avgTackles": 3.0, "avgShots": 2.5
+        },
+        "2": {
+          "matches": 7, "motm": 1, "saves": 51, "cleanSheets": 0, "goalsConceded": 11, "savePct": 82, "avgSaves": 7.3
+        }
+      }
+    }
+  }
+}

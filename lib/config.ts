@@ -1,3 +1,4 @@
+import archetypeStats from "@/config/archetype-stats.json";
 import siteSettings from "@/config/settings.json";
 
 export const CLUB_ID = process.env.CLUB_ID ?? "837026";
@@ -115,4 +116,33 @@ export function matchKind(ts: number, matchType: string, promotion = false): Mat
   const x = seasonOf(ts);
   const win = x ? playoffsWindow(x) : null;
   return win && ts >= win.from && ts <= win.to ? "playoffs" : "league";
+}
+
+/** One archetype's season totals from the in-game Archetypes > Statistics screen. */
+export type InGameArchetype = {
+  matches: number;
+  motm: number;
+  goals?: number;
+  assists?: number;
+  passesMade?: number;
+  tackles?: number;
+  interceptions?: number;
+  conversionPct?: number;
+  passPct?: number;
+  tacklePct?: number;
+  avgPasses?: number;
+  avgTackles?: number;
+  avgShots?: number;
+  saves?: number;
+  cleanSheets?: number;
+  goalsConceded?: number;
+  savePct?: number;
+  avgSaves?: number;
+};
+
+/** A player's in-game archetype screen, copied by hand (config/archetype-stats.json). */
+export type InGameArchetypes = { season: string; asOf: string; archetypes: Record<string, InGameArchetype> };
+
+export function inGameArchetypes(player: string): InGameArchetypes | null {
+  return (archetypeStats.players as Record<string, InGameArchetypes>)[player] ?? null;
 }

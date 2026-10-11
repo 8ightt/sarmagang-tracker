@@ -129,6 +129,10 @@ uses it: the pages work without the new columns, but saving matches doesn't.
 ### 7. Optional
 
 - **Discord**: set `DISCORD_WEBHOOK_URL` and every new result gets posted to your channel.
+- **Season by archetype**: EA's API can't split a player's season by archetype, but the game
+  can. Copy a player's in-game Archetypes › Statistics screen (one screenshot per archetype) into
+  `config/archetype-stats.json` with the time it was taken; the player page then shows the
+  whole season per archetype, plus every game saved after that time.
 - **Positions, nicknames, bios, Pro pictures**: edit `config/settings.json`. Pictures go in
   `public/pros/` and are referenced as `/pros/name.png`.
 

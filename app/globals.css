@@ -238,3 +238,9 @@ details > summary { cursor: pointer; color: var(--text-2); }
 .series-rules td { padding: 8px 10px; border-top: 1px solid var(--line-2); }
 .series-rules tr[aria-current] td { color: var(--accent); font-weight: 700; }
 .series-rules tr[aria-current] td.muted { font-weight: 400; }
+
+/* season by archetype: label/value pairs */
+.arch-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 0; }
+.arch-stats > div { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line-2); padding-top: 6px; }
+.arch-stats dt { color: var(--muted); font-size: 13px; }
+.arch-stats dd { margin: 0; font-weight: 700; }

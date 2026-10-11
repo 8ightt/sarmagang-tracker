@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { cache } from "react";
-import { CLUB_ID, currentSeason, loadSettings, playoffsWindow, promotionRule } from "./config";
+import { CLUB_ID, currentSeason, inGameArchetypes, loadSettings, playoffsWindow, promotionRule, seasonOf, type InGameArchetype } from "./config";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
 import { positionName } from "./ea-assets";
@@ -380,6 +380,77 @@ export async function getArchetypes(player: string): Promise<ArchetypeRow[]> {
     where mp.player = ${player} and mp.seconds > 0
     group by mp.archetype order by games desc, rating desc`;
   return rows as unknown as ArchetypeRow[];
+}
+
+export type ArchetypeSeason = {
+  archetype: number;
+  /** the in-game totals (all season, up to asOf) */
+  inGame: InGameArchetype | null;
+  /** saved games after asOf, added on top */
+  since: { games: number; goals: number; assists: number; motm: number; passes: number; tackles: number; saves: number; conceded: number; cleanSheets: number };
+  /** in-game totals + saved games since */
+  total: { games: number; goals: number; assists: number; motm: number; passes: number; tackles: number; saves: number; conceded: number; cleanSheets: number };
+};
+
+/**
+ * A player's whole season split by archetype: the in-game Archetypes > Statistics totals
+ * (config/archetype-stats.json) plus every game the site saved after they were copied.
+ * Null when nobody has copied that screen for the player yet.
+ */
+export async function getArchetypeSeason(player: string): Promise<{ season: string; asOf: number; rows: ArchetypeSeason[] } | null> {
+  const snap = inGameArchetypes(player);
+  if (!snap) return null;
+  const asOf = Date.parse(snap.asOf) / 1000;
+  const db = sql();
+  // EA's numbers (incl. the CPU's for whoever runs it), like the in-game screen
+  const games = (await db`
+    select mp.archetype, m.ts, mp.ea_goals, mp.ea_assists, mp.ea_motm, mp.passes_made, mp.tackles_made, mp.saves,
+           mp.goals_conceded, mp.clean_sheet
+    from ${db(await playersTable())} mp join matches m on m.id = mp.match_id
+    where mp.player = ${player} and mp.seconds > 0 and m.ts > ${asOf} and m.match_type <> 'friendlyMatch'`) as unknown as {
+    archetype: number; ts: number; ea_goals: number; ea_assists: number; ea_motm: boolean; passes_made: number; tackles_made: number;
+    saves: number; goals_conceded: number | null; clean_sheet: boolean | null;
+  }[];
+  const zero = () => ({ games: 0, goals: 0, assists: 0, motm: 0, passes: 0, tackles: 0, saves: 0, conceded: 0, cleanSheets: 0 });
+  const since = new Map<number, ReturnType<typeof zero>>();
+  for (const g of games) {
+    if (seasonOf(Number(g.ts))?.name !== snap.season) continue;
+    const a = Number(g.archetype);
+    const x = since.get(a) ?? zero();
+    x.games += 1;
+    x.goals += Number(g.ea_goals ?? 0);
+    x.assists += Number(g.ea_assists ?? 0);
+    x.motm += g.ea_motm ? 1 : 0;
+    x.passes += Number(g.passes_made ?? 0);
+    x.tackles += Number(g.tackles_made ?? 0);
+    x.saves += Number(g.saves ?? 0);
+    x.conceded += Number(g.goals_conceded ?? 0);
+    x.cleanSheets += g.clean_sheet ? 1 : 0;
+    since.set(a, x);
+  }
+  const ids = new Set([...Object.keys(snap.archetypes).map(Number), ...since.keys()]);
+  const rows = [...ids].map((archetype): ArchetypeSeason => {
+    const inGame = snap.archetypes[String(archetype)] ?? null;
+    const s = since.get(archetype) ?? zero();
+    return {
+      archetype,
+      inGame,
+      since: s,
+      total: {
+        games: (inGame?.matches ?? 0) + s.games,
+        goals: (inGame?.goals ?? 0) + s.goals,
+        assists: (inGame?.assists ?? 0) + s.assists,
+        motm: (inGame?.motm ?? 0) + s.motm,
+        passes: (inGame?.passesMade ?? 0) + s.passes,
+        tackles: (inGame?.tackles ?? 0) + s.tackles,
+        saves: (inGame?.saves ?? 0) + s.saves,
+        conceded: (inGame?.goalsConceded ?? 0) + s.conceded,
+        cleanSheets: (inGame?.cleanSheets ?? 0) + s.cleanSheets,
+      },
+    };
+  });
+  rows.sort((a, b) => b.total.games - a.total.games);
+  return { season: snap.season, asOf, rows };
 }
 
 export async function getSeasonCpuReds(player: string): Promise<number> {
