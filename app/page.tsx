@@ -1,5 +1,5 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
-import { loadSettings } from "@/lib/config";
+import { currentSeason, loadSettings } from "@/lib/config";
 import { reputationUrl } from "@/lib/ea-assets";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getTactics, lastPoll } from "@/lib/stats";
 import { SeasonForm } from "@/components/Forms";
@@ -20,6 +20,26 @@ export default async function Home() {
   // the season tracker follows the in-game lobby; EA's own division field lags behind
   const division = season?.division ?? club.division;
   const settings = loadSettings();
+  const clubSeason = currentSeason();
+  const nowSec = Date.now() / 1000;
+  const playoffsAt = clubSeason?.playoffsStart ? Date.parse(clubSeason.playoffsStart) / 1000 : null;
+  const seasonEnd = clubSeason ? Date.parse(`${clubSeason.end}T23:59:59`) / 1000 : null;
+  const dayLabel = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const countdown = (secs: number) => {
+    const d = Math.floor(secs / 86400);
+    const h = Math.floor((secs % 86400) / 3600);
+    return d ? `${d} day${d === 1 ? "" : "s"}, ${h} hour${h === 1 ? "" : "s"}` : `${h} hour${h === 1 ? "" : "s"}`;
+  };
+  const seasonLine = !clubSeason
+    ? null
+    : seasonEnd !== null && nowSec > seasonEnd
+      ? `${clubSeason.name} (${dayLabel(clubSeason.start)} – ${dayLabel(clubSeason.end)}) has ended`
+      : `${clubSeason.name} · ${dayLabel(clubSeason.start)} – ${dayLabel(clubSeason.end)}` +
+        (playoffsAt === null
+          ? ""
+          : nowSec < playoffsAt
+            ? ` · Season Playoffs start in about ${countdown(playoffsAt - nowSec)}, in the highest division reached`
+            : " · Season Playoffs are on");
   const playing = members.filter((m) => m.games > 0);
   const top = (key: "goals" | "assists" | "motm") => [...playing].sort((a, b) => b[key] - a[key])[0];
   const lethal = [...playing].filter((m) => m.games >= 10).sort((a, b) => (b.goals + b.assists) / b.games - (a.goals + a.assists) / a.games)[0];
@@ -72,10 +92,11 @@ export default async function Home() {
             <h2 className="display">{divisionName(season.division)} season</h2>
             <span className="muted" style={{ fontSize: 13 }}>Win +3 · Draw +1 · Loss −1 chance</span>
           </div>
+          {seasonLine ? <span className="text-2" style={{ fontSize: 14, marginTop: -8 }}>{seasonLine}</span> : null}
           {season.phase !== "league" ? (
             <div className="card-strong" style={{ border: `1px solid ${season.phase === "playoffs" ? "var(--accent)" : "var(--shame)"}` }}>
               <strong className="display" style={{ fontSize: 22, color: season.phase === "playoffs" ? "var(--accent)" : "var(--shame)" }}>
-                {season.phase === "playoffs" ? "Playoffs" : "Relegation match"}
+                {season.phase === "playoffs" ? "Promotion playoff" : "Relegation match"}
               </strong>
               <div className="text-2" style={{ marginTop: 6 }}>
                 {season.phase === "playoffs"
@@ -141,9 +162,9 @@ export default async function Home() {
               {season.events
                 .map((e) => {
                   const label = {
-                    playoffs: "Reached the playoffs",
+                    playoffs: "Reached the promotion playoff",
                     promoted: `Promoted to ${divisionName(e.division)}`,
-                    "playoff-lost": "Lost the playoff",
+                    "playoff-lost": "Lost the promotion playoff",
                     "relegation-match": "Out of chances: relegation match",
                     survived: "Won the relegation match",
                     relegated: `Relegated to ${divisionName(e.division)}`,

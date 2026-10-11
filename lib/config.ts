@@ -32,8 +32,19 @@ export type LeagueRules = {
   targets: Record<string, number>;
 };
 
+/** An EA Clubs season, copied from the in-game Season Info screen. */
+export type ClubSeason = {
+  name: string;
+  /** first and last day, YYYY-MM-DD */
+  start: string;
+  end: string;
+  /** when the end-of-season Playoffs open, ISO time (the lobby only shows a countdown) */
+  playoffsStart?: string;
+};
+
 export type SiteSettings = {
   tagline?: string;
+  seasons: ClubSeason[];
   players: Record<string, PlayerSettings>;
   league: LeagueRules;
 };
@@ -45,10 +56,19 @@ export function loadSettings(): SiteSettings {
   return {
     tagline: s.tagline,
     players: s.players ?? {},
+    seasons: s.seasons ?? [],
     league: {
       chances: league.chances ?? 3,
       chancesAfterSurviving: league.chancesAfterSurviving ?? 1,
       targets: league.targets ?? {},
     },
   };
+}
+
+/** The season running at `now` (seconds), else the latest one that has started. */
+export function currentSeason(now = Date.now() / 1000): ClubSeason | null {
+  const started = loadSettings()
+    .seasons.filter((x) => Date.parse(x.start) / 1000 <= now)
+    .sort((a, b) => a.start.localeCompare(b.start));
+  return started[started.length - 1] ?? null;
 }
