@@ -1,7 +1,7 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
 import { loadSettings } from "@/lib/config";
 import { reputationUrl } from "@/lib/ea-assets";
-import { getClub, getMatches, getMembers, getRecords, getSeason, getTactics, lastPoll } from "@/lib/stats";
+import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getTactics, lastPoll } from "@/lib/stats";
 import { SeasonForm } from "@/components/Forms";
 import { Tactics } from "@/components/Tactics";
 
@@ -69,9 +69,21 @@ export default async function Home() {
       {season ? (
         <section className="card stack" style={{ gap: 18 }}>
           <div className="section-head">
-            <h2 className="display">Division {season.division} season</h2>
+            <h2 className="display">{divisionName(season.division)} season</h2>
             <span className="muted" style={{ fontSize: 13 }}>Win +3 · Draw +1 · Loss −1 chance</span>
           </div>
+          {season.phase !== "league" ? (
+            <div className="card-strong" style={{ border: `1px solid ${season.phase === "playoffs" ? "var(--accent)" : "var(--shame)"}` }}>
+              <strong className="display" style={{ fontSize: 22, color: season.phase === "playoffs" ? "var(--accent)" : "var(--shame)" }}>
+                {season.phase === "playoffs" ? "Playoffs" : "Relegation match"}
+              </strong>
+              <div className="text-2" style={{ marginTop: 6 }}>
+                {season.phase === "playoffs"
+                  ? `Points target reached. Win the playoff to go up to ${divisionName(Math.max(0, season.division - 1))}.`
+                  : `Out of chances. Win the next game to stay in ${divisionName(season.division)}; lose it and you go down.`}
+              </div>
+            </div>
+          ) : null}
           <div className="row" style={{ gap: 32, alignItems: "flex-end" }}>
             <div className="stack" style={{ gap: 8, flex: "2 1 320px" }}>
               <div className="row between">
@@ -106,7 +118,11 @@ export default async function Home() {
                 ))}
               </div>
               <span className="muted" style={{ fontSize: 13 }}>
-                {season.chances === 1 ? "Last chance: one more loss ends the season" : `${season.chances} losses left this season`}
+                {season.chances === 0
+                  ? "None left: relegation match next"
+                  : season.chances === 1
+                    ? "Last chance: one more loss means a relegation match"
+                    : `${season.chances} losses left before a relegation match`}
               </span>
             </div>
           </div>
@@ -122,7 +138,19 @@ export default async function Home() {
           ) : null}
           {season.events.length ? (
             <span className="text-2" style={{ fontSize: 14 }}>
-              {season.events.map((e) => (e.kind === "promoted" ? `Promoted to Division ${e.division} (${when(e.ts)})` : `Season ended in Division ${e.division} (${when(e.ts)})`)).join(" · ")}
+              {season.events
+                .map((e) => {
+                  const label = {
+                    playoffs: "Reached the playoffs",
+                    promoted: `Promoted to ${divisionName(e.division)}`,
+                    "playoff-lost": "Lost the playoff",
+                    "relegation-match": "Out of chances: relegation match",
+                    survived: "Won the relegation match",
+                    relegated: `Relegated to ${divisionName(e.division)}`,
+                  }[e.kind];
+                  return `${label} (${when(e.ts)})`;
+                })
+                .join(" · ")}
             </span>
           ) : null}
           <details>
