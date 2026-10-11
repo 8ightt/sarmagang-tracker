@@ -40,8 +40,11 @@
   "league": {
     "chances": 3,
     "chancesAfterSurviving": 1,
-    "promotionMatches": 3,
-    "promotionWins": 2,
+    "promotion": {
+      "4": { "matches": 4, "wins": 3, "confirmed": true },
+      "3": { "matches": 4, "wins": 4 },
+      "1": { "matches": 5, "wins": 5 }
+    },
     "targets": {
       "4": 9
     }

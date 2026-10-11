@@ -513,7 +513,7 @@ export type Season = {
   results: { id: string; ts: number; result: "W" | "D" | "L"; opp: string; score: string; type: string }[];
   events: SeasonEvent[];
   /** during the promotion match series */
-  promotion: { played: number; wins: number; matches: number; winsNeeded: number } | null;
+  promotion: { played: number; wins: number; matches: number; winsNeeded: number; confirmed: boolean } | null;
   setAt: number;
   setBy: string | null;
 };
@@ -527,10 +527,9 @@ export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
  * The league season, replayed from the last known state through every result since.
  *
  * - League: win +3 points, draw +1, loss -1 chance.
- * - Reaching the division's points target starts the promotion match: a short series
- *   (3 games, 2 wins to go up). Falling short keeps the club in its division.
- * - A win because the opponent quit early doesn't count for league points (the lobby
- *   didn't move after one), though EA's season record still includes it.
+ * - Reaching the division's points target starts the promotion match: a short series that
+ *   gets one win harder per division (Division 4: 3 wins from 4). Falling short keeps the
+ *   club in its division.
  * - Losing the last chance means a relegation match: win and you stay (with some chances
  *   back), lose and you go down a division.
  * Points targets per division and the chances you get back are in config/settings.json.
@@ -543,7 +542,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   const [state] = await db`select division, points, chances, target, anchor_ts, updated_by, updated_at from season_state where id = 1`;
   if (!state) return null;
   const games = (await db`
-    select id, ts, result, opp_name, goals_for, goals_against, match_type, dnf from matches
+    select id, ts, result, opp_name, goals_for, goals_against, match_type from matches
     where match_type in ('leagueMatch', 'playoffMatch') and ts > ${Number(state.anchor_ts)} order by ts asc`) as unknown as (MatchRow & {
     opp_name: string;
   })[];
@@ -551,6 +550,9 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   const league = loadSettings().league;
   const maxChances = league.chances;
   const targetFor = (d: number, fallback: number) => league.targets[String(d)] ?? fallback;
+  // unknown divisions: one more win than the division below, as the series grows by one win per division
+  const promotionRule = (d: number) =>
+    league.promotion[String(d)] ?? { matches: Math.max(1, 8 - d), wins: Math.max(1, 7 - d), confirmed: false };
 
   let division = Number(state.division);
   let points = Number(state.points);
@@ -577,16 +579,14 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     if (windows.some((w) => ts >= w.from && ts <= w.to)) continue;
     results.push({ id: g.id, ts, result: g.result, opp: g.opp_name, score: `${g.goals_for}–${g.goals_against}`, type: g.match_type });
 
-    // wins by the opponent quitting don't move league progress
-    if (g.dnf) continue;
-
     if (phase === "playoffs") {
       series.played += 1;
       if (g.result === "W") series.wins += 1;
-      if (series.wins >= league.promotionWins) {
+      const rule = promotionRule(division);
+      if (series.wins >= rule.wins) {
         events.push({ ts, kind: "promoted", division: Math.max(0, division - 1) });
         newSeason(Math.max(0, division - 1));
-      } else if (league.promotionWins - series.wins > league.promotionMatches - series.played) {
+      } else if (rule.wins - series.wins > rule.matches - series.played) {
         events.push({ ts, kind: "playoff-lost", division });
         newSeason(division);
       }
@@ -629,7 +629,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     events,
     promotion:
       phase === "playoffs"
-        ? { played: series.played, wins: series.wins, matches: league.promotionMatches, winsNeeded: league.promotionWins }
+        ? { played: series.played, wins: series.wins, matches: promotionRule(division).matches, winsNeeded: promotionRule(division).wins, confirmed: promotionRule(division).confirmed ?? false }
         : null,
     setAt: new Date(state.updated_at).getTime(),
     setBy: (state.updated_by as string) ?? null,

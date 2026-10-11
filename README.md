@@ -101,9 +101,10 @@ Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
   one player's line and only records forward/midfielder/defender/keeper. Copy the real lines
   and exact positions from the in-game Player Performance screen; totals and records follow.
 - **Season tracker** on the club page, worked out from every result: win +3 points,
-  draw +1, loss −1 chance. Reaching the division's target starts the promotion match (best
-  of 3: two wins to go up); losing the last chance means a relegation match (win to stay,
-  lose to go down). Wins where the opponent quit early don't count, as in the game.
+  draw +1, loss −1 chance. Reaching the division's target starts the promotion match, a short
+  series that needs one more win per division (Division 4: 3 wins from 4); losing the last
+  chance means a relegation match (win to stay, lose to go down). Series lengths per
+  division are in `config/settings.json` under `league.promotion`.
   Points targets per division and the chances you get back after surviving are set in
   `config/settings.json` under `league`.
 - **Season dates**: each EA season's dates and when its end-of-season Playoffs open go in

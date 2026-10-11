@@ -156,7 +156,7 @@ export default async function Home() {
               </strong>
               <div className="text-2" style={{ marginTop: 6 }}>
                 {season.phase === "playoffs" && season.promotion
-                  ? `Points target reached. ${season.promotion.winsNeeded - season.promotion.wins} more win${season.promotion.winsNeeded - season.promotion.wins === 1 ? "" : "s"} from ${season.promotion.matches - season.promotion.played} game${season.promotion.matches - season.promotion.played === 1 ? "" : "s"} to go up to ${divisionName(Math.max(0, season.division - 1))}.`
+                  ? `Points target reached. ${season.promotion.winsNeeded - season.promotion.wins} more win${season.promotion.winsNeeded - season.promotion.wins === 1 ? "" : "s"} from ${season.promotion.matches - season.promotion.played} game${season.promotion.matches - season.promotion.played === 1 ? "" : "s"} to go up to ${divisionName(Math.max(0, season.division - 1))}.${season.promotion.confirmed ? "" : " (Series length not confirmed yet: check the lobby.)"}`
                   : `Out of chances. Win the next game to stay in ${divisionName(season.division)}; lose it and you go down.`}
               </div>
             </div>
@@ -175,7 +175,7 @@ export default async function Home() {
               <span className="muted" style={{ fontSize: 13 }}>
                 {season.target - season.points > 0
                   ? `${season.target - season.points} more point${season.target - season.points === 1 ? "" : "s"} to go up: ${Math.ceil((season.target - season.points) / 3)} win${Math.ceil((season.target - season.points) / 3) === 1 ? "" : "s"}`
-                  : "Target reached: promotion match next"}
+                  : "Target reached"}
               </span>
             </div>
             <div className="stack" style={{ gap: 8, flex: "1 1 200px" }}>
