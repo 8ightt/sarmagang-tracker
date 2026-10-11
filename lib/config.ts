@@ -93,11 +93,15 @@ export function seasonOf(ts: number): ClubSeason | null {
   return loadSettings().seasons.find((x) => x.start <= day && day <= x.end) ?? null;
 }
 
-export type MatchKind = "league" | "playoffs" | "friendly";
+export type MatchKind = "league" | "promotion" | "playoffs" | "friendly";
 
-/** League, playoff (EA's playoff type or during a season's Playoffs) or friendly. */
-export function matchKind(ts: number, matchType: string): MatchKind {
+/**
+ * League, promotion match (EA sends those as league games, so the caller passes what the
+ * season replay found), playoff (EA's playoff type or during a season's Playoffs) or friendly.
+ */
+export function matchKind(ts: number, matchType: string, promotion = false): MatchKind {
   if (matchType === "friendlyMatch") return "friendly";
+  if (promotion) return "promotion";
   if (matchType === "playoffMatch") return "playoffs";
   const x = seasonOf(ts);
   const win = x ? playoffsWindow(x) : null;

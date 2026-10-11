@@ -1,12 +1,13 @@
 import { Crest, ResultBadge, when } from "@/components/bits";
 import { currentSeason, loadSettings, localDay, matchKind, seasonOf, type MatchKind } from "@/lib/config";
-import { getClub, getMatches } from "@/lib/stats";
+import { getClub, getMatches, getSeason } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Seasons" };
 
 const KINDS: { value: MatchKind; label: string }[] = [
   { value: "league", label: "League" },
+  { value: "promotion", label: "Promotion" },
   { value: "playoffs", label: "Playoffs" },
   { value: "friendly", label: "Friendly" },
 ];
@@ -34,13 +35,15 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
   const to = isDay(one("to")) ? one("to") : "";
   const q = one("q").trim().toLowerCase();
 
-  const [club, all] = await Promise.all([getClub(), getMatches(5000)]);
+  const [club, all, league] = await Promise.all([getClub(), getMatches(5000), getSeason()]);
+  const promo = league?.promotionGames ?? {};
+  const kindOf = (m: (typeof all)[number]) => matchKind(Number(m.ts), m.match_type, m.id in promo);
   type Skip = "type" | "result";
   const keep = (m: (typeof all)[number], skip?: Skip) => {
     const ts = Number(m.ts);
     const d = localDay(ts);
     if (season && seasonOf(ts)?.name !== season.name) return false;
-    if (skip !== "type" && kind && matchKind(ts, m.match_type) !== kind) return false;
+    if (skip !== "type" && kind && kindOf(m) !== kind) return false;
     if (skip !== "result" && result && m.result !== result) return false;
     if (from && d < from) return false;
     if (to && d > to) return false;
@@ -100,7 +103,7 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
             <span className="filter-label">Type</span>
             <a className="pill" href={href({ type: "" })} aria-current={!kind}>All <span className="count">{byType.length}</span></a>
             {KINDS.map((k) => {
-              const n = byType.filter((m) => matchKind(Number(m.ts), m.match_type) === k.value).length;
+              const n = byType.filter((m) => kindOf(m) === k.value).length;
               return (
                 <a key={k.value} className={`pill${n ? "" : " is-empty"}`} href={href({ type: k.value })} aria-current={kind === k.value}>
                   {k.label} <span className="count">{n}</span>
@@ -182,7 +185,10 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
               <span style={{ fontWeight: 700 }}>{m.opp_name}</span>
             </div>
             <span className="row" style={{ gap: 8 }}>
-              <span className="chip chip-ghost">{KINDS.find((k) => k.value === matchKind(Number(m.ts), m.match_type))?.label}</span>
+              <span className="chip chip-ghost">
+                {KINDS.find((k) => k.value === kindOf(m))?.label}
+                {promo[m.id] ? ` · Game ${promo[m.id].game}/${promo[m.id].of}` : ""}
+              </span>
               {m.dnf ? <span className="chip chip-ghost">They quit · {m.minutes} min</span> : null}
               {m.captain ? <span className="chip chip-ghost">C · {m.captain}</span> : null}
             </span>
@@ -191,7 +197,8 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
         {!matches.length ? <p className="muted">{all.length ? "No games match these filters." : "No matches saved yet."}</p> : null}
       </div>
       <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-        Playoffs = EA&apos;s playoff games plus every game during a season&apos;s end-of-season Playoffs. Season dates come from
+        Promotion = games in a promotion match series (EA sends them as league games; the site spots them from the points
+        target). Playoffs = EA&apos;s playoff games plus every game during a season&apos;s end-of-season Playoffs. Season dates come from
         config/settings.json.
       </p>
     </main>

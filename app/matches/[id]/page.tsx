@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, when } from "@/components/bits";
 import { groupShort } from "@/lib/ea-assets";
-import { AFK_SECONDS, getClub, getMatch, getMembers, idleLabel, saveBreakdown } from "@/lib/stats";
+import { AFK_SECONDS, divisionName, getClub, getMatch, getMembers, getSeason, idleLabel, saveBreakdown } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,8 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
     ...(cpuGoals > 0 ? [cpuGoals > 1 ? `CPU ×${cpuGoals}` : "CPU"] : []),
   ];
   const motm = players.find((p) => p.motm);
+  // EA sends promotion match games as league games; the season replay knows which ones they were
+  const promo = (await getSeason())?.promotionGames[m.id] ?? null;
   const ourKit = m.our_kit ?? club.kits[0]?.colors;
   const stat = (k: string) => [Number(team.us?.[k] ?? 0), Number(team.them?.[k] ?? 0)];
   const rows = [
@@ -39,7 +41,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
       <section className="card stack" style={{ alignItems: "center", gap: 22, padding: "36px 28px" }}>
         <span className="eyebrow" style={{ textAlign: "center" }}>
-          {m.match_type === "leagueMatch" ? "League" : m.match_type === "playoffMatch" ? "Playoff" : "Friendly"} · {when(m.ts)} · {m.minutes} min
+          {promo
+            ? `Promotion match to ${divisionName(Math.max(0, promo.division - 1))} · Game ${promo.game} of ${promo.of}`
+            : m.match_type === "leagueMatch" ? "League" : m.match_type === "playoffMatch" ? "Playoff" : "Friendly"}{" "}
+          · {when(m.ts)} · {m.minutes} min
           {m.dnf ? " · opponent quit" : ""}
         </span>
         <div className="row" style={{ justifyContent: "center", gap: 28, width: "100%" }}>

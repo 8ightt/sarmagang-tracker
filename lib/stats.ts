@@ -514,6 +514,8 @@ export type Season = {
   events: SeasonEvent[];
   /** during the promotion match series */
   promotion: { played: number; wins: number; matches: number; winsNeeded: number; confirmed: boolean; games: Season["results"] } | null;
+  /** every promotion match game since the season state was last set: match id → game n of the series */
+  promotionGames: Record<string, { game: number; of: number; division: number }>;
   setAt: number;
   setBy: string | null;
 };
@@ -562,6 +564,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   const events: SeasonEvent[] = [];
   let results: Season["results"] = [];
   let series = { played: 0, wins: 0 };
+  const promotionGames: Season["promotionGames"] = {};
   const newSeason = (d: number) => {
     division = d;
     points = 0;
@@ -583,6 +586,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
       series.played += 1;
       if (g.result === "W") series.wins += 1;
       const rule = promotionRule(division);
+      promotionGames[g.id] = { game: series.played, of: rule.matches, division };
       if (series.wins >= rule.wins) {
         events.push({ ts, kind: "promoted", division: Math.max(0, division - 1) });
         newSeason(Math.max(0, division - 1));
@@ -638,6 +642,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
             games: results.slice(results.length - series.played),
           }
         : null,
+    promotionGames,
     setAt: new Date(state.updated_at).getTime(),
     setBy: (state.updated_by as string) ?? null,
   };
