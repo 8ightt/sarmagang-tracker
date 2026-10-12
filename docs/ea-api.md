@@ -344,7 +344,7 @@ Not decoded yet: tackle attempts (no counter or pair matches), interceptions, dr
 
 Derived:
 
-- **cpuGoals**: club score minus the sum of counter 214 over the club's players (own goals by the opponent land here too); shown as “CPU” among the scorers on match pages and in Discord posts.
+- **cpuGoals**: club score minus the sum of counter 214 over the club's players; shown as “CPU” among the scorers on match pages and in Discord posts. Checked on 22 games (44 club-games): when someone runs the CPU, its goals sit on that player's EA line; when nobody does, they appear only in the score (6 goals, all in such games). No counter or club field marks own goals, so an opponent own goal can't be told apart and also lands here.
 - **cpuController**: the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (the CPU nearly always passes, rarely scores).
 
 ## Thanks
