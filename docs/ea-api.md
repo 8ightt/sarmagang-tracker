@@ -336,11 +336,25 @@ The counters count the HUMAN's own actions. EA's headline goals/assists/shots ad
 
 Guesses not proven yet:
 
+- `6`: interceptions (3.9 per 90 for defenders, 1.0 for forwards, 0.5 for keepers; correlation 0.40 with tackles; not a part of passes or tackles)
+- `28`: clearances (3.5 per 90 for defenders and 3.3 for keepers, 0.5 for forwards)
 - `56`: related to saves (correlation 1.00 with saves, only 4 keeper lines)
+- `114`: key passes (passes that led to a teammate's shot) (≤ passes; per team ≤ the team's shots in 40/44 games (0.58 of them); a player's assists are ≤ it on 133/142 lines; correlation 0.54 with assists)
+- `118`: a type of assist (e.g. ground or through-ball assists) (always ≤ assists (11), correlation 0.81)
 - `267`: goodDirectionSaves (equal on all 98 lines but only 3 non-zero)
+- `13, 18`: shots on target split by where from: 13 inside the box (forwards 1.8 per 90), 18 outside it (0.5 per 90) (13 + 18 = counter 217 (shots on target) on all 142 lines of 22 games; which half is which is the guess)
+- `14, 19`: shots off target, inside (14) and outside (19) the box (14 + 19 = counter 218 (shots off target) on 141/142 lines)
+- `121, 120`: tackles won split by type: 121 standing (145), 120 sliding (13, mostly defenders) (121 + 120 = counter 164 (tackles won) on all 142 lines)
+- `0, 229`: tackles won that also won the ball back for the team (possession regained) (always ≤ 164, correlation 0.99 / 0.97 with it; 3 per 90 for defenders, 0 for keepers)
+- `12, 93, 123, 124, 128, 131, 137, 140, 238`: goal types (header, weak foot, inside/outside box, first time…); they overlap, so no set adds up to goals (each ≤ counter 214 on every line; best 5-counter sum matches goals on only 123/142 lines)
+- `24, 26, 30, 34, 143, 152, 176`: completed passes by type or zone: 24 is a forward's pass (10 per 90 vs 2.5 for defenders), 26 a defender's (5.9 vs 3.2) (each ≤ completed passes (215 + 153); no pair adds up to them)
+- `25, 27, 29, 31, 33, 35, 37, 151, 157`: missed passes by type; 31 is the most common (3–4 per 90) (each ≤ missed passes (216 + 191); 31 + 35 matches on 99/142 lines only)
+- `266, 9, 144, 162`: defensive actions (blocks, headed clearances…) (1.3–1.6 per 90 for defenders, near 0 for everyone else)
+- `97, 174, 175, 111`: volume counters (touches, passes received, time on the ball); 111 is 42 per 90 for keepers (on nearly every line, large totals, follow passes (0.65–0.83) but are bigger than them)
+- `10, 49, 50`: keeper actions besides saves (catches, claimed crosses) (only on keeper lines, correlation 0.65–0.83 with saves)
 - `54, 268`: reflex or diving save (1 non-zero line only)
 
-Not decoded yet: tackle attempts (no counter or pair matches), interceptions, dribbles, through passes, second assists and most of the 150+ ids. Ground truth needed: in-game Player Performance screens.
+Not decoded yet: tackle attempts (no counter, pair or triple matches); the candidates above are guesses from how counters split known stats and how they differ per position. In-game Player Performance screens (interceptions, dribbles, through passes…) can confirm them.
 
 Derived:
 
