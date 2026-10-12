@@ -1,0 +1,7 @@
+# Store and check out text files with LF everywhere (stops the CRLF warnings on Windows)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.woff2 binary

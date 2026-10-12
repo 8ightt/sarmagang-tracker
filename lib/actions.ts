@@ -1,17 +1,44 @@
 "use server";
 
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { CLUB_PASSWORD } from "./config";
 import { sql } from "./db";
 
 export type ActionState = { ok: boolean; message: string } | null;
 
-function checkPassword(given: FormDataEntryValue | null): string | null {
+/** Wrong passwords allowed per visitor, and from everyone together, within LOCK_MINUTES. */
+const MAX_FAILURES = 5;
+const MAX_FAILURES_ALL = 30;
+const LOCK_MINUTES = 15;
+
+/** The visitor, as a hash of their IP (the IP itself is never stored). */
+async function visitor(): Promise<string> {
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  return createHash("sha256").update(`sarmagang:${ip}`).digest("hex").slice(0, 32);
+}
+
+async function checkPassword(given: FormDataEntryValue | null): Promise<string | null> {
   if (!CLUB_PASSWORD) return "Editing is switched off: set CLUB_PASSWORD in Vercel.";
+  const db = sql();
+  const who = await visitor();
+  const since = new Date(Date.now() - LOCK_MINUTES * 60_000);
+  // counted before checking, so a right guess during a lockout doesn't get through either
+  const [c] = await db`
+    select count(*) filter (where who = ${who})::int as mine, count(*)::int as everyone
+    from password_failures where at > ${since}`;
+  if (c.mine >= MAX_FAILURES || c.everyone >= MAX_FAILURES_ALL)
+    return `Too many wrong passwords. Try again in ${LOCK_MINUTES} minutes.`;
   const a = Buffer.from(String(given ?? ""));
   const b = Buffer.from(CLUB_PASSWORD);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return "Wrong club password.";
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    await db`insert into password_failures (who) values (${who})`;
+    await db`delete from password_failures where at < now() - interval '1 day'`;
+    const left = MAX_FAILURES - c.mine - 1;
+    return left > 0 ? `Wrong club password (${left} ${left === 1 ? "try" : "tries"} left).` : `Wrong club password. Locked for ${LOCK_MINUTES} minutes.`;
+  }
   return null;
 }
 
@@ -19,7 +46,7 @@ const text = (form: FormData, key: string, max: number) => String(form.get(key) 
 
 /** Move one of a player's red cards in a match to the CPU (or undo that). */
 export async function toggleCpuRed(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   const matchId = text(form, "matchId", 40);
   const player = text(form, "player", 40);
@@ -40,7 +67,7 @@ export async function toggleCpuRed(_prev: ActionState, form: FormData): Promise<
 
 /** Season-level correction for red cards from before the site saved matches. */
 export async function setSeasonCpuReds(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   const player = text(form, "player", 40);
   const amount = Math.max(0, Math.min(50, Math.round(Number(form.get("amount") ?? 0)) || 0));
@@ -57,7 +84,7 @@ export async function setSeasonCpuReds(_prev: ActionState, form: FormData): Prom
 }
 
 export async function setCaptain(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   const matchId = text(form, "matchId", 40);
   const captain = text(form, "captain", 40) || null;
@@ -69,7 +96,7 @@ export async function setCaptain(_prev: ActionState, form: FormData): Promise<Ac
 }
 
 export async function addTactic(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   const name = text(form, "name", 60);
   const code = text(form, "code", 40);
@@ -82,7 +109,7 @@ export async function addTactic(_prev: ActionState, form: FormData): Promise<Act
 }
 
 export async function removeTactic(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   await sql()`delete from tactics where id = ${Number(form.get("id"))}`;
   revalidatePath("/", "layout");
@@ -108,7 +135,7 @@ const POSITIONS = new Set(["GK", "CB", "LCB", "RCB", "LB", "RB", "LWB", "RWB", "
  * fix_<n>=on means "use my numbers", otherwise any earlier fix is removed.
  */
 export async function saveStatFixes(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   const matchId = text(form, "matchId", 40);
   const by = text(form, "by", 40) || null;
@@ -155,7 +182,7 @@ export async function saveStatFixes(_prev: ActionState, form: FormData): Promise
 
 /** Sets the league season as shown in the lobby right now; later results are applied automatically. */
 export async function setSeasonState(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = checkPassword(form.get("password"));
+  const err = await checkPassword(form.get("password"));
   if (err) return { ok: false, message: err };
   const division = intOrNull(form.get("division"));
   const points = intOrNull(form.get("points"));
