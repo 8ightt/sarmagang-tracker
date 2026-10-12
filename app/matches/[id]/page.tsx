@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, when } from "@/components/bits";
+import { COUNTER_STATS, counterStat } from "@/lib/counters";
 import { groupShort } from "@/lib/ea-assets";
 import { AFK_SECONDS, divisionName, getClub, getMatch, getMembers, getSeason, idleLabel, saveBreakdown } from "@/lib/stats";
 
@@ -168,6 +169,39 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           Use <a href="#fix">Fix stats</a> below with the numbers from the in-game Player Performance screen to correct those.
         </p>
       </section>
+
+      {players.some((p) => p.counters) ? (
+        <section className="stack">
+          <h2 className="display">More stats</h2>
+          <div className="table-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  {COUNTER_STATS.map((s) => (
+                    <th key={s.key} title={s.label}>{s.label}{s.rough ? "*" : ""}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {players.map((p) => (
+                  <tr key={p.player}>
+                    <td><a href={`/players/${encodeURIComponent(p.player)}`}>{p.player}</a></td>
+                    {COUNTER_STATS.map((s) => (
+                      <td key={s.key}>{p.counters ? counterStat(p.counters, s) : "–"}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            Each player&apos;s own, from EA&apos;s hidden event counters, decoded by the{" "}
+            <a href="https://github.com/Interactive-63/eafc-pro-clubs-api-research">EA FC Pro Clubs API research</a> project.
+            * Rough: these can come out lower than the in-game screen.
+          </p>
+        </section>
+      ) : null}
 
       <section className="card stack" id="fix">
         <h2 className="display" style={{ fontSize: 22 }}>Fix stats</h2>

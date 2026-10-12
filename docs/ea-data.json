@@ -8,6 +8,13 @@
       "file": "lib/lookups.js",
       "thanks": "Thank you for working these out and publishing them.",
       "usedFor": "archetypeid → archetype names; regionId decoding"
+    },
+    {
+      "project": "Interactive-63/eafc-pro-clubs-api-research",
+      "url": "https://github.com/Interactive-63/eafc-pro-clubs-api-research",
+      "file": "README.md (event IDs and decoded stat formulas)",
+      "thanks": "Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.",
+      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, possession won/lost, fouls and yellow cards from the hidden event counters; offside passes (153)"
     }
   ],
   "evidence": {
@@ -396,7 +403,7 @@
         "usedIn": "match_players.own_passes_made → match_players_effective.passes_made"
       },
       "153": {
-        "meaning": "own completed passes, part 2 (a rarer pass type)",
+        "meaning": "offside passes (per the research project); EA's passesmade counts them, the research's 'passes completed' (215) doesn't",
         "status": "assumed",
         "evidence": "see 215",
         "usedIn": "see 215"
@@ -424,26 +431,38 @@
       "cpuGoals": "club score minus the sum of counter 214 over the club's players; shown as “CPU” among the scorers on match pages and in Discord posts. Checked on 22 games (44 club-games): when someone runs the CPU, its goals sit on that player's EA line; when nobody does, they appear only in the score (6 goals, all in such games). No counter or club field marks own goals, so an opponent own goal can't be told apart and also lands here",
       "cpuController": "the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (the CPU nearly always passes, rarely scores)"
     },
-    "candidates": {
-      "13, 18": { "guess": "shots on target split by where from: 13 inside the box (forwards 1.8 per 90), 18 outside it (0.5 per 90)", "evidence": "13 + 18 = counter 217 (shots on target) on all 142 lines of 22 games; which half is which is the guess" },
-      "14, 19": { "guess": "shots off target, inside (14) and outside (19) the box", "evidence": "14 + 19 = counter 218 (shots off target) on 141/142 lines" },
-      "121, 120": { "guess": "tackles won split by type: 121 standing (145), 120 sliding (13, mostly defenders)", "evidence": "121 + 120 = counter 164 (tackles won) on all 142 lines" },
-      "0, 229": { "guess": "tackles won that also won the ball back for the team (possession regained)", "evidence": "always ≤ 164, correlation 0.99 / 0.97 with it; 3 per 90 for defenders, 0 for keepers" },
-      "114": { "guess": "key passes (passes that led to a teammate's shot)", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games (0.58 of them); a player's assists are ≤ it on 133/142 lines; correlation 0.54 with assists" },
-      "118": { "guess": "a type of assist (e.g. ground or through-ball assists)", "evidence": "always ≤ assists (11), correlation 0.81" },
-      "12, 93, 123, 124, 128, 131, 137, 140, 238": { "guess": "goal types (header, weak foot, inside/outside box, first time…); they overlap, so no set adds up to goals", "evidence": "each ≤ counter 214 on every line; best 5-counter sum matches goals on only 123/142 lines" },
-      "24, 26, 30, 34, 143, 152, 176": { "guess": "completed passes by type or zone: 24 is a forward's pass (10 per 90 vs 2.5 for defenders), 26 a defender's (5.9 vs 3.2)", "evidence": "each ≤ completed passes (215 + 153); no pair adds up to them" },
-      "25, 27, 29, 31, 33, 35, 37, 151, 157": { "guess": "missed passes by type; 31 is the most common (3–4 per 90)", "evidence": "each ≤ missed passes (216 + 191); 31 + 35 matches on 99/142 lines only" },
-      "6": { "guess": "interceptions", "evidence": "3.9 per 90 for defenders, 1.0 for forwards, 0.5 for keepers; correlation 0.40 with tackles; not a part of passes or tackles" },
-      "28": { "guess": "clearances", "evidence": "3.5 per 90 for defenders and 3.3 for keepers, 0.5 for forwards" },
-      "266, 9, 144, 162": { "guess": "defensive actions (blocks, headed clearances…)", "evidence": "1.3–1.6 per 90 for defenders, near 0 for everyone else" },
-      "97, 174, 175, 111": { "guess": "volume counters (touches, passes received, time on the ball); 111 is 42 per 90 for keepers", "evidence": "on nearly every line, large totals, follow passes (0.65–0.83) but are bigger than them" },
-      "10, 49, 50": { "guess": "keeper actions besides saves (catches, claimed crosses)", "evidence": "only on keeper lines, correlation 0.65–0.83 with saves" },
-      "267": { "guess": "goodDirectionSaves", "evidence": "equal on all 98 lines but only 3 non-zero" },
-      "56": { "guess": "related to saves", "evidence": "correlation 1.00 with saves, only 4 keeper lines" },
-      "54, 268": { "guess": "reflex or diving save", "evidence": "1 non-zero line only" }
+    "fromResearch": {
+      "about": "Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-63/eafc-pro-clubs-api-research), worked out on 51,395 FC 27 player lines. Our own 142 lines agree wherever we had checked the same ids (13/18, 14/19, 6, 118, 229, 266, 153). Status 'assumed' until an in-game Player Performance screen confirms them here.",
+      "6": { "meaning": "interceptions", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "115": { "meaning": "second assists", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "152": { "meaning": "through passes (successful)", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "174": { "meaning": "dribbles completed", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "265, 266": { "meaning": "aerial duels won, attacking (265) and defending (266)", "status": "assumed", "usedIn": "lib/counters.ts → More stats" },
+      "108, 109, 110": { "meaning": "possession won in the defensive, middle and attacking third", "status": "assumed", "note": "the research says totals look low next to the in-game screen", "usedIn": "lib/counters.ts → More stats (marked rough)" },
+      "105, 106, 107": { "meaning": "possession lost in the defensive, middle and attacking third", "status": "assumed", "note": "may undercount, as above", "usedIn": "lib/counters.ts → More stats (marked rough)" },
+      "2, 3": { "meaning": "fouls conceded (3 = roughly in the defensive third)", "status": "assumed", "note": "may undercount, as above", "usedIn": "lib/counters.ts → More stats (marked rough)" },
+      "95, 213": { "meaning": "yellow cards: immediate (95) and after advantage (213)", "status": "assumed", "usedIn": "lib/counters.ts → More stats" },
+      "13, 18": { "meaning": "shots on target from inside (13) and outside (18) the box; 13 + 18 = 217 on all our 142 lines", "status": "assumed" },
+      "14, 19": { "meaning": "shots off target from inside (14) and outside (19) the box; 14 + 19 = 218 on 141/142 of ours", "status": "assumed" },
+      "0, 1": { "meaning": "tackles won (0) and lost (1) as the research counts them; our EA tacklesmade matches 164 instead, and 0 + 1 is not EA's tackleattempts", "status": "assumed" },
+      "229, 230, 121": { "meaning": "standing (229) and sliding (230) tackles won; 121 is a near-duplicate of 229", "status": "assumed" },
+      "30, 32, 34": { "meaning": "completed passes forward, backward, sideways", "status": "assumed" },
+      "24, 26, 28, 36": { "meaning": "completed passes short, medium, long, crosses", "status": "assumed" },
+      "31, 33, 35": { "meaning": "missed passes forward, backward, sideways", "status": "assumed" },
+      "25, 27, 29, 37": { "meaning": "missed passes short, medium, long, crosses", "status": "assumed" },
+      "143, 144, 147": { "meaning": "first-time passes, switches of play, flair passes", "status": "assumed" },
+      "97, 112, 38": { "meaning": "dribbles carried (97); beats incl. skill-move beats (112); skill-move beats (38)", "status": "assumed" },
+      "202": { "meaning": "shots saved (the shooter's)", "status": "assumed" },
+      "4, 94, 10, 145, 156, 158, 163, 171": { "meaning": "fouls won (4), penalties conceded (94), corners conceded (10), corners taken (145), crosses blocked (156), opponent dispossessed (158), dangerous tackles (163), free kicks for bad tackles (171)", "status": "assumed" },
+      "99-103, 219, 111": { "meaning": "out of position, severity 1-5 (219 = their sum); in position (111)", "status": "assumed" },
+      "175, 176, 177, 182, 183, 207, 212": { "meaning": "in-match feedback pop-ups (no good option, good/best option taken, should have passed elsewhere, chose to pass, pick your pass, use the ball)", "status": "assumed" },
+      "118, 128, 131, 136, 12, 93, 123, 124, 137, 140, 238": { "meaning": "assist and goal descriptors: through-ball assist (118), first-time (128), weak foot (131), off the post (136), chip (123), other techniques; they overlap, so they don't add up to goals", "status": "assumed" }
     },
-    "notYetDecoded": "tackle attempts (no counter, pair or triple matches); the candidates above are guesses from how counters split known stats and how they differ per position. In-game Player Performance screens (interceptions, dribbles, through passes…) can confirm them.",
+    "candidates": {
+      "114": { "guess": "key passes (passes that led to a teammate's shot); not in the research list", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines" },
+      "191": { "guess": "part of EA's missed passes (passattempts = 215 + 216 + 153 + 191 on 52/60 of our lines); not in the research list", "evidence": "see 216" }
+    },
+    "notYetDecoded": "tackle attempts (no counter, pair or triple matches EA's tackleattempts); key passes (114 is a guess). In-game Player Performance screens can confirm the fromResearch mappings.",
     "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"
   }
 }

@@ -1,12 +1,16 @@
 import { Leaderboard } from "@/components/Leaderboard";
 import { flagUrl } from "@/lib/ea-assets";
-import { getMembers, getTracked } from "@/lib/stats";
+import { getAdvanced, getMembers, getTracked } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Players" };
 
 export default async function PlayersPage() {
-  const [members, tracked] = await Promise.all([getMembers(), getTracked()]);
+  const [members, tracked, advanced] = await Promise.all([getMembers(), getTracked(), getAdvanced()]);
+  const perGame = (name: string, key: string) => {
+    const a = advanced.get(name);
+    return a?.games ? a.totals[key] / a.games : 0;
+  };
   const rows = members
     .filter((m) => m.games > 0)
     .map((m) => ({
@@ -26,6 +30,11 @@ export default async function PlayersPage() {
       tackles: m.tackles,
       cleanSheets: tracked.get(m.gamertag)?.cleanSheets ?? 0,
       controlsCpu: m.controlsCpu,
+      savedGames: advanced.get(m.gamertag)?.games ?? 0,
+      interceptions: perGame(m.gamertag, "interceptions"),
+      dribbles: perGame(m.gamertag, "dribbles"),
+      throughPasses: perGame(m.gamertag, "throughPasses"),
+      secondAssists: perGame(m.gamertag, "secondAssists"),
     }));
   return (
     <main className="wrap">

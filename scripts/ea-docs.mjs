@@ -82,6 +82,16 @@ lines.push(
   "|---|---|---|---|---|",
   ...Object.entries(c.decoded).map(([id, f]) => `| \`${id}\` | ${STATUS[f.status]} | ${esc(f.meaning)} | ${esc(f.evidence)} | ${esc(f.usedIn)} |`),
   "",
+  "### From the EA FC Pro Clubs API research project",
+  "",
+  c.fromResearch.about,
+  "",
+  "| Counter | How sure | What it counts | Used for |",
+  "|---|---|---|---|",
+  ...Object.entries(c.fromResearch)
+    .filter(([id]) => id !== "about")
+    .map(([id, f]) => `| \`${id}\` | ${STATUS[f.status]} | ${esc(f.meaning)}${f.note ? ` *Note:* ${esc(f.note)}` : ""} | ${esc(f.usedIn ?? "")} |`),
+  "",
   "Guesses not proven yet:",
   "",
   ...Object.entries(c.candidates).map(([id, f]) => `- \`${id}\`: ${f.guess} (${f.evidence})`),

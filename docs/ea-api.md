@@ -325,7 +325,7 @@ The counters count the HUMAN's own actions. EA's headline goals/assists/shots ad
 | Counter | How sure | What it counts | Evidence | Used for |
 |---|---|---|---|---|
 | `11` | ✅ verified | own assists | equals assists on 86/98 lines; all 12 mismatches are CPU-controller lines, counter lower | match_players.own_assists → match_players_effective.assists |
-| `153` | 🟡 assumed | own completed passes, part 2 (a rarer pass type) | see 215 | see 215 |
+| `153` | 🟡 assumed | offside passes (per the research project); EA's passesmade counts them, the research's 'passes completed' (215) doesn't | see 215 | see 215 |
 | `164` | 🟡 assumed | own tackles won | equals tacklesmade on 56 of 60 human-only lines (totals 62 vs 67); on CPU-controller lines EA is 7–17 higher | match_players.own_tackles_made → match_players_effective.tackles_made |
 | `191` | 🟡 assumed | own missed passes, part 2 | see 216 | see 216 |
 | `214` | ✅ verified | own goals scored | equals goals on 89/98 lines; all 9 mismatches are CPU-controller lines where the counter is lower | match_players.own_goals → match_players_effective.goals |
@@ -334,27 +334,43 @@ The counters count the HUMAN's own actions. EA's headline goals/assists/shots ad
 | `217` | ✅ verified | own shots, part 1 (probably on target) | 217 + 218 equals shots on 85/98 lines; all 13 mismatches are CPU-controller lines, counter lower | match_players.own_shots → match_players_effective.shots |
 | `218` | ✅ verified | own shots, part 2 (probably off target) | see 217 | match_players.own_shots → match_players_effective.shots |
 
+### From the EA FC Pro Clubs API research project
+
+Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-63/eafc-pro-clubs-api-research), worked out on 51,395 FC 27 player lines. Our own 142 lines agree wherever we had checked the same ids (13/18, 14/19, 6, 118, 229, 266, 153). Status 'assumed' until an in-game Player Performance screen confirms them here.
+
+| Counter | How sure | What it counts | Used for |
+|---|---|---|---|
+| `6` | 🟡 assumed | interceptions | lib/counters.ts → More stats, leaderboard |
+| `115` | 🟡 assumed | second assists | lib/counters.ts → More stats, leaderboard |
+| `152` | 🟡 assumed | through passes (successful) | lib/counters.ts → More stats, leaderboard |
+| `174` | 🟡 assumed | dribbles completed | lib/counters.ts → More stats, leaderboard |
+| `202` | 🟡 assumed | shots saved (the shooter's) |  |
+| `265, 266` | 🟡 assumed | aerial duels won, attacking (265) and defending (266) | lib/counters.ts → More stats |
+| `108, 109, 110` | 🟡 assumed | possession won in the defensive, middle and attacking third *Note:* the research says totals look low next to the in-game screen | lib/counters.ts → More stats (marked rough) |
+| `105, 106, 107` | 🟡 assumed | possession lost in the defensive, middle and attacking third *Note:* may undercount, as above | lib/counters.ts → More stats (marked rough) |
+| `2, 3` | 🟡 assumed | fouls conceded (3 = roughly in the defensive third) *Note:* may undercount, as above | lib/counters.ts → More stats (marked rough) |
+| `95, 213` | 🟡 assumed | yellow cards: immediate (95) and after advantage (213) | lib/counters.ts → More stats |
+| `13, 18` | 🟡 assumed | shots on target from inside (13) and outside (18) the box; 13 + 18 = 217 on all our 142 lines |  |
+| `14, 19` | 🟡 assumed | shots off target from inside (14) and outside (19) the box; 14 + 19 = 218 on 141/142 of ours |  |
+| `0, 1` | 🟡 assumed | tackles won (0) and lost (1) as the research counts them; our EA tacklesmade matches 164 instead, and 0 + 1 is not EA's tackleattempts |  |
+| `229, 230, 121` | 🟡 assumed | standing (229) and sliding (230) tackles won; 121 is a near-duplicate of 229 |  |
+| `30, 32, 34` | 🟡 assumed | completed passes forward, backward, sideways |  |
+| `24, 26, 28, 36` | 🟡 assumed | completed passes short, medium, long, crosses |  |
+| `31, 33, 35` | 🟡 assumed | missed passes forward, backward, sideways |  |
+| `25, 27, 29, 37` | 🟡 assumed | missed passes short, medium, long, crosses |  |
+| `143, 144, 147` | 🟡 assumed | first-time passes, switches of play, flair passes |  |
+| `97, 112, 38` | 🟡 assumed | dribbles carried (97); beats incl. skill-move beats (112); skill-move beats (38) |  |
+| `4, 94, 10, 145, 156, 158, 163, 171` | 🟡 assumed | fouls won (4), penalties conceded (94), corners conceded (10), corners taken (145), crosses blocked (156), opponent dispossessed (158), dangerous tackles (163), free kicks for bad tackles (171) |  |
+| `99-103, 219, 111` | 🟡 assumed | out of position, severity 1-5 (219 = their sum); in position (111) |  |
+| `175, 176, 177, 182, 183, 207, 212` | 🟡 assumed | in-match feedback pop-ups (no good option, good/best option taken, should have passed elsewhere, chose to pass, pick your pass, use the ball) |  |
+| `118, 128, 131, 136, 12, 93, 123, 124, 137, 140, 238` | 🟡 assumed | assist and goal descriptors: through-ball assist (118), first-time (128), weak foot (131), off the post (136), chip (123), other techniques; they overlap, so they don't add up to goals |  |
+
 Guesses not proven yet:
 
-- `6`: interceptions (3.9 per 90 for defenders, 1.0 for forwards, 0.5 for keepers; correlation 0.40 with tackles; not a part of passes or tackles)
-- `28`: clearances (3.5 per 90 for defenders and 3.3 for keepers, 0.5 for forwards)
-- `56`: related to saves (correlation 1.00 with saves, only 4 keeper lines)
-- `114`: key passes (passes that led to a teammate's shot) (≤ passes; per team ≤ the team's shots in 40/44 games (0.58 of them); a player's assists are ≤ it on 133/142 lines; correlation 0.54 with assists)
-- `118`: a type of assist (e.g. ground or through-ball assists) (always ≤ assists (11), correlation 0.81)
-- `267`: goodDirectionSaves (equal on all 98 lines but only 3 non-zero)
-- `13, 18`: shots on target split by where from: 13 inside the box (forwards 1.8 per 90), 18 outside it (0.5 per 90) (13 + 18 = counter 217 (shots on target) on all 142 lines of 22 games; which half is which is the guess)
-- `14, 19`: shots off target, inside (14) and outside (19) the box (14 + 19 = counter 218 (shots off target) on 141/142 lines)
-- `121, 120`: tackles won split by type: 121 standing (145), 120 sliding (13, mostly defenders) (121 + 120 = counter 164 (tackles won) on all 142 lines)
-- `0, 229`: tackles won that also won the ball back for the team (possession regained) (always ≤ 164, correlation 0.99 / 0.97 with it; 3 per 90 for defenders, 0 for keepers)
-- `12, 93, 123, 124, 128, 131, 137, 140, 238`: goal types (header, weak foot, inside/outside box, first time…); they overlap, so no set adds up to goals (each ≤ counter 214 on every line; best 5-counter sum matches goals on only 123/142 lines)
-- `24, 26, 30, 34, 143, 152, 176`: completed passes by type or zone: 24 is a forward's pass (10 per 90 vs 2.5 for defenders), 26 a defender's (5.9 vs 3.2) (each ≤ completed passes (215 + 153); no pair adds up to them)
-- `25, 27, 29, 31, 33, 35, 37, 151, 157`: missed passes by type; 31 is the most common (3–4 per 90) (each ≤ missed passes (216 + 191); 31 + 35 matches on 99/142 lines only)
-- `266, 9, 144, 162`: defensive actions (blocks, headed clearances…) (1.3–1.6 per 90 for defenders, near 0 for everyone else)
-- `97, 174, 175, 111`: volume counters (touches, passes received, time on the ball); 111 is 42 per 90 for keepers (on nearly every line, large totals, follow passes (0.65–0.83) but are bigger than them)
-- `10, 49, 50`: keeper actions besides saves (catches, claimed crosses) (only on keeper lines, correlation 0.65–0.83 with saves)
-- `54, 268`: reflex or diving save (1 non-zero line only)
+- `114`: key passes (passes that led to a teammate's shot); not in the research list (≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines)
+- `191`: part of EA's missed passes (passattempts = 215 + 216 + 153 + 191 on 52/60 of our lines); not in the research list (see 216)
 
-Not decoded yet: tackle attempts (no counter, pair or triple matches); the candidates above are guesses from how counters split known stats and how they differ per position. In-game Player Performance screens (interceptions, dribbles, through passes…) can confirm them.
+Not decoded yet: tackle attempts (no counter, pair or triple matches EA's tackleattempts); key passes (114 is a guess). In-game Player Performance screens can confirm the fromResearch mappings.
 
 Derived:
 
@@ -364,3 +380,4 @@ Derived:
 ## Thanks
 
 - [frdceri/clubs-hub](https://github.com/frdceri/clubs-hub) (`lib/lookups.js`): archetypeid → archetype names; regionId decoding. Thank you for working these out and publishing them.
+- [Interactive-63/eafc-pro-clubs-api-research](https://github.com/Interactive-63/eafc-pro-clubs-api-research) (`README.md (event IDs and decoded stat formulas)`): interceptions, second assists, through passes, dribbles, aerial duels, possession won/lost, fouls and yellow cards from the hidden event counters; offside passes (153). Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.

@@ -1,6 +1,7 @@
 import type postgres from "postgres";
 import { cache } from "react";
 import { CLUB_ID, currentSeason, inGameArchetypes, loadSettings, playoffsWindow, promotionRule, seasonOf, type InGameArchetype } from "./config";
+import { COUNTER_STATS, counterStat, type Counters } from "./counters";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
 import { positionName } from "./ea-assets";
@@ -62,6 +63,8 @@ export type MatchPlayer = {
   /** EA's own numbers; on a +CPU line they include the CPU teammates' (goals/assists above don't) */
   ea_goals: number;
   ea_assists: number;
+  /** hidden event counters {"id": count} (see lib/counters.ts); null for lines without them */
+  counters: Counters | null;
   /** EA's passes and tackles (incl. the CPU's on a +CPU line); 0 until supabase/migrations/0008 has been run */
   ea_passes_made: number;
   ea_pass_attempts: number;
@@ -339,6 +342,28 @@ export async function getPlayerLog(gamertag: string, limit = 20): Promise<LogRow
     from ${db(t)} mp join matches m on m.id = mp.match_id
     where mp.player = ${gamertag} order by m.ts desc limit ${limit}`) as unknown as LogRow[];
 }
+
+export type Advanced = {
+  /** saved games that had counters */
+  games: number;
+  totals: Record<string, number>;
+};
+
+/** Per-player totals of the counter stats (interceptions, dribbles…) over the saved games. */
+export const getAdvanced = cache(async (): Promise<Map<string, Advanced>> => {
+  const db = sql();
+  const rows = (await db`
+    select player, counters from match_players
+    where counters is not null and seconds > 0`) as unknown as { player: string; counters: Counters }[];
+  const out = new Map<string, Advanced>();
+  for (const r of rows) {
+    const a = out.get(r.player) ?? { games: 0, totals: Object.fromEntries(COUNTER_STATS.map((s) => [s.key, 0])) };
+    a.games += 1;
+    for (const s of COUNTER_STATS) a.totals[s.key] += counterStat(r.counters, s);
+    out.set(r.player, a);
+  }
+  return out;
+});
 
 export type Tracked = {
   games: number;

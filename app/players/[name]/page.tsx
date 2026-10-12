@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
+import { COUNTER_STATS } from "@/lib/counters";
 import { archetypeGroup, archetypeName, groupShort } from "@/lib/ea-assets";
 import { MIN_GAMES } from "@/lib/insights";
-import { AFK_SECONDS, getArchetypeSeason, getArchetypes, getCareer, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel, UNKNOWN_ARCHETYPE } from "@/lib/stats";
+import { AFK_SECONDS, getAdvanced, getArchetypeSeason, getArchetypes, getCareer, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel, UNKNOWN_ARCHETYPE } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -16,14 +17,16 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const members = await getMembers();
   const p = members.find((m) => m.gamertag === name);
   if (!p) notFound();
-  const [log, seasonCpuReds, tracked, archetypes, byArchetype, career] = await Promise.all([
+  const [log, seasonCpuReds, tracked, archetypes, byArchetype, career, advanced] = await Promise.all([
     getPlayerLog(name, 20),
     getSeasonCpuReds(name),
     getTracked(),
     getArchetypes(name),
     getArchetypeSeason(name),
     getCareer(name),
+    getAdvanced(),
   ]);
+  const adv = advanced.get(name);
   const currentArchetype = log[0]?.archetype ?? null;
   const t = tracked.get(name);
   const playing = members.filter((m) => m.games > 0);
@@ -152,6 +155,30 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
             </div>
           ))}
           <span className="muted" style={{ fontSize: 13 }}>EA doesn&apos;t give every save a type; those are counted as Other.</span>
+        </section>
+      ) : null}
+
+      {adv?.games ? (
+        <section className="card stack">
+          <div className="section-head">
+            <h2 className="display" style={{ fontSize: 22 }}>More stats</h2>
+            <span className="muted" style={{ fontSize: 13 }}>{adv.games} saved games</span>
+          </div>
+          <dl className="arch-stats">
+            {COUNTER_STATS.map((s) => (
+              <div key={s.key}>
+                <dt>{s.label}{s.rough ? "*" : ""}</dt>
+                <dd className="num">
+                  {adv.totals[s.key]} <span className="muted" style={{ fontSize: 12 }}>({(adv.totals[s.key] / adv.games).toFixed(1)} per game)</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            The player&apos;s own (never the CPU&apos;s), in the games the site saved, from EA&apos;s hidden event counters as decoded by
+            the <a href="https://github.com/Interactive-63/eafc-pro-clubs-api-research">EA FC Pro Clubs API research</a> project.
+            * Rough: can come out lower than the in-game screen.
+          </p>
         </section>
       ) : null}
 

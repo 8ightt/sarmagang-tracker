@@ -119,6 +119,7 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
   };
   const players = ours.map((p) => {
     const own = ownStats(p);
+    const counters = eventCounters(p);
     return {
       match_id: m.matchId,
       player: p.playername,
@@ -153,6 +154,7 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
       own_passes_made: own?.passesMade ?? null,
       own_pass_attempts: own?.passAttempts ?? null,
       own_tackles_made: own?.tacklesMade ?? null,
+      counters: counters ? db.json(Object.fromEntries(counters) as postgres.JSONValue) : null,
     };
   });
 
@@ -177,7 +179,7 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
           dive_saves = excluded.dive_saves, cross_saves = excluded.cross_saves, direction_saves = excluded.direction_saves,
           own_goals = excluded.own_goals, own_assists = excluded.own_assists, own_shots = excluded.own_shots,
           own_passes_made = excluded.own_passes_made, own_pass_attempts = excluded.own_pass_attempts,
-          own_tackles_made = excluded.own_tackles_made`;
+          own_tackles_made = excluded.own_tackles_made, counters = excluded.counters`;
     }
     return Boolean(res?.inserted);
   });

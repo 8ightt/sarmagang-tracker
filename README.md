@@ -12,7 +12,9 @@ Next.js on Vercel, data in Supabase, near-live: EA checked every 2 minutes while
 - **Seasons**: every saved game, filtered by season, type (league, playoffs, friendly),
   result, dates or opponent, with the record and goals for the selection
 - **Match pages**: each game with both clubs' kits, team stats, player
-  ratings, goals the CPU scored, keepers' saves by type, AFK flags and the captain
+  ratings, goals the CPU scored, keepers' saves by type, AFK flags and the captain, plus
+  interceptions, through passes, dribbles, second assists, aerial duels, possession and fouls
+  per player from EA's hidden counters
 - **Records**: hall of fame, single-game records, streaks and the hall of shame
 - **Analysis**: form, results with and without each player, best duos, positions, and
   results against stronger and weaker opponents (by EA Skill Rating)
@@ -175,6 +177,12 @@ Other people's work this site builds on. Thank you!
   (`lib/lookups.js`) cracked two of EA's codes for us: which `archetypeid` is which FC 27
   archetype, and that a club's `regionId` is ASCII text in hex (e.g. 5719381 → "WEU").
   Both are noted in [docs/ea-data.json](docs/ea-data.json).
+- **[EA FC Pro Clubs API research](https://github.com/Interactive-63/eafc-pro-clubs-api-research)**
+  (Interactive-63): their decoded event counters, worked out on 51,395 FC 27 player lines, give
+  the site interceptions, second assists, through passes, dribbles, aerial duels, possession
+  won/lost, fouls and yellow cards, and explained counter 153 (offside passes). Found through
+  [Pro Clubs Tracker](https://proclubstracker.com), which credits it. Mapped in
+  [docs/ea-data.json](docs/ea-data.json).
 - **[Pro Clubs Analytics](https://www.proclubsanalytics.com)**: the division and reputation
   ladders on the club page follow their club overview, which also showed us the name of the
   first reputation tier ("Hometown Heroes").

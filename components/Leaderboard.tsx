@@ -20,6 +20,12 @@ export type BoardRow = {
   /** from the saved matches, not EA's season totals */
   cleanSheets: number;
   controlsCpu: boolean;
+  /** per game over the saved games with event counters (savedGames of them) */
+  savedGames: number;
+  interceptions: number;
+  dribbles: number;
+  throughPasses: number;
+  secondAssists: number;
 };
 
 const METRICS = [
@@ -31,6 +37,10 @@ const METRICS = [
   { id: "passPct", label: "Pass %", fmt: (v: number) => `${v}%` },
   { id: "tackles", label: "Tackles", perGame: true, cpuSkewed: true },
   { id: "cleanSheets", label: "Clean sheets", note: "in saved games" },
+  { id: "interceptions", label: "Interceptions", saved: true },
+  { id: "dribbles", label: "Dribbles", saved: true },
+  { id: "throughPasses", label: "Through passes", saved: true },
+  { id: "secondAssists", label: "Second assists", saved: true },
 ] as const;
 
 type MetricId = (typeof METRICS)[number]["id"];
@@ -69,9 +79,15 @@ export function Leaderboard({ rows }: { rows: BoardRow[] }) {
                 <div style={{ width: `${Math.round((v / max) * 100)}%`, opacity: skewed ? 0.45 : 1 }} />
               </div>
               <div style={{ minWidth: 120, textAlign: "right" }}>
-                <div className="display num" style={{ fontSize: 36, fontWeight: 900 }}>{"fmt" in m ? m.fmt(v) : v}</div>
+                <div className="display num" style={{ fontSize: 36, fontWeight: 900 }}>{"saved" in m ? v.toFixed(1) : "fmt" in m ? m.fmt(v) : v}</div>
                 <div className="muted" style={{ fontSize: 13 }}>
-                  {"perGame" in m && m.perGame && r.games ? `${(v / r.games).toFixed(2)} per game` : "note" in m ? m.note : m.label}
+                  {"saved" in m
+                    ? `per game · ${r.savedGames} saved`
+                    : "perGame" in m && m.perGame && r.games
+                      ? `${(v / r.games).toFixed(2)} per game`
+                      : "note" in m
+                        ? m.note
+                        : m.label}
                   {skewed ? " · incl. CPU" : ""}
                 </div>
               </div>
