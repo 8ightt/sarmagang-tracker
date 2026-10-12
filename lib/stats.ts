@@ -393,15 +393,23 @@ export type ArchetypeSeason = {
   total: { games: number; goals: number; assists: number; motm: number; passes: number; tackles: number; saves: number; conceded: number; cleanSheets: number };
 };
 
+/** Row id for the season's games EA counted but the site never saw (archetype unknown). */
+export const UNKNOWN_ARCHETYPE = -1;
+
 /**
- * A player's whole season split by archetype: the in-game Archetypes > Statistics totals
- * (config/archetype-stats.json) plus every game the site saved after they were copied.
- * Null when nobody has copied that screen for the player yet.
+ * A player's whole season split by archetype. With the in-game Archetypes > Statistics totals
+ * (config/archetype-stats.json): those, plus every game the site saved after they were copied.
+ * Without: the saved games of the current season per archetype, plus an UNKNOWN_ARCHETYPE row
+ * for the rest of EA's season totals (games from before the site saved matches).
  */
-export async function getArchetypeSeason(player: string): Promise<{ season: string; asOf: number; rows: ArchetypeSeason[] } | null> {
-  const snap = inGameArchetypes(player);
+export async function getArchetypeSeason(
+  player: string,
+): Promise<{ season: string; asOf: number | null; rows: ArchetypeSeason[] } | null> {
+  const copied = inGameArchetypes(player);
+  const current = currentSeason();
+  const snap = copied ?? (current ? { season: current.name, asOf: null, archetypes: {} as Record<string, InGameArchetype> } : null);
   if (!snap) return null;
-  const asOf = Date.parse(snap.asOf) / 1000;
+  const asOf = snap.asOf ? Date.parse(snap.asOf) / 1000 : 0;
   const db = sql();
   // EA's numbers (incl. the CPU's for whoever runs it), like the in-game screen
   const games = (await db`
@@ -451,7 +459,30 @@ export async function getArchetypeSeason(player: string): Promise<{ season: stri
     };
   });
   rows.sort((a, b) => b.total.games - a.total.games);
-  return { season: snap.season, asOf, rows };
+  if (!copied) {
+    // EA's season totals minus what the saved games cover = the games nobody knows the archetype of
+    const members = await getSnapshot<{ members?: Record<string, string>[] }>("members");
+    const m = members?.data?.members?.find((x) => x.name === player);
+    if (m) {
+      const saved = rows.reduce((t, r) => {
+        for (const k of Object.keys(t) as (keyof typeof t)[]) t[k] += r.total[k];
+        return t;
+      }, zero());
+      const rest = (ea: number, ours: number) => Math.max(0, ea - ours);
+      const unknown = {
+        ...zero(),
+        games: rest(num(m.gamesPlayed), saved.games),
+        goals: rest(num(m.goals), saved.goals),
+        assists: rest(num(m.assists), saved.assists),
+        motm: rest(num(m.manOfTheMatch), saved.motm),
+        passes: rest(num(m.passesMade), saved.passes),
+        tackles: rest(num(m.tacklesMade), saved.tackles),
+      };
+      if (unknown.games > 0) rows.push({ archetype: UNKNOWN_ARCHETYPE, inGame: null, since: zero(), total: unknown });
+    }
+    if (!rows.some((r) => r.archetype !== UNKNOWN_ARCHETYPE)) return null;
+  }
+  return { season: snap.season, asOf: snap.asOf ? asOf : null, rows };
 }
 
 /** A member's all-time totals at the club (members/career/stats); EA's numbers, incl. the CPU's for whoever runs it. */

@@ -3,7 +3,7 @@ import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
 import { archetypeGroup, archetypeName, groupShort } from "@/lib/ea-assets";
 import { MIN_GAMES } from "@/lib/insights";
-import { AFK_SECONDS, getArchetypeSeason, getArchetypes, getCareer, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel } from "@/lib/stats";
+import { AFK_SECONDS, getArchetypeSeason, getArchetypes, getCareer, getMembers, getPlayerLog, getSeasonCpuReds, getTracked, idleLabel, UNKNOWN_ARCHETYPE } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -166,7 +166,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
             {byArchetype.rows.map((a) => {
               const t = a.total;
               const g = a.inGame;
-              const keeper = archetypeGroup(a.archetype) === "Keeper";
+              const unknown = a.archetype === UNKNOWN_ARCHETYPE;
+              const keeper = !unknown && archetypeGroup(a.archetype) === "Keeper";
               const total = byArchetype.rows.reduce((n, x) => n + x.total.games, 0);
               const stats: [string, string | number][] = keeper
                 ? [
@@ -192,11 +193,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                     ["Tackle success", g?.tacklePct !== undefined ? `${g.tacklePct}%` : "–"],
                   ];
               return (
-                <div key={a.archetype} className="card stack" style={{ gap: 14, border: a.archetype === currentArchetype ? "1px solid var(--accent)" : undefined }}>
+                <div key={a.archetype} className="card stack" style={{ gap: 14, border: a.archetype === currentArchetype ? "1px solid var(--accent)" : undefined, opacity: unknown ? 0.75 : undefined }}>
                   <div className="row between" style={{ alignItems: "flex-start" }}>
                     <div className="stack" style={{ gap: 2 }}>
-                      <span className="kpi-label">{archetypeGroup(a.archetype)}</span>
-                      <strong className="display" style={{ fontSize: 24 }}>{archetypeName(a.archetype)}</strong>
+                      <span className="kpi-label">{unknown ? "Archetype unknown" : archetypeGroup(a.archetype)}</span>
+                      <strong className="display" style={{ fontSize: 24 }}>{unknown ? "Earlier games" : archetypeName(a.archetype)}</strong>
                     </div>
                     {a.archetype === currentArchetype ? <span className="chip">Current</span> : null}
                   </div>
@@ -211,7 +212,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                     <span className="muted" style={{ fontSize: 12 }}>{total ? Math.round((t.games / total) * 100) : 0}% of the season</span>
                   </div>
                   <dl className="arch-stats">
-                    {stats.map(([k, v]) => (
+                    {stats.filter(([, v]) => v !== "–").map(([k, v]) => (
                       <div key={k}><dt>{k}</dt><dd className="num">{v}</dd></div>
                     ))}
                   </dl>
@@ -220,9 +221,19 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
             })}
           </div>
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-            From the in-game Archetypes › Statistics screen ({when(byArchetype.asOf)}), plus every game the site saved since.
-            Percentages and shots are the game&apos;s, as of then. Goals and assists here are EA&apos;s, so they include the CPU&apos;s for
-            whoever runs it.
+            {byArchetype.asOf !== null ? (
+              <>
+                From the in-game Archetypes › Statistics screen ({when(byArchetype.asOf)}), plus every game the site saved since.
+                Percentages and shots are the game&apos;s, as of then.
+              </>
+            ) : (
+              <>
+                From the league games the site saved. EA doesn&apos;t split season totals by archetype, so the games from
+                before the site saved matches are under Earlier games; a screenshot of the in-game Archetypes › Statistics
+                screen fills those in.
+              </>
+            )}{" "}
+            Goals and assists here are EA&apos;s, so they include the CPU&apos;s for whoever runs it.
           </p>
         </section>
       ) : null}
