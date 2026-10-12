@@ -141,9 +141,9 @@
             "goals": { "status": "verified", "meaning": "EA's goals; on the line of whoever controls the CPU this INCLUDES the CPU teammates' goals", "usedFor": "shown as 'EA: n incl. CPU'; own goals come from counter 214" },
             "assists": { "status": "verified", "meaning": "as goals: includes CPU assists on the controller's line" },
             "shots": { "status": "verified", "meaning": "as goals: includes CPU shots on the controller's line" },
-            "passesmade": { "status": "verified", "meaning": "completed passes; includes CPU on the controller's line" },
+            "passesmade": { "status": "verified", "meaning": "completed passes; includes CPU on the controller's line, and 0 for a player who quit", "usedFor": "shown as 'EA: n incl. CPU'; own passes come from counters 215 + 153" },
             "passattempts": { "status": "verified", "meaning": "attempted passes; includes CPU on the controller's line" },
-            "tacklesmade": { "status": "verified", "meaning": "won tackles; includes CPU on the controller's line" },
+            "tacklesmade": { "status": "verified", "meaning": "won tackles; includes CPU on the controller's line", "usedFor": "shown as 'EA: n incl. CPU'; own tackles come from counter 164" },
             "tackleattempts": { "status": "verified", "meaning": "attempted tackles; includes CPU on the controller's line" },
             "redcards": { "status": "verified", "meaning": "red cards; may include CPU cards on the controller's line" },
             "mom": { "status": "verified", "meaning": "1 = man of the match" },
@@ -388,17 +388,48 @@
         "status": "verified",
         "evidence": "see 217",
         "usedIn": "match_players.own_shots → match_players_effective.shots"
+      },
+      "215": {
+        "meaning": "own completed passes, part 1 (most of them)",
+        "status": "assumed",
+        "evidence": "215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0",
+        "usedIn": "match_players.own_passes_made → match_players_effective.passes_made"
+      },
+      "153": {
+        "meaning": "own completed passes, part 2 (a rarer pass type)",
+        "status": "assumed",
+        "evidence": "see 215",
+        "usedIn": "see 215"
+      },
+      "216": {
+        "meaning": "own missed passes, part 1",
+        "status": "assumed",
+        "evidence": "215 + 216 + 153 + 191 = passattempts on 52 of 60 human-only lines; totals 954 vs 962",
+        "usedIn": "match_players.own_pass_attempts → match_players_effective.pass_attempts"
+      },
+      "191": {
+        "meaning": "own missed passes, part 2",
+        "status": "assumed",
+        "evidence": "see 216",
+        "usedIn": "see 216"
+      },
+      "164": {
+        "meaning": "own tackles won",
+        "status": "assumed",
+        "evidence": "equals tacklesmade on 56 of 60 human-only lines (totals 62 vs 67); on CPU-controller lines EA is 7–17 higher",
+        "usedIn": "match_players.own_tackles_made → match_players_effective.tackles_made"
       }
     },
     "derived": {
-      "cpuGoals": "club score minus the sum of counter 214 over the club's players (own goals by the opponent land here too); shown as “CPU” among the scorers on match pages and in Discord posts"
+      "cpuGoals": "club score minus the sum of counter 214 over the club's players (own goals by the opponent land here too); shown as “CPU” among the scorers on match pages and in Discord posts",
+      "cpuController": "the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (the CPU nearly always passes, rarely scores)"
     },
     "candidates": {
       "267": { "guess": "goodDirectionSaves", "evidence": "equal on all 98 lines but only 3 non-zero" },
       "56": { "guess": "related to saves", "evidence": "correlation 1.00 with saves, only 4 keeper lines" },
       "54, 268": { "guess": "reflex or diving save", "evidence": "1 non-zero line only" }
     },
-    "notYetDecoded": "passes and tackles do not match any single counter or pair; likely split by type (e.g. 174, 175, 215, 216). Revisit with 30+ matches.",
+    "notYetDecoded": "tackle attempts (no counter or pair matches), interceptions, dribbles, through passes, second assists and most of the 150+ ids. Ground truth needed: in-game Player Performance screens.",
     "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"
   }
 }

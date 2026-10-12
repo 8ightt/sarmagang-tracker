@@ -62,6 +62,10 @@ export type MatchPlayer = {
   /** EA's own numbers; on a +CPU line they include the CPU teammates' (goals/assists above don't) */
   ea_goals: number;
   ea_assists: number;
+  /** EA's passes and tackles (incl. the CPU's on a +CPU line); 0 until supabase/migrations/0008 has been run */
+  ea_passes_made: number;
+  ea_pass_attempts: number;
+  ea_tackles_made: number;
   /** the fields below are 0/false until supabase/migrations/0005 has been run */
   goals_conceded: number;
   clean_sheet: boolean;
@@ -190,6 +194,9 @@ export type Member = {
   /** EA's season totals, which include the CPU's goals/assists for whoever controls the CPU */
   goalsEa: number;
   assistsEa: number;
+  /** EA's season passes/tackles; passes/tackles above take the CPU's share out of saved games */
+  passesEa: number;
+  tacklesEa: number;
   rating: number;
   motm: number;
   redsEa: number;
@@ -204,6 +211,8 @@ export type Member = {
   controlsCpu: boolean;
 };
 
+type Delta = { goals: number; assists: number; motm: number; passes: number; pass_attempts: number; tackles: number };
+
 export const getMembers = cache(async (): Promise<Member[]> => {
   const db = sql();
   const fixesReady = (await playersTable()) === "match_players_effective";
@@ -216,23 +225,33 @@ export const getMembers = cache(async (): Promise<Member[]> => {
       ? db`select player,
              sum(goals - ea_goals)::int as goals,
              sum(assists - ea_assists)::int as assists,
-             sum(motm::int - ea_motm::int)::int as motm
+             sum(motm::int - ea_motm::int)::int as motm,
+             sum(passes_made - ea_passes_made)::int as passes,
+             sum(coalesce(pass_attempts, passes_made) - ea_pass_attempts)::int as pass_attempts,
+             sum(tackles_made - ea_tackles_made)::int as tackles
           from match_players_effective
-          where goals <> ea_goals or assists <> ea_assists or motm <> ea_motm group by player`
+          where goals <> ea_goals or assists <> ea_assists or motm <> ea_motm
+             or passes_made <> ea_passes_made or pass_attempts is distinct from ea_pass_attempts or tackles_made <> ea_tackles_made
+          group by player`
       : Promise.resolve([] as postgres.Row[]),
   ]);
   const members = snap?.data?.members ?? [];
   const settings = loadSettings();
   const cpuReds = new Map(cpuRows.map((r) => [r.player as string, r.n as number]));
   const cpuPlayers = new Set(cpuPlayerRows.map((r) => r.player as string));
-  const fixDelta = new Map(fixRows.map((r) => [r.player as string, r as unknown as { goals: number; assists: number; motm: number }]));
+  const fixDelta = new Map(fixRows.map((r) => [r.player as string, r as unknown as Delta]));
   return members
     .map((m) => {
       const s = settings.players[m.name] ?? {};
       const eaPos = positionName(m.proPos);
       const redsEa = num(m.redCards);
       const redsCpu = cpuReds.get(m.name) ?? 0;
-      const fix = fixDelta.get(m.name) ?? { goals: 0, assists: 0, motm: 0 };
+      const fix = fixDelta.get(m.name) ?? { goals: 0, assists: 0, motm: 0, passes: 0, pass_attempts: 0, tackles: 0 };
+      // EA only sends pass success %, so its attempts are worked back from that
+      const passesEa = num(m.passesMade);
+      const attemptsEa = num(m.passSuccessRate) > 0 ? passesEa / (num(m.passSuccessRate) / 100) : passesEa;
+      const passes = Math.max(0, passesEa + fix.passes);
+      const attempts = Math.max(passes, attemptsEa + fix.pass_attempts);
       return {
         gamertag: m.name,
         proName: m.proName || "—",
@@ -257,9 +276,11 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         redsEa,
         redsCpu,
         reds: Math.max(0, redsEa - redsCpu),
-        passes: num(m.passesMade),
-        passPct: num(m.passSuccessRate),
-        tackles: num(m.tacklesMade),
+        passes,
+        passPct: attempts > 0 ? Math.round((passes / attempts) * 100) : num(m.passSuccessRate),
+        passesEa,
+        tackles: Math.max(0, num(m.tacklesMade) + fix.tackles),
+        tacklesEa: num(m.tacklesMade),
         tacklePct: num(m.tackleSuccessRate),
         shotPct: num(m.shotSuccessRate),
         lastTenGoals: Array.from({ length: 10 }, (_, i) => num(m[`prevGoals${i + 1}`])).reverse(),
@@ -413,7 +434,7 @@ export async function getArchetypeSeason(
   const db = sql();
   // EA's numbers (incl. the CPU's for whoever runs it), like the in-game screen
   const games = (await db`
-    select mp.archetype, m.ts, mp.ea_goals, mp.ea_assists, mp.ea_motm, mp.passes_made, mp.tackles_made, mp.saves,
+    select mp.archetype, m.ts, mp.ea_goals, mp.ea_assists, mp.ea_motm, mp.ea_passes_made as passes_made, mp.ea_tackles_made as tackles_made, mp.saves,
            mp.goals_conceded, mp.clean_sheet
     from ${db(await playersTable())} mp join matches m on m.id = mp.match_id
     where mp.player = ${player} and mp.seconds > 0 and m.ts > ${asOf} and m.match_type <> 'friendlyMatch'`) as unknown as {

@@ -46,9 +46,12 @@ site uses them for goals (counter 214), assists (11) and shots (217 + 218), so:
 
 - Goals, assists and shots everywhere are each player's own. Goals the CPU scored show as
   **CPU** among the scorers on match pages and in Discord posts.
+- Passes (counters 215 + 153 made, plus 216 + 191 missed) and tackles won (164) are each
+  player's own too. These are newer finds: they match EA exactly on most human-only lines
+  and within 1–2 on the rest. They also keep the stats of a player who quit, which EA wipes.
 - Season totals take the CPU's share out for every game the site saved; EA's figure stays
   visible as "EA: n incl. CPU". Games from before the site saved matches can't be corrected.
-- Passes, tackles and cards still include the CPU's for whoever controls it. The site marks
+- Red cards and tackle attempts still include the CPU's for whoever controls it. The site marks
   that line **+CPU**, a red card in such a game can be moved to the CPU with the club
   password, and **Fix stats** takes the real numbers from the in-game screen.
 

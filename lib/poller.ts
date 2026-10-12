@@ -7,7 +7,7 @@ const MATCH_TYPES = ["leagueMatch", "playoffMatch", "friendlyMatch"] as const;
 const n = (v: unknown) => (v === undefined || v === null || v === "" ? 0 : Number(v));
 
 /**
- * A player "controls the CPU" when his passing volume dwarfs everyone else's:
+ * A player "controls the CPU" when their passing volume dwarfs everyone else's:
  * that happens when he plays ANY, or is one of only two humans online.
  */
 export function cpuController(players: Record<string, string>[]): string | null {
@@ -21,6 +21,14 @@ export function cpuController(players: Record<string, string>[]): string | null 
     })
     .sort((a, b) => b.extra - a.extra);
   if (extra[0].extra > 0) return extra[0].name;
+  // nearly as certain: the CPU always passes, so EA's passes run well above the controller's own
+  const passGap = live
+    .map((p) => {
+      const own = ownStats(p);
+      return { name: p.playername, gap: own ? n(p.passesmade) - own.passesMade : 0 };
+    })
+    .sort((a, b) => b.gap - a.gap);
+  if (passGap[0].gap >= 5) return passGap[0].name;
   // otherwise a guess: the controller also makes the CPU's passes AND tackles, so both are far above a human's
   const byPasses = live
     .map((p) => ({ name: p.playername, att: n(p.passattempts), tackles: n(p.tackleattempts), mins: Math.max(1, n(p.secondsPlayed) / 60) }))
@@ -49,13 +57,25 @@ export function eventCounters(p: Record<string, string>): Map<number, number> | 
 const OWN_GOALS = 214;
 const OWN_ASSISTS = 11;
 const OWN_SHOTS = [217, 218];
+const OWN_PASSES_MADE = [215, 153];
+const OWN_PASSES_MISSED = [216, 191];
+const OWN_TACKLES_MADE = 164;
 
-/** The player's own goals, assists and shots (without the CPU's), or null without counters. */
+/** The player's own goals, assists, shots, passes and tackles (without the CPU's), or null without counters. */
 export function ownStats(p: Record<string, string>) {
   const c = eventCounters(p);
   if (!c) return null;
   const get = (id: number) => c.get(id) ?? 0;
-  return { goals: get(OWN_GOALS), assists: get(OWN_ASSISTS), shots: OWN_SHOTS.reduce((s, id) => s + get(id), 0) };
+  const sum = (ids: number[]) => ids.reduce((s, id) => s + get(id), 0);
+  const passesMade = sum(OWN_PASSES_MADE);
+  return {
+    goals: get(OWN_GOALS),
+    assists: get(OWN_ASSISTS),
+    shots: sum(OWN_SHOTS),
+    passesMade,
+    passAttempts: passesMade + sum(OWN_PASSES_MISSED),
+    tacklesMade: get(OWN_TACKLES_MADE),
+  };
 }
 
 /** The kit colours EA sends with a match: body, trim, sleeve, extra. */
@@ -130,6 +150,9 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
       own_goals: own?.goals ?? null,
       own_assists: own?.assists ?? null,
       own_shots: own?.shots ?? null,
+      own_passes_made: own?.passesMade ?? null,
+      own_pass_attempts: own?.passAttempts ?? null,
+      own_tackles_made: own?.tacklesMade ?? null,
     };
   });
 
@@ -152,7 +175,9 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
           idle_seconds = excluded.idle_seconds, real_seconds = excluded.real_seconds,
           reflex_saves = excluded.reflex_saves, parry_saves = excluded.parry_saves, punch_saves = excluded.punch_saves,
           dive_saves = excluded.dive_saves, cross_saves = excluded.cross_saves, direction_saves = excluded.direction_saves,
-          own_goals = excluded.own_goals, own_assists = excluded.own_assists, own_shots = excluded.own_shots`;
+          own_goals = excluded.own_goals, own_assists = excluded.own_assists, own_shots = excluded.own_shots,
+          own_passes_made = excluded.own_passes_made, own_pass_attempts = excluded.own_pass_attempts,
+          own_tackles_made = excluded.own_tackles_made`;
     }
     return Boolean(res?.inserted);
   });

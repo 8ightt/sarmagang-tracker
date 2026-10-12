@@ -121,7 +121,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         <a href={`/players/${encodeURIComponent(p.player)}`}>{p.player}</a>
                         {p.motm ? <span className="chip">MOTM</span> : null}
                         {m.captain === p.player ? <span className="chip chip-ghost">C</span> : null}
-                        {p.controls_cpu ? <span className="chip chip-ghost" title="EA added the CPU teammates' passes, tackles and cards to this line">+CPU</span> : null}
+                        {p.controls_cpu ? <span className="chip chip-ghost" title="This player ran the CPU teammates; EA added their stats to this line. The table shows the player's own, except red cards">+CPU</span> : null}
                         {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
                         {p.clean_sheet ? <span className="chip chip-ghost" title="EA credited a clean sheet">CS</span> : null}
                         {p.idle_seconds >= AFK_SECONDS ? (
@@ -140,8 +140,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                     <td title={p.goals !== p.ea_goals ? `EA: ${p.ea_goals} incl. CPU` : undefined}>{p.goals}</td>
                     <td title={p.assists !== p.ea_assists ? `EA: ${p.ea_assists} incl. CPU` : undefined}>{p.assists}</td>
                     <td>{p.shots}</td>
-                    <td>{p.passes_made}{p.pass_attempts !== null ? `/${p.pass_attempts}` : ""}</td>
-                    <td>{p.tackles_made}{p.tackle_attempts !== null ? `/${p.tackle_attempts}` : ""}</td>
+                    <td title={p.passes_made !== p.ea_passes_made ? `EA: ${p.ea_passes_made}/${p.ea_pass_attempts} incl. CPU` : undefined}>
+                      {p.passes_made}{p.pass_attempts !== null ? `/${p.pass_attempts}` : ""}
+                    </td>
+                    <td title={p.tackles_made !== p.ea_tackles_made ? `EA: ${p.ea_tackles_made} incl. CPU` : undefined}>
+                      {p.tackles_made}{p.tackle_attempts !== null ? `/${p.tackle_attempts}` : ""}
+                    </td>
                     <td>
                       {p.saves || "–"}
                       {p.saves ? (
@@ -158,10 +162,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           </table>
         </div>
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          Goals, assists and shots are each player&apos;s own; goals the CPU teammates scored are listed as “CPU”.
-          EA still adds the CPU&apos;s passes, tackles and cards to one player&apos;s line (marked “+CPU”), and only records
-          forward/midfielder/defender/keeper. Use <a href="#fix">Fix stats</a> below with the numbers from the in-game
-          Player Performance screen to correct those.
+          Goals, assists, shots, passes and tackles are each player&apos;s own; goals the CPU teammates scored are listed as
+          “CPU”, and EA&apos;s number (incl. the CPU&apos;s) shows when you hover a cell. EA still puts the CPU&apos;s red cards on
+          the line marked “+CPU”, gives no own tackle attempts for it, and only records forward/midfielder/defender/keeper.
+          Use <a href="#fix">Fix stats</a> below with the numbers from the in-game Player Performance screen to correct those.
         </p>
       </section>
 

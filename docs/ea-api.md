@@ -100,9 +100,9 @@ Path: `[].players.{id}.{id}`. Keyed by club id, then the player's EA account id.
 | `goals` | ✅ verified | EA's goals; on the line of whoever controls the CPU this INCLUDES the CPU teammates' goals | shown as 'EA: n incl. CPU'; own goals come from counter 214 |
 | `assists` | ✅ verified | as goals: includes CPU assists on the controller's line |  |
 | `shots` | ✅ verified | as goals: includes CPU shots on the controller's line |  |
-| `passesmade` | ✅ verified | completed passes; includes CPU on the controller's line |  |
+| `passesmade` | ✅ verified | completed passes; includes CPU on the controller's line, and 0 for a player who quit | shown as 'EA: n incl. CPU'; own passes come from counters 215 + 153 |
 | `passattempts` | ✅ verified | attempted passes; includes CPU on the controller's line |  |
-| `tacklesmade` | ✅ verified | won tackles; includes CPU on the controller's line |  |
+| `tacklesmade` | ✅ verified | won tackles; includes CPU on the controller's line | shown as 'EA: n incl. CPU'; own tackles come from counter 164 |
 | `tackleattempts` | ✅ verified | attempted tackles; includes CPU on the controller's line |  |
 | `redcards` | ✅ verified | red cards; may include CPU cards on the controller's line |  |
 | `mom` | ✅ verified | 1 = man of the match |  |
@@ -325,7 +325,12 @@ The counters count the HUMAN's own actions. EA's headline goals/assists/shots ad
 | Counter | How sure | What it counts | Evidence | Used for |
 |---|---|---|---|---|
 | `11` | ✅ verified | own assists | equals assists on 86/98 lines; all 12 mismatches are CPU-controller lines, counter lower | match_players.own_assists → match_players_effective.assists |
+| `153` | 🟡 assumed | own completed passes, part 2 (a rarer pass type) | see 215 | see 215 |
+| `164` | 🟡 assumed | own tackles won | equals tacklesmade on 56 of 60 human-only lines (totals 62 vs 67); on CPU-controller lines EA is 7–17 higher | match_players.own_tackles_made → match_players_effective.tackles_made |
+| `191` | 🟡 assumed | own missed passes, part 2 | see 216 | see 216 |
 | `214` | ✅ verified | own goals scored | equals goals on 89/98 lines; all 9 mismatches are CPU-controller lines where the counter is lower | match_players.own_goals → match_players_effective.goals |
+| `215` | 🟡 assumed | own completed passes, part 1 (most of them) | 215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0 | match_players.own_passes_made → match_players_effective.passes_made |
+| `216` | 🟡 assumed | own missed passes, part 1 | 215 + 216 + 153 + 191 = passattempts on 52 of 60 human-only lines; totals 954 vs 962 | match_players.own_pass_attempts → match_players_effective.pass_attempts |
 | `217` | ✅ verified | own shots, part 1 (probably on target) | 217 + 218 equals shots on 85/98 lines; all 13 mismatches are CPU-controller lines, counter lower | match_players.own_shots → match_players_effective.shots |
 | `218` | ✅ verified | own shots, part 2 (probably off target) | see 217 | match_players.own_shots → match_players_effective.shots |
 
@@ -335,9 +340,12 @@ Guesses not proven yet:
 - `267`: goodDirectionSaves (equal on all 98 lines but only 3 non-zero)
 - `54, 268`: reflex or diving save (1 non-zero line only)
 
-Not decoded yet: passes and tackles do not match any single counter or pair; likely split by type (e.g. 174, 175, 215, 216). Revisit with 30+ matches.
+Not decoded yet: tackle attempts (no counter or pair matches), interceptions, dribbles, through passes, second assists and most of the 150+ ids. Ground truth needed: in-game Player Performance screens.
 
-Derived: club score minus the sum of counter 214 over the club's players (own goals by the opponent land here too); shown as “CPU” among the scorers on match pages and in Discord posts.
+Derived:
+
+- **cpuGoals**: club score minus the sum of counter 214 over the club's players (own goals by the opponent land here too); shown as “CPU” among the scorers on match pages and in Discord posts.
+- **cpuController**: the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (the CPU nearly always passes, rarely scores).
 
 ## Thanks
 
