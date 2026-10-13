@@ -138,6 +138,10 @@ uses it: the pages work without the new columns, but saving matches doesn't.
 ### 7. Optional
 
 - **Discord**: set `DISCORD_WEBHOOK_URL` and every new result gets posted to your channel.
+- **Screenshot bot**: set `TELEGRAM_TOKEN` (from @BotFather) in Vercel and `.env.local`, then run
+  `node --env-file=.env.local scripts/telegram-setup.mjs` once. Teammates send in-game screenshots to
+  the bot; they're kept in a private table until `node --env-file=.env.local scripts/telegram-pull.mjs`
+  copies them into `inbox/` (local only) and clears them. Limits: 20 MB a file, 40 a day per sender.
 - **Season by archetype**: every player page splits the season by archetype from the saved league
   games, with the rest of EA's season totals as "Earlier games". EA's API can't split those, but the game
   can. Copy a player's in-game Archetypes › Statistics screen (one screenshot per archetype) into
