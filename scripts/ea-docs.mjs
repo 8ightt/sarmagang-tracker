@@ -24,7 +24,7 @@ function expand(key) {
 }
 
 const esc = (s) => String(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
-const STATUS = { verified: "✅ verified", assumed: "🟡 assumed", unknown: "❓ unknown", useless: "⛔ useless" };
+const STATUS = { verified: "✅ verified", assumed: "🟡 assumed", unknown: "❓ unknown", useless: "⛔ useless", doubtful: "🟠 doubtful", wrong: "❌ wrong" };
 
 function explain(f) {
   const parts = [f.meaning ?? ""];
@@ -80,7 +80,7 @@ lines.push(
   "",
   "| Counter | How sure | What it counts | Evidence | Used for |",
   "|---|---|---|---|---|",
-  ...Object.entries(c.decoded).map(([id, f]) => `| \`${id}\` | ${STATUS[f.status]} | ${esc(f.meaning)} | ${esc(f.evidence)} | ${esc(f.usedIn)} |`),
+  ...Object.entries(c.decoded).map(([id, f]) => `| \`${id}\` | ${STATUS[f.status]} | ${esc(f.meaning)} | ${esc(f.evidence)}${f.screen ? `. In game: ${esc(f.screen)}` : ""} | ${esc(f.usedIn)} |`),
   "",
   "### From the EA FC Pro Clubs API research project",
   "",
@@ -90,7 +90,7 @@ lines.push(
   "|---|---|---|---|",
   ...Object.entries(c.fromResearch)
     .filter(([id]) => id !== "about")
-    .map(([id, f]) => `| \`${id}\` | ${STATUS[f.status]} | ${esc(f.meaning)}${f.note ? ` *Note:* ${esc(f.note)}` : ""} | ${esc(f.usedIn ?? "")} |`),
+    .map(([id, f]) => `| \`${id}\` | ${STATUS[f.status]} | ${esc(f.meaning)}${f.note ? ` *Note:* ${esc(f.note)}` : ""}${f.screen ? ` *In game:* ${esc(f.screen)}` : ""} | ${esc(f.usedIn ?? "")} |`),
   "",
   "Guesses not proven yet:",
   "",

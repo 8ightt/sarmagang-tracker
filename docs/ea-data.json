@@ -14,7 +14,7 @@
       "url": "https://github.com/Interactive-63/eafc-pro-clubs-api-research",
       "file": "README.md (event IDs and decoded stat formulas)",
       "thanks": "Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.",
-      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, possession won/lost, fouls and yellow cards from the hidden event counters; offside passes (153)"
+      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153)"
     }
   ],
   "evidence": {
@@ -148,13 +148,13 @@
             "goals": { "status": "verified", "meaning": "EA's goals; on the line of whoever controls the CPU this INCLUDES the CPU teammates' goals", "usedFor": "shown as 'EA: n incl. CPU'; own goals come from counter 214" },
             "assists": { "status": "verified", "meaning": "as goals: includes CPU assists on the controller's line" },
             "shots": { "status": "verified", "meaning": "as goals: includes CPU shots on the controller's line" },
-            "passesmade": { "status": "verified", "meaning": "completed passes; includes CPU on the controller's line, and 0 for a player who quit", "usedFor": "shown as 'EA: n incl. CPU'; own passes come from counters 215 + 153" },
+            "passesmade": { "status": "verified", "meaning": "completed passes; includes CPU on the controller's line, and 0 for a player who quit", "usedFor": "shown as 'EA: n incl. CPU'; own passes come from counter 215" },
             "passattempts": { "status": "verified", "meaning": "attempted passes; includes CPU on the controller's line" },
             "tacklesmade": { "status": "verified", "meaning": "won tackles; includes CPU on the controller's line", "usedFor": "shown as 'EA: n incl. CPU'; own tackles come from counter 164" },
             "tackleattempts": { "status": "verified", "meaning": "attempted tackles; includes CPU on the controller's line" },
             "redcards": { "status": "verified", "meaning": "red cards; may include CPU cards on the controller's line" },
             "mom": { "status": "verified", "meaning": "1 = man of the match" },
-            "saves": { "status": "verified", "meaning": "saves (keepers)" },
+            "saves": { "status": "verified", "meaning": "saves (keepers)", "note": "can run above the in-game screen: mo_nm vs Angola fest (13 Oct) EA 11, in game 9 (11 shots on target, 2 conceded)" },
             "reflexSaves, parrySaves, punchSaves, ballDiveSaves, crossSaves, goodDirectionSaves": {
               "status": "assumed",
               "meaning": "saves by type; they add up to less than saves (mo_nm 16 of 21), the rest are untyped",
@@ -397,21 +397,21 @@
         "usedIn": "match_players.own_shots → match_players_effective.shots"
       },
       "215": {
-        "meaning": "own completed passes, part 1 (most of them)",
-        "status": "assumed",
-        "evidence": "215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0",
+        "meaning": "own completed passes",
+        "status": "verified",
+        "evidence": "in-game Player Performance, Angola fest (13 Oct): dirty8ightt Completed 9 = 215, mo_nm 8 = 215. EA's passesmade also counts offside passes: 215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0",
         "usedIn": "match_players.own_passes_made → match_players_effective.passes_made"
       },
       "153": {
-        "meaning": "offside passes (per the research project); EA's passesmade counts them, the research's 'passes completed' (215) doesn't",
-        "status": "assumed",
-        "evidence": "see 215",
+        "meaning": "offside passes; EA's passesmade counts them as made, the in-game screen as attempted but not completed",
+        "status": "verified",
+        "evidence": "dirty8ightt, Angola fest: Offside Passes 1 = 153; Passes 12 = 215 + 216 + 153",
         "usedIn": "see 215"
       },
       "216": {
-        "meaning": "own missed passes, part 1",
-        "status": "assumed",
-        "evidence": "215 + 216 + 153 + 191 = passattempts on 52 of 60 human-only lines; totals 954 vs 962",
+        "meaning": "own missed passes (not offside)",
+        "status": "verified",
+        "evidence": "Angola fest: dirty8ightt 216 = 2 (12 passes, 9 completed, 1 offside), mo_nm 216 = 3 (11 passes, 8 completed); 215 + 216 + 153 + 191 = passattempts on 52 of 60 human-only lines; totals 954 vs 962",
         "usedIn": "match_players.own_pass_attempts → match_players_effective.pass_attempts"
       },
       "191": {
@@ -422,25 +422,26 @@
       },
       "164": {
         "meaning": "own tackles won",
-        "status": "assumed",
+        "status": "verified",
+        "screen": "dirty8ightt, Angola fest: 2 sliding tackles, 0 won, 164 absent",
         "evidence": "equals tacklesmade on 56 of 60 human-only lines (totals 62 vs 67); on CPU-controller lines EA is 7–17 higher",
         "usedIn": "match_players.own_tackles_made → match_players_effective.tackles_made"
       }
     },
     "derived": {
       "cpuGoals": "club score minus the sum of counter 214 over the club's players; shown as “CPU” among the scorers on match pages and in Discord posts. Checked on 22 games (44 club-games): when someone runs the CPU, its goals sit on that player's EA line; when nobody does, they appear only in the score (6 goals, all in such games). No counter or club field marks own goals, so an opponent own goal can't be told apart and also lands here",
-      "cpuController": "the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (the CPU nearly always passes, rarely scores)"
+      "cpuController": "the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (EA counts offside passes as made) (the CPU nearly always passes, rarely scores)"
     },
     "fromResearch": {
-      "about": "Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-63/eafc-pro-clubs-api-research), worked out on 51,395 FC 27 player lines. Our own 142 lines agree wherever we had checked the same ids (13/18, 14/19, 6, 118, 229, 266, 153). Status 'assumed' until an in-game Player Performance screen confirms them here.",
-      "6": { "meaning": "interceptions", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
-      "115": { "meaning": "second assists", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
-      "152": { "meaning": "through passes (successful)", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
-      "174": { "meaning": "dribbles completed", "status": "assumed", "usedIn": "lib/counters.ts → More stats, leaderboard" },
-      "265, 266": { "meaning": "aerial duels won, attacking (265) and defending (266)", "status": "assumed", "usedIn": "lib/counters.ts → More stats" },
-      "108, 109, 110": { "meaning": "possession won in the defensive, middle and attacking third", "status": "assumed", "note": "the research says totals look low next to the in-game screen", "usedIn": "lib/counters.ts → More stats (marked rough)" },
-      "105, 106, 107": { "meaning": "possession lost in the defensive, middle and attacking third", "status": "assumed", "note": "may undercount, as above", "usedIn": "lib/counters.ts → More stats (marked rough)" },
-      "2, 3": { "meaning": "fouls conceded (3 = roughly in the defensive third)", "status": "assumed", "note": "may undercount, as above", "usedIn": "lib/counters.ts → More stats (marked rough)" },
+      "about": "Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-63/eafc-pro-clubs-api-research), worked out on 51,395 FC 27 player lines. Our own 142 lines agree wherever we had checked the same ids (13/18, 14/19, 6, 118, 229, 266, 153). Status 'assumed' until an in-game Player Performance screen confirms them here; checked so far against dirty8ightt (outfield) and mo_nm (GK), Angola fest, 13 Oct.",
+      "6": { "meaning": "interceptions", "status": "assumed", "screen": "0 = 0 for dirty8ightt only", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "115": { "meaning": "second assists", "status": "assumed", "screen": "0 = 0 for both", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "152": { "meaning": "through passes (successful)", "status": "doubtful", "screen": "dirty8ightt 152 = 5, in game 2 through + 2 lobbed through completed", "usedIn": "lib/counters.ts → More stats (marked *)" },
+      "174": { "meaning": "dribbles completed", "status": "verified", "screen": "dirty8ightt 7 = Dribbles Completed 7 (of 11); mo_nm 0 = 0", "usedIn": "lib/counters.ts → More stats, leaderboard" },
+      "265, 266": { "meaning": "aerial duels won, attacking (265) and defending (266)", "status": "assumed", "screen": "dirty8ightt 1 = Aerial Duels Won 1", "usedIn": "lib/counters.ts → More stats" },
+      "108, 109, 110": { "meaning": "possession won in the defensive, middle and attacking third", "status": "wrong", "screen": "not the in-game Possession Won: dirty8ightt 0 vs 1, mo_nm 0 vs 6", "usedIn": "no longer shown" },
+      "105, 106, 107": { "meaning": "possession lost in the defensive, middle and attacking third", "status": "wrong", "screen": "not the in-game Possession Lost: dirty8ightt 4 vs 7, mo_nm 0 vs 3", "usedIn": "no longer shown" },
+      "2, 3": { "meaning": "fouls conceded (3 = roughly in the defensive third)", "status": "assumed", "screen": "dirty8ightt 1 = Fouls Committed 1; mo_nm 0 = 0", "usedIn": "lib/counters.ts → More stats" },
       "95, 213": { "meaning": "yellow cards: immediate (95) and after advantage (213)", "status": "assumed", "usedIn": "lib/counters.ts → More stats" },
       "13, 18": { "meaning": "shots on target from inside (13) and outside (18) the box; 13 + 18 = 217 on all our 142 lines", "status": "assumed" },
       "14, 19": { "meaning": "shots off target from inside (14) and outside (19) the box; 14 + 19 = 218 on 141/142 of ours", "status": "assumed" },
@@ -451,7 +452,7 @@
       "31, 33, 35": { "meaning": "missed passes forward, backward, sideways", "status": "assumed" },
       "25, 27, 29, 37": { "meaning": "missed passes short, medium, long, crosses", "status": "assumed" },
       "143, 144, 147": { "meaning": "first-time passes, switches of play, flair passes", "status": "assumed" },
-      "97, 112, 38": { "meaning": "dribbles carried (97); beats incl. skill-move beats (112); skill-move beats (38)", "status": "assumed" },
+      "97, 112, 38": { "meaning": "dribbles carried (97); beats incl. skill-move beats (112); skill-move beats (38)", "status": "assumed", "screen": "97 is not Players Beaten By Passes: dirty8ightt 7 = 7 but mo_nm 0 vs 4" },
       "202": { "meaning": "shots saved (the shooter's)", "status": "assumed" },
       "4, 94, 10, 145, 156, 158, 163, 171": { "meaning": "fouls won (4), penalties conceded (94), corners conceded (10), corners taken (145), crosses blocked (156), opponent dispossessed (158), dangerous tackles (163), free kicks for bad tackles (171)", "status": "assumed" },
       "99-103, 219, 111": { "meaning": "out of position, severity 1-5 (219 = their sum); in position (111)", "status": "assumed" },
@@ -459,10 +460,10 @@
       "118, 128, 131, 136, 12, 93, 123, 124, 137, 140, 238": { "meaning": "assist and goal descriptors: through-ball assist (118), first-time (128), weak foot (131), off the post (136), chip (123), other techniques; they overlap, so they don't add up to goals", "status": "assumed" }
     },
     "candidates": {
-      "114": { "guess": "key passes (passes that led to a teammate's shot); not in the research list", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines" },
+      "114": { "guess": "key passes (passes that led to a teammate's shot); not in the research list", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0", "usedIn": "lib/counters.ts → More stats, leaderboard" },
       "191": { "guess": "part of EA's missed passes (passattempts = 215 + 216 + 153 + 191 on 52/60 of our lines); not in the research list", "evidence": "see 216" }
     },
-    "notYetDecoded": "tackle attempts (no counter, pair or triple matches EA's tackleattempts); key passes (114 is a guess). In-game Player Performance screens can confirm the fromResearch mappings.",
+    "notYetDecoded": "tackle attempts (no counter, pair or triple matches EA's tackleattempts); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.",
     "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"
   }
 }

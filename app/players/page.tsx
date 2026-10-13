@@ -33,7 +33,7 @@ export default async function PlayersPage() {
       savedGames: advanced.get(m.gamertag)?.games ?? 0,
       interceptions: perGame(m.gamertag, "interceptions"),
       dribbles: perGame(m.gamertag, "dribbles"),
-      throughPasses: perGame(m.gamertag, "throughPasses"),
+      keyPasses: perGame(m.gamertag, "keyPasses"),
       secondAssists: perGame(m.gamertag, "secondAssists"),
     }));
   return (

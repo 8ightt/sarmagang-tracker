@@ -24,7 +24,7 @@ export type BoardRow = {
   savedGames: number;
   interceptions: number;
   dribbles: number;
-  throughPasses: number;
+  keyPasses: number;
   secondAssists: number;
 };
 
@@ -39,7 +39,7 @@ const METRICS = [
   { id: "cleanSheets", label: "Clean sheets", note: "in saved games" },
   { id: "interceptions", label: "Interceptions", saved: true },
   { id: "dribbles", label: "Dribbles", saved: true },
-  { id: "throughPasses", label: "Through passes", saved: true },
+  { id: "keyPasses", label: "Key passes", saved: true },
   { id: "secondAssists", label: "Second assists", saved: true },
 ] as const;
 

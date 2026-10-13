@@ -177,7 +177,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
             The player&apos;s own (never the CPU&apos;s), in the games the site saved, from EA&apos;s hidden event counters as decoded by
             the <a href="https://github.com/Interactive-63/eafc-pro-clubs-api-research">EA FC Pro Clubs API research</a> project.
-            * Rough: can come out lower than the in-game screen.
+            * Not confirmed yet: didn't match the in-game screen exactly.
           </p>
         </section>
       ) : null}
