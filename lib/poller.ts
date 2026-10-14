@@ -61,6 +61,19 @@ const OWN_SHOTS = [217, 218];
 const OWN_PASSES_MADE = [215];
 const OWN_PASSES_MISSED = [153, 216];
 const OWN_TACKLES_MADE = 164;
+const OWN_STRAIGHT_RED = 96;
+const OWN_YELLOWS = [95, 213];
+
+/**
+ * Whether the counters show the player's own red card: a straight red (96) or a second yellow.
+ * On 42,451 human-only lines of the research dataset every EA red has one of these, so an EA red
+ * without them is the CPU's. Not the other way round: two yellows without a red happen too.
+ */
+function ownRedPossible(p: Record<string, string>): boolean | null {
+  const c = eventCounters(p);
+  if (!c) return null;
+  return (c.get(OWN_STRAIGHT_RED) ?? 0) > 0 || OWN_YELLOWS.reduce((s, id) => s + (c.get(id) ?? 0), 0) >= 2;
+}
 
 /** The player's own goals, assists, shots, passes and tackles (without the CPU's), or null without counters. */
 export function ownStats(p: Record<string, string>) {
@@ -84,6 +97,8 @@ function kitColors(club?: EaMatch["clubs"][string]): number[] | null {
   const kit = club?.details?.customKit;
   return kit ? [kit.kitColor1, kit.kitColor2, kit.kitColor3, kit.kitColor4].map(n) : null;
 }
+
+const CPU_RED_NOTE = "CPU card: no straight red (96) or second yellow (95 + 213) in the player's own counters";
 
 /** Only games this recent get today's Skill Ratings; older ones would get misleading values. */
 const SR_WINDOW_SECONDS = 3 * 3600;
@@ -183,6 +198,21 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
           own_goals = excluded.own_goals, own_assists = excluded.own_assists, own_shots = excluded.own_shots,
           own_passes_made = excluded.own_passes_made, own_pass_attempts = excluded.own_pass_attempts,
           own_tackles_made = excluded.own_tackles_made, counters = excluded.counters`;
+    }
+    // Only on the first save, so a red the club gave back to the player stays theirs
+    const cpuReds = ours.filter((p) => n(p.redcards) > 0 && ownRedPossible(p) === false);
+    if (res?.inserted && cpuReds.length) {
+      await tx`
+        insert into corrections ${tx(
+          cpuReds.map((p) => ({
+            match_id: m.matchId,
+            player: p.playername,
+            stat: "reds",
+            amount: n(p.redcards),
+            note: CPU_RED_NOTE,
+            created_by: "auto",
+          })),
+        )}`;
     }
     return Boolean(res?.inserted);
   });

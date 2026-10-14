@@ -104,7 +104,7 @@ Path: `[].players.{id}.{id}`. Keyed by club id, then the player's EA account id.
 | `passattempts` | ✅ verified | attempted passes; includes CPU on the controller's line |  |
 | `tacklesmade` | ✅ verified | won tackles; includes CPU on the controller's line | shown as 'EA: n incl. CPU'; own tackles come from counter 164 |
 | `tackleattempts` | ✅ verified | attempted tackles; includes CPU on the controller's line |  |
-| `redcards` | ✅ verified | red cards; may include CPU cards on the controller's line |  |
+| `redcards` | ✅ verified | red cards; may include CPU cards on the controller's line | a red without counter 96 or 2+ yellows (95 + 213) is moved to the CPU automatically (corrections, created_by auto) |
 | `mom` | ✅ verified | 1 = man of the match |  |
 | `saves` | ✅ verified | saves (keepers) *Note:* can run above the in-game screen: mo_nm vs Angola fest (13 Oct) EA 11, in game 9 (11 shots on target, 2 conceded) |  |
 | `reflexSaves`, `parrySaves`, `punchSaves`, `ballDiveSaves`, `crossSaves`, `goodDirectionSaves` | 🟡 assumed | saves by type; they add up to less than saves (mo_nm 16 of 21), the rest are untyped | Saves by type on player and match pages |
@@ -341,15 +341,18 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 | Counter | How sure | What it counts | Used for |
 |---|---|---|---|
 | `6` | 🟡 assumed | interceptions *In game:* 0 = 0 for dirty8ightt only | lib/counters.ts → More stats, leaderboard |
+| `96` | ✅ verified | straight red card (own) *Note:* research dataset, 42,451 human-only lines: 145 of 145 lines with 96 have an EA red, none without. Every EA red (692) has 96 or 95 + 213 >= 2 | red cards: an EA red without 96 or a second yellow is moved to the CPU (lib/poller.ts, migration 0015) |
 | `115` | 🟡 assumed | second assists *In game:* 0 = 0 for both | lib/counters.ts → More stats, leaderboard |
 | `152` | 🟠 doubtful | through passes (successful) *In game:* dirty8ightt 152 = 5, in game 2 through + 2 lobbed through completed | lib/counters.ts → More stats (marked *) |
 | `174` | ✅ verified | dribbles completed *In game:* dirty8ightt 7 = Dribbles Completed 7 (of 11); mo_nm 0 = 0 | lib/counters.ts → More stats, leaderboard |
 | `202` | 🟡 assumed | shots saved (the shooter's) |  |
+| `267` | ✅ verified | good-direction saves *Note:* research dataset: equals EA's goodDirectionSaves on 1,383 of 1,388 human keeper lines |  |
 | `265, 266` | 🟡 assumed | aerial duels won, attacking (265) and defending (266) *In game:* dirty8ightt 1 = Aerial Duels Won 1 | lib/counters.ts → More stats |
 | `108, 109, 110` | ❌ wrong | possession won in the defensive, middle and attacking third *In game:* not the in-game Possession Won: dirty8ightt 0 vs 1, mo_nm 0 vs 6 | no longer shown |
 | `105, 106, 107` | ❌ wrong | possession lost in the defensive, middle and attacking third *In game:* not the in-game Possession Lost: dirty8ightt 4 vs 7, mo_nm 0 vs 3 | no longer shown |
 | `2, 3` | 🟡 assumed | fouls conceded (3 = roughly in the defensive third) *In game:* dirty8ightt 1 = Fouls Committed 1; mo_nm 0 = 0 | lib/counters.ts → More stats |
-| `95, 213` | 🟡 assumed | yellow cards: immediate (95) and after advantage (213) | lib/counters.ts → More stats |
+| `95, 213` | 🟡 assumed | yellow cards: immediate (95) and after advantage (213) *Note:* research dataset (42,451 human-only lines): 547 of 692 EA reds have 95 + 213 >= 2 (second yellow), but 129 lines have 2 without any red (113 of them 95 = 2), so a 2 is sometimes one card | lib/counters.ts → More stats; second yellow for red cards (lib/poller.ts) |
+| `51, 52` | ✅ verified | cross saves (51 + 52); not in the research list *Note:* research dataset: 51 + 52 equals EA's crossSaves on 1,360 of 1,388 human keeper lines (98.0%); 49, 50, 55 and 113 match no other save type |  |
 | `13, 18` | 🟡 assumed | shots on target from inside (13) and outside (18) the box; 13 + 18 = 217 on all our 142 lines |  |
 | `14, 19` | 🟡 assumed | shots off target from inside (14) and outside (19) the box; 14 + 19 = 218 on 141/142 of ours |  |
 | `0, 1` | 🟡 assumed | tackles won (0) and lost (1) as the research counts them; our EA tacklesmade matches 164 instead, and 0 + 1 is not EA's tackleattempts |  |
@@ -374,9 +377,10 @@ Not decoded yet: tackle attempts (no counter, pair or triple matches EA's tackle
 Derived:
 
 - **cpuGoals**: club score minus the sum of counter 214 over the club's players; shown as “CPU” among the scorers on match pages and in Discord posts. Checked on 22 games (44 club-games): when someone runs the CPU, its goals sit on that player's EA line; when nobody does, they appear only in the score (6 goals, all in such games). No counter or club field marks own goals, so an opponent own goal can't be told apart and also lands here.
+- **cpuReds**: an EA red on a line whose counters have neither 96 (straight red) nor 95 + 213 >= 2 (second yellow) is the CPU's; saved as a corrections row (created_by auto) when the match is first saved, so the club can give it back. 0 misses on the research dataset's 692 human reds.
 - **cpuController**: the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (EA counts offside passes as made) (the CPU nearly always passes, rarely scores).
 
 ## Thanks
 
 - [frdceri/clubs-hub](https://github.com/frdceri/clubs-hub) (`lib/lookups.js`): archetypeid → archetype names; regionId decoding. Thank you for working these out and publishing them.
-- [Interactive-63/eafc-pro-clubs-api-research](https://github.com/Interactive-63/eafc-pro-clubs-api-research) (`README.md (event IDs and decoded stat formulas); data/eafc_27_raw_player_data.csv`): interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes. Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.
+- [Interactive-63/eafc-pro-clubs-api-research](https://github.com/Interactive-63/eafc-pro-clubs-api-research) (`README.md (event IDs and decoded stat formulas); data/eafc_27_raw_player_data.csv`): interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes and decoded red cards (96, second yellow) and cross saves (51 + 52). Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.

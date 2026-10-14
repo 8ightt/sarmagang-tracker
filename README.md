@@ -53,9 +53,12 @@ site uses them for goals (counter 214), assists (11) and shots (217 + 218), so:
   and within 1–2 on the rest. They also keep the stats of a player who quit, which EA wipes.
 - Season totals take the CPU's share out for every game the site saved; EA's figure stays
   visible as "EA: n incl. CPU". Games from before the site saved matches can't be corrected.
-- Red cards and tackle attempts still include the CPU's for whoever controls it. The site marks
-  that line **+CPU**, a red card in such a game can be moved to the CPU with the club
-  password, and **Fix stats** takes the real numbers from the in-game screen.
+- Red cards: a player's own red shows in their counters as a straight red (96) or a second
+  yellow (95 + 213). An EA red without either is the CPU's, and the site moves it to the CPU by
+  itself. A red with them stays with the player; if it was still the CPU's, it can be moved
+  with the club password (and given back the same way).
+- Tackle attempts still include the CPU's for whoever controls it. The site marks that line
+  **+CPU**, and **Fix stats** takes the real numbers from the in-game screen.
 
 ## Setup
 
@@ -185,7 +188,8 @@ Other people's work this site builds on. Thank you!
   (Interactive-63): their decoded event counters, worked out on 51,395 FC 27 player lines, give
   the site interceptions, second assists, through passes, dribbles, aerial duels, possession
   won/lost, fouls and yellow cards, and explained counter 153 (offside passes). Their raw dataset of those lines
-  also showed our counter 191 doesn't belong in missed passes. Found through
+  also showed our counter 191 doesn't belong in missed passes, decoded red cards (96 or a second
+  yellow) and cross saves (51 + 52). Found through
   [Pro Clubs Tracker](https://proclubstracker.com), which credits it. Mapped in
   [docs/ea-data.json](docs/ea-data.json).
 - **[Pro Clubs Analytics](https://www.proclubsanalytics.com)**: the division and reputation

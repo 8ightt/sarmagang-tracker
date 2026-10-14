@@ -14,7 +14,7 @@
       "url": "https://github.com/Interactive-63/eafc-pro-clubs-api-research",
       "file": "README.md (event IDs and decoded stat formulas); data/eafc_27_raw_player_data.csv",
       "thanks": "Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.",
-      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes"
+      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes and decoded red cards (96, second yellow) and cross saves (51 + 52)"
     }
   ],
   "evidence": {
@@ -152,7 +152,7 @@
             "passattempts": { "status": "verified", "meaning": "attempted passes; includes CPU on the controller's line" },
             "tacklesmade": { "status": "verified", "meaning": "won tackles; includes CPU on the controller's line", "usedFor": "shown as 'EA: n incl. CPU'; own tackles come from counter 164" },
             "tackleattempts": { "status": "verified", "meaning": "attempted tackles; includes CPU on the controller's line" },
-            "redcards": { "status": "verified", "meaning": "red cards; may include CPU cards on the controller's line" },
+            "redcards": { "status": "verified", "meaning": "red cards; may include CPU cards on the controller's line", "usedFor": "a red without counter 96 or 2+ yellows (95 + 213) is moved to the CPU automatically (corrections, created_by auto)" },
             "mom": { "status": "verified", "meaning": "1 = man of the match" },
             "saves": { "status": "verified", "meaning": "saves (keepers)", "note": "can run above the in-game screen: mo_nm vs Angola fest (13 Oct) EA 11, in game 9 (11 shots on target, 2 conceded)" },
             "reflexSaves, parrySaves, punchSaves, ballDiveSaves, crossSaves, goodDirectionSaves": {
@@ -430,6 +430,7 @@
     },
     "derived": {
       "cpuGoals": "club score minus the sum of counter 214 over the club's players; shown as “CPU” among the scorers on match pages and in Discord posts. Checked on 22 games (44 club-games): when someone runs the CPU, its goals sit on that player's EA line; when nobody does, they appear only in the score (6 goals, all in such games). No counter or club field marks own goals, so an opponent own goal can't be told apart and also lands here",
+      "cpuReds": "an EA red on a line whose counters have neither 96 (straight red) nor 95 + 213 >= 2 (second yellow) is the CPU's; saved as a corrections row (created_by auto) when the match is first saved, so the club can give it back. 0 misses on the research dataset's 692 human reds",
       "cpuController": "the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (EA counts offside passes as made) (the CPU nearly always passes, rarely scores)"
     },
     "fromResearch": {
@@ -442,7 +443,10 @@
       "108, 109, 110": { "meaning": "possession won in the defensive, middle and attacking third", "status": "wrong", "screen": "not the in-game Possession Won: dirty8ightt 0 vs 1, mo_nm 0 vs 6", "usedIn": "no longer shown" },
       "105, 106, 107": { "meaning": "possession lost in the defensive, middle and attacking third", "status": "wrong", "screen": "not the in-game Possession Lost: dirty8ightt 4 vs 7, mo_nm 0 vs 3", "usedIn": "no longer shown" },
       "2, 3": { "meaning": "fouls conceded (3 = roughly in the defensive third)", "status": "assumed", "screen": "dirty8ightt 1 = Fouls Committed 1; mo_nm 0 = 0", "usedIn": "lib/counters.ts → More stats" },
-      "95, 213": { "meaning": "yellow cards: immediate (95) and after advantage (213)", "status": "assumed", "usedIn": "lib/counters.ts → More stats" },
+      "95, 213": { "meaning": "yellow cards: immediate (95) and after advantage (213)", "status": "assumed", "note": "research dataset (42,451 human-only lines): 547 of 692 EA reds have 95 + 213 >= 2 (second yellow), but 129 lines have 2 without any red (113 of them 95 = 2), so a 2 is sometimes one card", "usedIn": "lib/counters.ts → More stats; second yellow for red cards (lib/poller.ts)" },
+      "96": { "meaning": "straight red card (own)", "status": "verified", "note": "research dataset, 42,451 human-only lines: 145 of 145 lines with 96 have an EA red, none without. Every EA red (692) has 96 or 95 + 213 >= 2", "usedIn": "red cards: an EA red without 96 or a second yellow is moved to the CPU (lib/poller.ts, migration 0015)" },
+      "267": { "meaning": "good-direction saves", "status": "verified", "note": "research dataset: equals EA's goodDirectionSaves on 1,383 of 1,388 human keeper lines" },
+      "51, 52": { "meaning": "cross saves (51 + 52); not in the research list", "status": "verified", "note": "research dataset: 51 + 52 equals EA's crossSaves on 1,360 of 1,388 human keeper lines (98.0%); 49, 50, 55 and 113 match no other save type" },
       "13, 18": { "meaning": "shots on target from inside (13) and outside (18) the box; 13 + 18 = 217 on all our 142 lines", "status": "assumed" },
       "14, 19": { "meaning": "shots off target from inside (14) and outside (19) the box; 14 + 19 = 218 on 141/142 of ours", "status": "assumed" },
       "0, 1": { "meaning": "tackles won (0) and lost (1) as the research counts them; our EA tacklesmade matches 164 instead, and 0 + 1 is not EA's tackleattempts", "status": "assumed" },
