@@ -24,6 +24,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
     ...(cpuGoals > 0 ? [cpuGoals > 1 ? `CPU ×${cpuGoals}` : "CPU"] : []),
   ];
   const motm = players.find((p) => p.motm);
+  const quitters = players.filter((p) => p.quit).map((p) => `${p.player} quit at ${Math.round(p.seconds / 60)}′`);
   // EA sends promotion match games as league games; the season replay knows which ones they were
   const promo = (await getSeason())?.promotionGames[m.id] ?? null;
   const ourKit = m.our_kit ?? club.kits[0]?.colors;
@@ -47,6 +48,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             : m.match_type === "leagueMatch" ? "League" : m.match_type === "playoffMatch" ? "Playoff" : "Friendly"}{" "}
           · {when(m.ts)} · {m.minutes} min
           {m.dnf ? " · opponent quit" : ""}
+          {quitters.length ? ` · ${quitters.join(", ")}` : ""}
         </span>
         <div className="row" style={{ justifyContent: "center", gap: 28, width: "100%" }}>
           <div className="stack" style={{ flex: "1 1 220px", alignItems: "center", gap: 10 }}>
@@ -123,6 +125,9 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         {p.motm ? <span className="chip">MOTM</span> : null}
                         {m.captain === p.player ? <span className="chip chip-ghost">C</span> : null}
                         {p.controls_cpu ? <span className="chip chip-ghost" title="This player ran the CPU teammates; EA added their stats to this line. The table shows the player's own, except red cards">+CPU</span> : null}
+                        {p.quit ? (
+                          <span className="chip chip-shame" title="Left mid-game. EA wiped this line (the rating is its quit penalty); passes and the like come from the hidden counters, goals conceded are the team's">Quit {Math.round(p.seconds / 60)}′</span>
+                        ) : null}
                         {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
                         {p.clean_sheet ? <span className="chip chip-ghost" title="EA credited a clean sheet">CS</span> : null}
                         {p.idle_seconds >= AFK_SECONDS ? (

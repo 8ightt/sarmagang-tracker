@@ -29,6 +29,8 @@ export type MatchRow = {
   goals_against: number;
   result: "W" | "D" | "L";
   dnf: boolean;
+  /** one of our players quit mid-game: the club takes the loss */
+  we_quit?: boolean;
   minutes: number;
   team: { us: Record<string, number> | null; them: Record<string, number> | null } | null;
   captain?: string | null;
@@ -65,6 +67,8 @@ export type MatchPlayer = {
   ea_assists: number;
   /** hidden event counters {"id": count} (see lib/counters.ts); null for lines without them */
   counters: Counters | null;
+  /** quit mid-game (EA userResult 6): EA wiped this line to 0, the counters kept the real numbers */
+  quit: boolean;
   /** EA's passes and tackles (incl. the CPU's on a +CPU line); 0 until supabase/migrations/0008 has been run */
   ea_passes_made: number;
   ea_pass_attempts: number;
@@ -306,7 +310,8 @@ export async function getMatches(limit = 50): Promise<MatchRow[]> {
   const kits = kitColumns(await extrasReady());
   return (await sql()`
     select m.id, m.ts, m.match_type, m.opp_id, m.opp_name, m.opp_crest, m.goals_for, m.goals_against,
-           m.result, m.dnf, m.minutes, m.team, n.captain, ${kits}
+           m.result, m.dnf, m.minutes, m.team, n.captain, ${kits},
+           exists (select 1 from match_players q where q.match_id = m.id and q.quit) as we_quit
     from matches m left join match_notes n on n.match_id = m.id
     order by m.ts desc limit ${limit}`) as unknown as MatchRow[];
 }

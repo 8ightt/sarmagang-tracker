@@ -442,6 +442,7 @@ export default async function Home() {
                 <span style={{ fontWeight: 700 }}>{m.opp_name}</span>
               </div>
               {m.dnf ? <span className="chip chip-ghost">They quit</span> : null}
+              {m.we_quit ? <span className="chip chip-ghost">We quit</span> : null}
             </a>
           ))}
           {!recent.length ? <p className="muted">No matches saved yet — the first check runs a few seconds after start-up.</p> : null}
