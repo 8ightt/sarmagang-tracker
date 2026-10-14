@@ -1,5 +1,5 @@
 {
-  "_readme": "Season totals per archetype, copied from the in-game Archetypes > Statistics screen (one screenshot per archetype). asOf is when the screenshots were taken: games the site saves after that are added on top. Percentages and averages are the game's own, as of asOf.",
+  "_readme": "Season totals per archetype, copied from the in-game Archetypes > Statistics screen (one screenshot per archetype). asOf is when the screenshots were taken: games the site saves after that are added on top. Percentages and averages are the game's own, as of asOf. avgPasses and avgTackles are ATTEMPTS per match (made ÷ success %), not completed ones.",
   "players": {
     "mo_nm": {
       "season": "Season 1",
@@ -26,6 +26,21 @@
         "11": {
           "matches": 36, "goals": 35, "assists": 38, "motm": 1, "passesMade": 1030, "tackles": 120,
           "conversionPct": 36, "passPct": 78, "tacklePct": 33, "avgPasses": 36.5, "avgTackles": 9.9, "avgShots": 2.6
+        }
+      }
+    },
+    "Pakst-": {
+      "season": "Season 1",
+      "asOf": "2026-10-14T23:12:00+02:00",
+      "_note": "interceptions left out: the in-game screen showed 65,563 (Maestro) and 65,567 (Spark), a game bug",
+      "archetypes": {
+        "8": {
+          "matches": 10, "goals": 5, "assists": 8, "motm": 1, "passesMade": 126, "tackles": 14,
+          "conversionPct": 35, "passPct": 77, "tacklePct": 28, "avgPasses": 16.2, "avgTackles": 5.0, "avgShots": 1.4
+        },
+        "10": {
+          "matches": 31, "goals": 16, "assists": 11, "motm": 2, "passesMade": 259, "tackles": 24,
+          "conversionPct": 37, "passPct": 63, "tacklePct": 13, "avgPasses": 13.1, "avgTackles": 5.8, "avgShots": 1.4
         }
       }
     }
