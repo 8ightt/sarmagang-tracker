@@ -340,7 +340,7 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 
 | Counter | How sure | What it counts | Used for |
 |---|---|---|---|
-| `6` | 🟡 assumed | interceptions *In game:* 0 = 0 for dirty8ightt only | lib/counters.ts → More stats, leaderboard |
+| `6` | ✅ verified | interceptions *In game:* 0 = 0 for dirty8ightt (Angola fest); x-LadruM-x's Archetypes screen (Progressor, 14 Oct): Interceptions 22 = counter 6 summed over all 6 of his saved Progressor games. The same screen showed 65,563 to 65,567 for three other players, a game bug | lib/counters.ts → More stats, leaderboard |
 | `96` | ✅ verified | straight red card (own) *Note:* research dataset, 42,451 human-only lines: 145 of 145 lines with 96 have an EA red, none without. Every EA red (692) has 96 or 95 + 213 >= 2 | red cards: an EA red without 96 or a second yellow is moved to the CPU (lib/poller.ts, migration 0015) |
 | `115` | 🟡 assumed | second assists *In game:* 0 = 0 for both | lib/counters.ts → More stats, leaderboard |
 | `152` | 🟠 doubtful | through passes (successful) *In game:* dirty8ightt 152 = 5, in game 2 through + 2 lobbed through completed | lib/counters.ts → More stats (marked *) |

@@ -43,6 +43,16 @@
           "conversionPct": 37, "passPct": 63, "tacklePct": 13, "avgPasses": 13.1, "avgTackles": 5.8, "avgShots": 1.4
         }
       }
+    },
+    "x-LadruM-x": {
+      "season": "Season 1",
+      "asOf": "2026-10-14T23:12:00+02:00",
+      "archetypes": {
+        "3": {
+          "matches": 6, "goals": 0, "assists": 0, "motm": 4, "passesMade": 68, "tackles": 16, "interceptions": 22,
+          "conversionPct": 0, "passPct": 75, "tacklePct": 38, "avgPasses": 15.0, "avgTackles": 7.0, "avgShots": 0.2
+        }
+      }
     }
   }
 }
