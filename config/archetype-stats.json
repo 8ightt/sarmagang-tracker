@@ -53,6 +53,21 @@
           "conversionPct": 0, "passPct": 75, "tacklePct": 38, "avgPasses": 15.0, "avgTackles": 7.0, "avgShots": 0.2
         }
       }
+    },
+    "dirty8ightt": {
+      "season": "Season 1",
+      "asOf": "2026-10-14T23:22:00+02:00",
+      "_note": "Magician interceptions left out: the in-game screen showed 131,085, a game bug (not a fixed offset: counter 6 alone gives 14 in 13 of the 17 games)",
+      "archetypes": {
+        "9": {
+          "matches": 41, "goals": 30, "assists": 37, "motm": 0, "passesMade": 2734, "tackles": 452, "interceptions": 42,
+          "conversionPct": 22, "passPct": 78, "tacklePct": 29, "avgPasses": 84.7, "avgTackles": 37.1, "avgShots": 3.2
+        },
+        "11": {
+          "matches": 17, "goals": 20, "assists": 26, "motm": 6, "passesMade": 512, "tackles": 49,
+          "conversionPct": 33, "passPct": 77, "tacklePct": 23, "avgPasses": 38.8, "avgTackles": 12.2, "avgShots": 3.5
+        }
+      }
     }
   }
 }
