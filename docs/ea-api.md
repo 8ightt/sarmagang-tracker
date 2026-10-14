@@ -96,7 +96,7 @@ Path: `[].players.{id}.{id}`. Keyed by club id, then the player's EA account id.
 | `playername` | ✅ verified | gamertag |  |
 | `pos` | ✅ verified | broad group only: goalkeeper / defender / midfielder / forward | position on match pages (exact slot only via Fix stats) |
 | `archetypeid` | ✅ verified | FC 27 archetype played, numbered in the game's order (keepers, defenders, midfielders, forwards) Codes: `1` Shot Stopper, `2` Sweeper Keeper, `3` Progressor, `4` Boss, `5` Marauder, `6` Disruptor, `7` Recycler, `8` Maestro, `9` Creator, `10` Spark, `11` Magician, `12` Finisher, `13` Target. *Evidence:* 1-2 only on keepers, 3-5 on defenders, 6-10 on midfielders, 11-13 on forwards; mo_nm's in-game Archetypes screen (2026-10-11) shows Target, Finisher and Sweeper Keeper, and his saved games are 13 and 2 *Confirmed:* 2026-10-11 by the club: dirty8ightt Creator (midfield) and Magician (up front), mo_nm Target *Source:* frdceri/clubs-hub lib/lookups.js (see thanks) | By archetype table and season-by-archetype cards on player pages |
-| `rating` | ✅ verified | match rating |  |
+| `rating` | ✅ verified | match rating; on the CPU controller's line it differs from the in-game RR *Note:* LA Seigue FC, 14 Oct: in-game RR = EA rating for 5 of 6 players, but dirty8ightt (running the CPU) 6.0 in game vs 6.7 from EA |  |
 | `goals` | ✅ verified | EA's goals; on the line of whoever controls the CPU this INCLUDES the CPU teammates' goals | shown as 'EA: n incl. CPU'; own goals come from counter 214 |
 | `assists` | ✅ verified | as goals: includes CPU assists on the controller's line |  |
 | `shots` | ✅ verified | as goals: includes CPU shots on the controller's line |  |
@@ -329,7 +329,7 @@ The counters count the HUMAN's own actions. EA's headline goals/assists/shots ad
 | `164` | ✅ verified | own tackles won | equals tacklesmade on 56 of 60 human-only lines (totals 62 vs 67); on CPU-controller lines EA is 7–17 higher. In game: dirty8ightt, Angola fest: 2 sliding tackles, 0 won, 164 absent | match_players.own_tackles_made → match_players_effective.tackles_made |
 | `191` | ❌ wrong | not part of missed passes | research dataset, 42,451 human-only lines: adding 191 to 215 + 216 + 153 drops the passattempts match from 89.1% to 86.9%; 1,038 of the 1,252 lines where 191 fires already match without it. Our first guess came from 60 lines | no longer used |
 | `214` | ✅ verified | own goals scored | equals goals on 89/98 lines; all 9 mismatches are CPU-controller lines where the counter is lower | match_players.own_goals → match_players_effective.goals |
-| `215` | ✅ verified | own completed passes | in-game Player Performance, Angola fest (13 Oct): dirty8ightt Completed 9 = 215, mo_nm 8 = 215. EA's passesmade also counts offside passes: 215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0 | match_players.own_passes_made → match_players_effective.passes_made |
+| `215` | ✅ verified | own completed passes | in-game Player Performance, Angola fest (13 Oct): dirty8ightt Completed 9 = 215, mo_nm 8 = 215; LA Seigue FC (14 Oct): dirty8ightt 9, mo_nm 8, RUPPADOR 12, x-LadruM-x 11, all = 215. The in-game screen leaves the CPU out (dirty8ightt ran it: 12 passes in game, 60 from EA). Total passes = 215 + 216 + 153 for 3 of 4; mo_nm 13 in game vs 12. EA's passesmade also counts offside passes: 215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0 | match_players.own_passes_made → match_players_effective.passes_made |
 | `216` | ✅ verified | own missed passes (not offside) | Angola fest: dirty8ightt 216 = 2 (12 passes, 9 completed, 1 offside), mo_nm 216 = 3 (11 passes, 8 completed); 215 + 216 + 153 = passattempts on 37,819 of 42,451 human-only lines (89.1%) in the EA FC Pro Clubs API research dataset | match_players.own_pass_attempts → match_players_effective.pass_attempts |
 | `217` | ✅ verified | own shots, part 1 (probably on target) | 217 + 218 equals shots on 85/98 lines; all 13 mismatches are CPU-controller lines, counter lower | match_players.own_shots → match_players_effective.shots |
 | `218` | ✅ verified | own shots, part 2 (probably off target) | see 217 | match_players.own_shots → match_players_effective.shots |
@@ -340,11 +340,11 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 
 | Counter | How sure | What it counts | Used for |
 |---|---|---|---|
-| `6` | ✅ verified | interceptions *In game:* 0 = 0 for dirty8ightt (Angola fest); x-LadruM-x's Archetypes screen (Progressor, 14 Oct): Interceptions 22 = counter 6 summed over all 6 of his saved Progressor games. The same screen showed 65,563 to 65,567 for three other players, a game bug | lib/counters.ts → More stats, leaderboard |
+| `6` | ✅ verified | interceptions *In game:* 0 = 0 for dirty8ightt (Angola fest); LA Seigue FC (14 Oct): mo_nm 1 = 1, dirty8ightt 0 = 0, x-LadruM-x 0 = 0; x-LadruM-x's Archetypes screen (Progressor, 14 Oct): Interceptions 22 = counter 6 summed over all 6 of his saved Progressor games. The same screen showed 65,563 to 65,567 for three other players, a game bug | lib/counters.ts → More stats, leaderboard |
 | `96` | ✅ verified | straight red card (own) *Note:* research dataset, 42,451 human-only lines: 145 of 145 lines with 96 have an EA red, none without. Every EA red (692) has 96 or 95 + 213 >= 2 | red cards: an EA red without 96 or a second yellow is moved to the CPU (lib/poller.ts, migration 0015) |
-| `115` | 🟡 assumed | second assists *In game:* 0 = 0 for both | lib/counters.ts → More stats, leaderboard |
-| `152` | 🟠 doubtful | through passes (successful) *In game:* dirty8ightt 152 = 5, in game 2 through + 2 lobbed through completed | lib/counters.ts → More stats (marked *) |
-| `174` | ✅ verified | dribbles completed *In game:* dirty8ightt 7 = Dribbles Completed 7 (of 11); mo_nm 0 = 0 | lib/counters.ts → More stats, leaderboard |
+| `115` | ✅ verified | second assists *In game:* 0 = 0 for both (Angola fest); LA Seigue FC (14 Oct): dirty8ightt 1 = 1, RUPPADOR 1 = 1, mo_nm 0 = 0, x-LadruM-x 0 = 0 | lib/counters.ts → More stats, leaderboard |
+| `152` | 🟠 doubtful | through passes completed (through + lobbed through; the in-game Pass Type rows count completed passes) *In game:* Angola fest: dirty8ightt 152 = 5, in game 2 through + 2 lobbed through. LA Seigue FC (14 Oct): dirty8ightt 152 = 4 = 3 through + 1 lobbed through | lib/counters.ts → More stats (marked *) |
+| `174` | ✅ verified | dribbles completed *In game:* dirty8ightt 7 = Dribbles Completed 7 (of 11); mo_nm 0 = 0 (Angola fest); LA Seigue FC (14 Oct): dirty8ightt 8, mo_nm 7, RUPPADOR 11, x-LadruM-x 6, all equal | lib/counters.ts → More stats, leaderboard |
 | `202` | 🟡 assumed | shots saved (the shooter's) |  |
 | `267` | ✅ verified | good-direction saves *Note:* research dataset: equals EA's goodDirectionSaves on 1,383 of 1,388 human keeper lines |  |
 | `265, 266` | 🟡 assumed | aerial duels won, attacking (265) and defending (266) *In game:* dirty8ightt 1 = Aerial Duels Won 1 | lib/counters.ts → More stats |
@@ -370,7 +370,7 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 
 Guesses not proven yet:
 
-- `114`: key passes (passes that led to a teammate's shot); not in the research list (≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0)
+- `114`: key passes (passes that led to a teammate's shot); not in the research list (≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0. LA Seigue FC (14 Oct): dirty8ightt 2 = 2, mo_nm 1 = 1, RUPPADOR 1 = 1, but x-LadruM-x Key Passes 1 with no 114 (team total 5 in game, 4 from 114))
 
 Not decoded yet: tackle attempts (no counter, pair or triple matches EA's tackleattempts); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.
 
