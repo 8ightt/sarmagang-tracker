@@ -17,6 +17,17 @@
           "matches": 7, "motm": 1, "saves": 51, "cleanSheets": 0, "goalsConceded": 11, "savePct": 82, "avgSaves": 7.3
         }
       }
+    },
+    "EnEsC-37": {
+      "season": "Season 1",
+      "asOf": "2026-10-14T23:06:00+02:00",
+      "_note": "interceptions left out: the in-game screen showed 65,565, a game bug",
+      "archetypes": {
+        "11": {
+          "matches": 36, "goals": 35, "assists": 38, "motm": 1, "passesMade": 1030, "tackles": 120,
+          "conversionPct": 36, "passPct": 78, "tacklePct": 33, "avgPasses": 36.5, "avgTackles": 9.9, "avgShots": 2.6
+        }
+      }
     }
   }
 }
