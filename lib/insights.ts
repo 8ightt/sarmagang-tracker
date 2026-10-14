@@ -25,7 +25,8 @@ type Game = {
   oppSr: number | null;
 };
 
-type Line = { matchId: string; player: string; rating: number; goals: number; assists: number; position: string };
+/** rating is null on a +CPU line without a fix (EA averages the CPU's into it) */
+type Line = { matchId: string; player: string; rating: number | null; goals: number; assists: number; position: string };
 
 export type Record3 = { games: number; w: number; d: number; l: number; ppg: number; gf: number; ga: number };
 
@@ -45,6 +46,11 @@ function record(games: Game[]): Record3 {
 }
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+/** average rating over the lines whose rating is known */
+const avgRating = (ls: Line[]) => {
+  const xs = ls.flatMap((l) => (l.rating === null ? [] : [l.rating]));
+  return xs.length ? avg(xs) : null;
+};
 
 /** Fewest games for a row to be shown; small samples say little. */
 export const MIN_GAMES = 3;
@@ -77,7 +83,7 @@ const load = cache(async () => {
   const lines: Line[] = lineRows.map((r) => ({
     matchId: r.match_id,
     player: r.player,
-    rating: Number(r.rating),
+    rating: r.rating === null ? null : Number(r.rating),
     goals: r.goals,
     assists: r.assists,
     position: r.position || groupShort(r.pos) || "?",
@@ -93,14 +99,14 @@ export type FormRow = {
   last5GoalsAssists: number;
   trend: "hot" | "cold" | "steady";
   /** newest last */
-  recent: { rating: number; result: Result }[];
+  recent: { rating: number | null; result: Result }[];
 };
 
 export type WithWithoutRow = { player: string; with: Record3; without: Record3; ppgDiff: number | null };
 
 export type DuoRow = { players: [string, string]; rec: Record3; goalsAssists: number };
 
-export type PositionRow = { player: string; position: string; games: number; rating: number; goalsAssistsPerGame: number };
+export type PositionRow = { player: string; position: string; games: number; rating: number | null; goalsAssistsPerGame: number };
 
 export type OpponentBucket = { label: string; note: string; rec: Record3 };
 
@@ -137,8 +143,9 @@ export const getInsights = cache(async (): Promise<Insights> => {
     .map((player) => {
       const ls = byPlayer.get(player)!;
       const last5 = ls.slice(0, 5);
-      const rating = avg(ls.map((l) => l.rating));
-      const last5Rating = avg(last5.map((l) => l.rating));
+      // ratings only from the games where it's known: the last 5 of those
+      const rating = avgRating(ls) ?? 0;
+      const last5Rating = avgRating(ls.filter((l) => l.rating !== null).slice(0, 5)) ?? rating;
       const diff = last5Rating - rating;
       return {
         player,
@@ -184,7 +191,7 @@ export const getInsights = cache(async (): Promise<Insights> => {
         player,
         position,
         games: pl.length,
-        rating: avg(pl.map((l) => l.rating)),
+        rating: avgRating(pl),
         goalsAssistsPerGame: pl.reduce((s, l) => s + l.goals + l.assists, 0) / pl.length,
       });
     }

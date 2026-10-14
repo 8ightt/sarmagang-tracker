@@ -34,7 +34,7 @@ const METRICS = [
   { id: "goals", label: "Goals", perGame: true, cpuSkewed: true },
   { id: "assists", label: "Assists", perGame: true, cpuSkewed: true },
   { id: "ga", label: "G + A", perGame: true, cpuSkewed: true },
-  { id: "rating", label: "Avg rating", fmt: (v: number) => v.toFixed(1) },
+  { id: "rating", label: "Avg rating", fmt: (v: number) => v.toFixed(1), cpuSkewed: true },
   { id: "motm", label: "MOTM" },
   { id: "passPct", label: "Pass %", fmt: (v: number) => `${v}%`, cpuSkewed: true },
   { id: "tackles", label: "Tackles", perGame: true, cpuSkewed: true },

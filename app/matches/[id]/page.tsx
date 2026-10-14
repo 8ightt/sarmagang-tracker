@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
-import { Crest, Flag, KitShirt, PosLabel, ResultBadge, when } from "@/components/bits";
+import { Crest, Flag, KitShirt, PosLabel, Rating, ResultBadge, when } from "@/components/bits";
 import { COUNTER_STATS, counterStat } from "@/lib/counters";
 import { groupShort } from "@/lib/ea-assets";
 import { AFK_SECONDS, divisionName, getClub, getMatch, getMembers, getSeason, idleLabel, saveBreakdown } from "@/lib/stats";
@@ -75,7 +75,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           {motm ? (
             <span className="row" style={{ gap: 8, background: "var(--surface-2)", borderRadius: 999, padding: "10px 18px" }}>
               <Flag nation={members.get(motm.player)?.nation} />
-              Man of the match: <strong>{motm.player}</strong> · {motm.rating.toFixed(1)}
+              Man of the match: <strong>{motm.player}</strong> · <Rating rating={motm.rating} ea={motm.ea_rating} />
             </span>
           ) : null}
           {m.captain ? <span className="chip chip-ghost" style={{ padding: "8px 12px" }}>Captain: {m.captain}</span> : null}
@@ -142,7 +142,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         <span className="text-2" title="EA only records the group; set the exact position with Fix stats">{groupShort(p.pos)}</span>
                       )}
                     </td>
-                    <td style={{ fontWeight: 700, color: p.motm ? "var(--accent)" : undefined }}>{p.rating.toFixed(1)}</td>
+                    <td style={{ fontWeight: 700, color: p.motm ? "var(--accent)" : undefined }}><Rating rating={p.rating} ea={p.ea_rating} /></td>
                     <td title={p.goals !== p.ea_goals ? `EA: ${p.ea_goals} incl. CPU` : undefined}>{p.goals}</td>
                     <td title={p.assists !== p.ea_assists ? `EA: ${p.ea_assists} incl. CPU` : undefined}>{p.assists}</td>
                     <td>{p.shots}</td>
@@ -220,7 +220,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             player: p.player,
             fixed: Boolean(p.fixed),
             position: p.position ?? null,
-            rating: p.rating,
+            rating: p.rating ?? 0, // blank in the form when unknown (+CPU)
             goals: p.goals,
             assists: p.assists,
             shots: p.shots,

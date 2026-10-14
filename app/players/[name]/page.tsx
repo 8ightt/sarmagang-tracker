@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Crest, Flag, PosLabel, ResultBadge, when } from "@/components/bits";
+import { Crest, Flag, PosLabel, Rating, ResultBadge, when } from "@/components/bits";
 import { SeasonRedsForm } from "@/components/Forms";
 import { COUNTER_STATS } from "@/lib/counters";
 import { archetypeGroup, archetypeName, groupShort } from "@/lib/ea-assets";
@@ -50,7 +50,12 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
     { label: "Games", value: p.games, sub: `${p.winRate}% win rate` },
     { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game${p.goalsEa !== p.goals ? ` · EA: ${p.goalsEa} incl. CPU` : ""}`, warn: cpuWarn },
     { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game${p.assistsEa !== p.assists ? ` · EA: ${p.assistsEa} incl. CPU` : ""}`, warn: cpuWarn },
-    { label: "Avg rating", value: p.rating.toFixed(1), sub: `Squad avg ${squadRating.toFixed(1)}` },
+    {
+      label: "Avg rating",
+      value: p.rating.toFixed(1),
+      sub: `Squad avg ${squadRating.toFixed(1)}${p.ratingUnknown ? ` · ${p.ratingUnknown} +CPU game${p.ratingUnknown === 1 ? "" : "s"} left out · EA: ${p.ratingEa.toFixed(1)} incl. CPU` : ""}`,
+      warn: cpuWarn,
+    },
     { label: "MOTM", value: p.motm, sub: p.games ? `${Math.round((p.motm / p.games) * 100)}% of games` : "" },
     { label: "Passes", value: p.passes.toLocaleString("en-GB"), sub: `${per(p.passes)} per game${p.passesEa !== p.passes ? ` · EA: ${p.passesEa.toLocaleString("en-GB")} incl. CPU` : ""}`, warn: cpuWarn },
     { label: "Tackles", value: p.tackles.toLocaleString("en-GB"), sub: `${per(p.tackles)} per game${p.tacklesEa !== p.tackles ? ` · EA: ${p.tacklesEa} incl. CPU` : ""}`, warn: cpuWarn },
@@ -294,7 +299,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                     </td>
                     <td>{a.games}</td>
                     <td>{a.w}-{a.d}-{a.l}</td>
-                    <td style={{ fontWeight: 700 }}>{a.rating.toFixed(1)}</td>
+                    <td style={{ fontWeight: 700 }}><Rating rating={a.rating} /></td>
                     <td>{a.goals}</td>
                     <td>{a.assists}</td>
                     <td>{((a.goals + a.assists) / a.games).toFixed(2)}</td>
@@ -340,7 +345,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                       </a>
                     </td>
                     <td>{m.position ? <PosLabel position={m.position} /> : <span className="text-2">{groupShort(m.pos)}</span>}</td>
-                    <td style={{ fontWeight: 700 }}>{m.rating.toFixed(1)}</td>
+                    <td style={{ fontWeight: 700 }}><Rating rating={m.rating} ea={m.ea_rating} /></td>
                     <td>{m.goals}</td><td>{m.assists}</td><td>{m.shots}</td>
                     <td>{m.passes_made}{m.pass_attempts !== null ? `/${m.pass_attempts}` : ""}</td>
                     <td>{m.tackles_made}{m.tackle_attempts !== null ? `/${m.tackle_attempts}` : ""}</td>

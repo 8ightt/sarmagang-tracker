@@ -47,7 +47,8 @@ export type MatchPlayer = {
   /** EA's broad group: forward / midfielder / defender / goalkeeper */
   pos: string;
   archetype: number;
-  rating: number;
+  /** null on a +CPU line without a fix: EA averages the CPU teammates' ratings into it (see ea_rating) */
+  rating: number | null;
   goals: number;
   assists: number;
   shots: number;
@@ -73,6 +74,8 @@ export type MatchPlayer = {
   ea_passes_made: number;
   ea_pass_attempts: number;
   ea_tackles_made: number;
+  /** EA's rating; on a +CPU line it's the average of the player's and the CPU teammates' */
+  ea_rating?: number | null;
   /** the fields below are 0/false until supabase/migrations/0005 has been run */
   goals_conceded: number;
   clean_sheet: boolean;
@@ -216,6 +219,10 @@ export type Member = {
   shotPct: number;
   lastTenGoals: number[]; // oldest → newest
   controlsCpu: boolean;
+  /** EA's season average rating; on +CPU games it's averaged with the CPU teammates' */
+  ratingEa: number;
+  /** saved +CPU games left out of rating (no in-game RR entered) */
+  ratingUnknown: number;
   /** this season's games from before the site saved matches, when the player runs the CPU: EA's totals may include its stats from those */
   cpuEarlyGames: number;
 };
@@ -225,11 +232,14 @@ type Delta = { goals: number; assists: number; motm: number; passes: number; pas
 export const getMembers = cache(async (): Promise<Member[]> => {
   const db = sql();
   const fixesReady = (await playersTable()) === "match_players_effective";
-  const [snap, cpuRows, cpuPlayerRows, savedRows, fixRows] = await Promise.all([
+  const [snap, cpuRows, cpuPlayerRows, savedRows, ratingRows, fixRows] = await Promise.all([
     getSnapshot<{ members: EaMember[] }>("members"),
     db`select player, sum(amount)::int as n from corrections where stat = 'reds' group by player`,
     db`select distinct player from match_players where controls_cpu`,
     db`select mp.player, m.ts from match_players mp join matches m on m.id = mp.match_id where mp.seconds > 0`,
+    // lines whose rating isn't EA's: unknown (+CPU) or fixed from the in-game screen; needs migration 0016
+    db`select mp.player, m.ts, mp.rating, mp.ea_rating from match_players_effective mp join matches m on m.id = mp.match_id
+        where mp.seconds > 0 and mp.rating is distinct from mp.ea_rating`.catch(() => [] as postgres.Row[]),
     // how far the own/corrected lines differ from EA's, per player
     fixesReady
       ? db`select player,
@@ -255,6 +265,16 @@ export const getMembers = cache(async (): Promise<Member[]> => {
   const savedGames = new Map<string, number>();
   for (const r of savedRows)
     if (seasonOf(Number(r.ts))?.name === season) savedGames.set(r.player as string, (savedGames.get(r.player as string) ?? 0) + 1);
+  // per player: EA ratings to take out of the season average, games to drop, fixed ratings to put in
+  const ratingFix = new Map<string, { eaOut: number; dropped: number; fixedIn: number }>();
+  for (const r of ratingRows) {
+    if (seasonOf(Number(r.ts))?.name !== season) continue;
+    const x = ratingFix.get(r.player as string) ?? { eaOut: 0, dropped: 0, fixedIn: 0 };
+    x.eaOut += Number(r.ea_rating ?? 0);
+    if (r.rating === null) x.dropped += 1;
+    else x.fixedIn += Number(r.rating);
+    ratingFix.set(r.player as string, x);
+  }
   return members
     .map((m) => {
       const s = settings.players[m.name] ?? {};
@@ -286,7 +306,14 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         assists: Math.max(0, num(m.assists) + fix.assists),
         goalsEa: num(m.goals),
         assistsEa: num(m.assists),
-        rating: num(m.ratingAve),
+        rating: (() => {
+          const rf = ratingFix.get(m.name);
+          const games = num(m.gamesPlayed);
+          if (!rf || games - rf.dropped <= 0) return num(m.ratingAve);
+          return Math.round(((num(m.ratingAve) * games - rf.eaOut + rf.fixedIn) / (games - rf.dropped)) * 10) / 10;
+        })(),
+        ratingEa: num(m.ratingAve),
+        ratingUnknown: ratingFix.get(m.name)?.dropped ?? 0,
         motm: Math.max(0, num(m.manOfTheMatch) + fix.motm),
         redsEa,
         redsCpu,
@@ -336,7 +363,7 @@ export async function getMatch(id: string) {
   if (!match) return null;
   const t = await playersTable();
   const [players, cpuReds] = await Promise.all([
-    db`select * from ${db(t)} where match_id = ${id} order by motm desc, rating desc` as unknown as Promise<MatchPlayer[]>,
+    db`select * from ${db(t)} where match_id = ${id} order by motm desc, rating desc nulls last` as unknown as Promise<MatchPlayer[]>,
     db`select player, sum(amount)::int as n from corrections where match_id = ${id} and stat = 'reds' group by player`,
   ]);
   return {
@@ -423,7 +450,8 @@ export type ArchetypeRow = {
   w: number;
   d: number;
   l: number;
-  rating: number;
+  /** null when every game of the archetype was a +CPU one */
+  rating: number | null;
   goals: number;
   assists: number;
   motm: number;
@@ -440,7 +468,7 @@ export async function getArchetypes(player: string): Promise<ArchetypeRow[]> {
            sum(mp.goals)::int as goals, sum(mp.assists)::int as assists, sum(mp.motm::int)::int as motm, sum(mp.saves)::int as saves
     from ${db(await playersTable())} mp join matches m on m.id = mp.match_id
     where mp.player = ${player} and mp.seconds > 0
-    group by mp.archetype order by games desc, rating desc`;
+    group by mp.archetype order by games desc, rating desc nulls last`;
   return rows as unknown as ArchetypeRow[];
 }
 
@@ -620,7 +648,7 @@ export async function getRecords() {
   const base = (cond: string, dir: "asc" | "desc", col: string) =>
     db`select mp.player, mp.match_id, mp.goals, mp.assists, mp.rating, mp.saves, m.ts, m.opp_name, m.opp_crest, m.goals_for, m.goals_against, m.dnf
        from ${db(t)} mp join matches m on m.id = mp.match_id
-       where ${db.unsafe(cond)} order by ${db.unsafe(col)} ${db.unsafe(dir)}, mp.rating desc limit 1`;
+       where ${db.unsafe(cond)} order by ${db.unsafe(col)} ${db.unsafe(dir)}, mp.rating desc nulls last limit 1`;
 
   const hatTricks = await db`
     select mp.player, m.opp_name from ${db(t)} mp join matches m on m.id = mp.match_id
@@ -636,8 +664,8 @@ export async function getRecords() {
   if (topG?.goals) out.matchRecords.push({ label: "Most goals by a player", value: String(topG.goals), who: topG.player, detail: vs(topG), matchId: topG.match_id, crest: topG.opp_crest });
   const topA = await best(base("true", "desc", "mp.assists"));
   if (topA?.assists) out.matchRecords.push({ label: "Most assists in a game", value: String(topA.assists), who: topA.player, detail: vs(topA), matchId: topA.match_id, crest: topA.opp_crest });
-  const topR = await best(base("mp.seconds >= 2700", "desc", "mp.rating"));
-  if (topR) out.matchRecords.push({ label: "Highest match rating", value: topR.rating.toFixed(1), who: topR.player, detail: vs(topR), matchId: topR.match_id, crest: topR.opp_crest });
+  const topR = await best(base("mp.seconds >= 2700 and mp.rating is not null", "desc", "mp.rating"));
+  if (topR) out.matchRecords.push({ label: "Highest match rating", value: Number(topR.rating).toFixed(1), who: topR.player, detail: vs(topR), matchId: topR.match_id, crest: topR.opp_crest });
   const topS = await best(base("true", "desc", "mp.saves"));
   if (topS?.saves) out.matchRecords.push({ label: "Most saves in a game", value: String(topS.saves), who: topS.player, detail: vs(topS), matchId: topS.match_id, crest: topS.opp_crest });
 
@@ -646,8 +674,8 @@ export async function getRecords() {
   if (worst) out.shame.push({ label: "Heaviest defeat", value: `${worst.goals_for}–${worst.goals_against}`, who: `vs ${worst.opp_name}`, detail: fmtDate(worst.ts), matchId: worst.id, crest: worst.opp_crest });
   const leaky = [...matches].sort((a, b) => b.goals_against - a.goals_against)[0];
   if (leaky?.goals_against) out.shame.push({ label: "Most conceded in a game", value: String(leaky.goals_against), who: `vs ${leaky.opp_name}`, detail: fmtDate(leaky.ts), matchId: leaky.id, crest: leaky.opp_crest });
-  const lowR = await best(base("mp.seconds >= 2700", "asc", "mp.rating"));
-  if (lowR) out.shame.push({ label: "Lowest match rating", value: lowR.rating.toFixed(1), who: lowR.player, detail: vs(lowR), matchId: lowR.match_id, crest: lowR.opp_crest });
+  const lowR = await best(base("mp.seconds >= 2700 and mp.rating is not null", "asc", "mp.rating"));
+  if (lowR) out.shame.push({ label: "Lowest match rating", value: Number(lowR.rating).toFixed(1), who: lowR.player, detail: vs(lowR), matchId: lowR.match_id, crest: lowR.opp_crest });
 
   if (await extrasReady()) {
     const idle = await best(db`

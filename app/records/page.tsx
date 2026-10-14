@@ -22,7 +22,7 @@ export default async function RecordsPage() {
     { cat: "Top assister", cpu: true, list: by("assists"), v: (m: any) => m.assists },
     { cat: "Most appearances", list: by("games"), v: (m: any) => m.games },
     { cat: "Most man of the match", list: by("motm"), v: (m: any) => m.motm },
-    { cat: "Highest average rating", note: "5+ games", list: by("rating", 5), v: (m: any) => m.rating.toFixed(1) },
+    { cat: "Highest average rating", cpu: true, note: "5+ games", list: by("rating", 5), v: (m: any) => m.rating.toFixed(1) },
     {
       cat: "Goal involvements per game", cpu: true,
       note: "10+ games",
@@ -50,7 +50,7 @@ export default async function RecordsPage() {
     },
     { cat: "Worst pass completion", cpu: true, list: by("passPct", 5, -1), v: (m: any) => `${m.passPct}%` },
     { cat: "Worst tackle success", cpu: true, list: by("tacklePct", 5, -1).filter((m) => m.tackles >= 5), v: (m: any) => `${m.tacklePct}%` },
-    { cat: "Lowest average rating", list: by("rating", 5, -1), v: (m: any) => m.rating.toFixed(1) },
+    { cat: "Lowest average rating", cpu: true, list: by("rating", 5, -1), v: (m: any) => m.rating.toFixed(1) },
   ];
 
   return (

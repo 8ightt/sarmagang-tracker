@@ -60,3 +60,13 @@ export function PosLabel({ position, role }: { position: string; role?: string }
     </span>
   );
 }
+
+/** A match rating; on a +CPU line without a fix it's unknown and EA's (averaged with the CPU's) is shown small. */
+export function Rating({ rating, ea }: { rating: number | null; ea?: number | null }) {
+  if (rating !== null && rating !== undefined) return <>{Number(rating).toFixed(1)}</>;
+  return (
+    <span className="muted" title="EA averages the CPU teammates' ratings into this player's. Fix stats can enter the in-game RR.">
+      –{ea ? <span style={{ fontSize: 12, fontWeight: 400 }}> EA {Number(ea).toFixed(1)} incl. CPU</span> : null}
+    </span>
+  );
+}
