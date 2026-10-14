@@ -93,6 +93,7 @@ a.card:hover { border-color: var(--line-2); }
 .kpi-label { font-size: 13px; color: var(--text-2); font-weight: 500; }
 .kpi-value { font-size: 44px; margin: 6px 0; }
 .kpi-sub { font-size: 13px; color: var(--muted); }
+.cpu-warn { color: var(--shame); }
 
 /* result badges */
 .badge { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }

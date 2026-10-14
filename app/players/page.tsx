@@ -30,6 +30,7 @@ export default async function PlayersPage() {
       tackles: m.tackles,
       cleanSheets: tracked.get(m.gamertag)?.cleanSheets ?? 0,
       controlsCpu: m.controlsCpu,
+      cpuEarlyGames: m.cpuEarlyGames,
       savedGames: advanced.get(m.gamertag)?.games ?? 0,
       interceptions: perGame(m.gamertag, "interceptions"),
       dribbles: perGame(m.gamertag, "dribbles"),

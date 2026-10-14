@@ -42,14 +42,18 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   }
   const positionsPlayed = [...posCount.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ×${n}`).join(" · ");
 
-  const tiles = [
+  // EA's totals for games from before the site saved matches can't have the CPU's share taken out
+  const cpuWarn = p.cpuEarlyGames
+    ? `May include the CPU's from ${p.cpuEarlyGames} earlier game${p.cpuEarlyGames === 1 ? "" : "s"}`
+    : undefined;
+  const tiles: { label: string; value: string | number; sub: string; warn?: string }[] = [
     { label: "Games", value: p.games, sub: `${p.winRate}% win rate` },
-    { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game${p.goalsEa !== p.goals ? ` · EA: ${p.goalsEa} incl. CPU` : ""}` },
-    { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game${p.assistsEa !== p.assists ? ` · EA: ${p.assistsEa} incl. CPU` : ""}` },
+    { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game${p.goalsEa !== p.goals ? ` · EA: ${p.goalsEa} incl. CPU` : ""}`, warn: cpuWarn },
+    { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game${p.assistsEa !== p.assists ? ` · EA: ${p.assistsEa} incl. CPU` : ""}`, warn: cpuWarn },
     { label: "Avg rating", value: p.rating.toFixed(1), sub: `Squad avg ${squadRating.toFixed(1)}` },
     { label: "MOTM", value: p.motm, sub: p.games ? `${Math.round((p.motm / p.games) * 100)}% of games` : "" },
-    { label: "Passes", value: p.passes.toLocaleString("en-GB"), sub: `${per(p.passes)} per game${p.passesEa !== p.passes ? ` · EA: ${p.passesEa.toLocaleString("en-GB")} incl. CPU` : ""}` },
-    { label: "Tackles", value: p.tackles.toLocaleString("en-GB"), sub: `${per(p.tackles)} per game${p.tacklesEa !== p.tackles ? ` · EA: ${p.tacklesEa} incl. CPU` : ""}` },
+    { label: "Passes", value: p.passes.toLocaleString("en-GB"), sub: `${per(p.passes)} per game${p.passesEa !== p.passes ? ` · EA: ${p.passesEa.toLocaleString("en-GB")} incl. CPU` : ""}`, warn: cpuWarn },
+    { label: "Tackles", value: p.tackles.toLocaleString("en-GB"), sub: `${per(p.tackles)} per game${p.tacklesEa !== p.tackles ? ` · EA: ${p.tacklesEa} incl. CPU` : ""}`, warn: cpuWarn },
     {
       label: "Red cards",
       value: p.redsCpu ? `${p.reds}` : p.redsEa,
@@ -105,6 +109,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
             <div className="kpi-label">{t.label}</div>
             <div className="display kpi-value num" style={{ fontSize: 40 }}>{t.value}</div>
             <div className="kpi-sub">{t.sub}</div>
+            {t.warn ? <div className="kpi-sub cpu-warn">⚠ {t.warn}</div> : null}
           </div>
         ))}
       </section>
@@ -227,6 +232,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                     </div>
                     {a.archetype === currentArchetype ? <span className="chip">Current</span> : null}
                   </div>
+                  {p.controlsCpu && (g || unknown) ? (
+                    <div className="kpi-sub cpu-warn">
+                      ⚠ {unknown ? "EA's numbers: may include the CPU's" : `In-game numbers may include the CPU's${a.since.games ? `; the ${a.since.games} saved since are the player's own` : ""}`}
+                    </div>
+                  ) : null}
                   <div className="stack" style={{ gap: 6 }}>
                     <div className="row between">
                       <span className="text-2">Games</span>

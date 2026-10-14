@@ -11,21 +11,26 @@ export default async function RecordsPage() {
   const by = <K extends keyof (typeof members)[number]>(key: K, min = 0, dir: 1 | -1 = 1) =>
     [...members].filter((m) => m.games >= min).sort((a, b) => (Number(b[key]) - Number(a[key])) * dir);
   const nation = new Map(members.map((m) => [m.gamertag, m.nation]));
+  // EA's totals for games from before the site saved matches can't have the CPU's share taken out
+  const cpuWarn = (cpu: boolean | undefined, m: { cpuEarlyGames: number }) =>
+    cpu && m.cpuEarlyGames ? (
+      <span className="cpu-warn" style={{ fontSize: 13 }}>⚠ May include the CPU&apos;s from {m.cpuEarlyGames} earlier game{m.cpuEarlyGames === 1 ? "" : "s"}</span>
+    ) : null;
 
   const fame = [
-    { cat: "Top scorer", list: by("goals"), v: (m: any) => m.goals },
-    { cat: "Top assister", list: by("assists"), v: (m: any) => m.assists },
+    { cat: "Top scorer", cpu: true, list: by("goals"), v: (m: any) => m.goals },
+    { cat: "Top assister", cpu: true, list: by("assists"), v: (m: any) => m.assists },
     { cat: "Most appearances", list: by("games"), v: (m: any) => m.games },
     { cat: "Most man of the match", list: by("motm"), v: (m: any) => m.motm },
     { cat: "Highest average rating", note: "5+ games", list: by("rating", 5), v: (m: any) => m.rating.toFixed(1) },
     {
-      cat: "Goal involvements per game",
+      cat: "Goal involvements per game", cpu: true,
       note: "10+ games",
       list: [...members].filter((m) => m.games >= 10).sort((a, b) => (b.goals + b.assists) / b.games - (a.goals + a.assists) / a.games),
       v: (m: any) => ((m.goals + m.assists) / m.games).toFixed(2),
     },
-    { cat: "Best passer", note: "pass completion, 5+ games", list: by("passPct", 5), v: (m: any) => `${m.passPct}%` },
-    { cat: "Most clinical", note: "shot success, 5+ games", list: by("shotPct", 5), v: (m: any) => `${m.shotPct}%` },
+    { cat: "Best passer", cpu: true, note: "pass completion, 5+ games", list: by("passPct", 5), v: (m: any) => `${m.passPct}%` },
+    { cat: "Most clinical", cpu: true, note: "shot success, 5+ games", list: by("shotPct", 5), v: (m: any) => `${m.shotPct}%` },
     {
       cat: "Most clean sheets",
       note: "saved games",
@@ -35,9 +40,16 @@ export default async function RecordsPage() {
   ];
 
   const shame = [
-    { cat: "Most red cards", list: by("reds").filter((m) => m.reds > 0), v: (m: any) => m.reds, note: "CPU cards removed where flagged" },
-    { cat: "Worst pass completion", list: by("passPct", 5, -1), v: (m: any) => `${m.passPct}%` },
-    { cat: "Worst tackle success", list: by("tacklePct", 5, -1).filter((m) => m.tackles >= 5), v: (m: any) => `${m.tacklePct}%` },
+    {
+      cat: "Most red cards",
+      cpu: true,
+      list: by("reds").filter((m) => m.reds > 0),
+      v: (m: any) => m.reds,
+      // whole season, CPU cards taken out; every player with a red, not just the top one
+      note: ["Season, CPU cards removed", by("reds").filter((m) => m.reds > 0).map((m) => `${m.gamertag} ${m.reds}`).join(" · ")].join(" · "),
+    },
+    { cat: "Worst pass completion", cpu: true, list: by("passPct", 5, -1), v: (m: any) => `${m.passPct}%` },
+    { cat: "Worst tackle success", cpu: true, list: by("tacklePct", 5, -1).filter((m) => m.tackles >= 5), v: (m: any) => `${m.tacklePct}%` },
     { cat: "Lowest average rating", list: by("rating", 5, -1), v: (m: any) => m.rating.toFixed(1) },
   ];
 
@@ -67,6 +79,7 @@ export default async function RecordsPage() {
                   <span className="display accent num" style={{ fontSize: 40, fontWeight: 900 }}>{f.v(top)}</span>
                 </div>
                 <span className="muted" style={{ fontSize: 13 }}>{[f.note, runners].filter(Boolean).join(" · ")}</span>
+                {cpuWarn("cpu" in f ? f.cpu : undefined, top)}
               </div>
             );
           })}
@@ -138,6 +151,7 @@ export default async function RecordsPage() {
                   <span className="display num" style={{ fontSize: 36, color: "var(--shame)" }}>{s.v(top)}</span>
                 </div>
                 {s.note ? <span className="muted" style={{ fontSize: 13 }}>{s.note}</span> : null}
+                {cpuWarn("cpu" in s ? s.cpu : undefined, top)}
               </div>
             );
           })}

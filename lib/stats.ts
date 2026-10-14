@@ -216,6 +216,8 @@ export type Member = {
   shotPct: number;
   lastTenGoals: number[]; // oldest → newest
   controlsCpu: boolean;
+  /** this season's games from before the site saved matches, when the player runs the CPU: EA's totals may include its stats from those */
+  cpuEarlyGames: number;
 };
 
 type Delta = { goals: number; assists: number; motm: number; passes: number; pass_attempts: number; tackles: number };
@@ -223,10 +225,11 @@ type Delta = { goals: number; assists: number; motm: number; passes: number; pas
 export const getMembers = cache(async (): Promise<Member[]> => {
   const db = sql();
   const fixesReady = (await playersTable()) === "match_players_effective";
-  const [snap, cpuRows, cpuPlayerRows, fixRows] = await Promise.all([
+  const [snap, cpuRows, cpuPlayerRows, savedRows, fixRows] = await Promise.all([
     getSnapshot<{ members: EaMember[] }>("members"),
     db`select player, sum(amount)::int as n from corrections where stat = 'reds' group by player`,
     db`select distinct player from match_players where controls_cpu`,
+    db`select mp.player, m.ts from match_players mp join matches m on m.id = mp.match_id where mp.seconds > 0`,
     // how far the own/corrected lines differ from EA's, per player
     fixesReady
       ? db`select player,
@@ -247,6 +250,11 @@ export const getMembers = cache(async (): Promise<Member[]> => {
   const cpuReds = new Map(cpuRows.map((r) => [r.player as string, r.n as number]));
   const cpuPlayers = new Set(cpuPlayerRows.map((r) => r.player as string));
   const fixDelta = new Map(fixRows.map((r) => [r.player as string, r as unknown as Delta]));
+  // saved games of the season EA's totals cover
+  const season = currentSeason()?.name;
+  const savedGames = new Map<string, number>();
+  for (const r of savedRows)
+    if (seasonOf(Number(r.ts))?.name === season) savedGames.set(r.player as string, (savedGames.get(r.player as string) ?? 0) + 1);
   return members
     .map((m) => {
       const s = settings.players[m.name] ?? {};
@@ -292,6 +300,8 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         shotPct: num(m.shotSuccessRate),
         lastTenGoals: Array.from({ length: 10 }, (_, i) => num(m[`prevGoals${i + 1}`])).reverse(),
         controlsCpu: cpuPlayers.has(m.name) || /any/i.test(s.role ?? ""),
+        cpuEarlyGames:
+          cpuPlayers.has(m.name) || /any/i.test(s.role ?? "") ? Math.max(0, num(m.gamesPlayed) - (savedGames.get(m.name) ?? 0)) : 0,
       } satisfies Member;
     })
     .sort((a, b) => b.games - a.games);
@@ -462,25 +472,34 @@ export async function getArchetypeSeason(
   if (!snap) return null;
   const asOf = snap.asOf ? Date.parse(snap.asOf) / 1000 : 0;
   const db = sql();
-  // EA's numbers (incl. the CPU's for whoever runs it), like the in-game screen
+  // the player's own numbers, without the CPU's (the in-game screen's include them)
   const games = (await db`
-    select mp.archetype, m.ts, mp.ea_goals, mp.ea_assists, mp.ea_motm, mp.ea_passes_made as passes_made, mp.ea_tackles_made as tackles_made, mp.saves,
-           mp.goals_conceded, mp.clean_sheet
+    select mp.archetype, m.ts, mp.goals, mp.assists, mp.motm, mp.passes_made, mp.tackles_made, mp.saves,
+           mp.goals_conceded, mp.clean_sheet, mp.ea_goals, mp.ea_assists, mp.ea_motm, mp.ea_passes_made, mp.ea_tackles_made
     from ${db(await playersTable())} mp join matches m on m.id = mp.match_id
     where mp.player = ${player} and mp.seconds > 0 and m.ts > ${asOf} and m.match_type <> 'friendlyMatch'`) as unknown as {
-    archetype: number; ts: number; ea_goals: number; ea_assists: number; ea_motm: boolean; passes_made: number; tackles_made: number;
+    archetype: number; ts: number; goals: number; assists: number; motm: boolean; passes_made: number; tackles_made: number;
     saves: number; goals_conceded: number | null; clean_sheet: boolean | null;
+    ea_goals: number; ea_assists: number; ea_motm: boolean; ea_passes_made: number; ea_tackles_made: number;
   }[];
   const zero = () => ({ games: 0, goals: 0, assists: 0, motm: 0, passes: 0, tackles: 0, saves: 0, conceded: 0, cleanSheets: 0 });
   const since = new Map<number, ReturnType<typeof zero>>();
+  // EA's numbers for the same games, to take them out of EA's season totals below
+  const eaSaved = zero();
   for (const g of games) {
     if (seasonOf(Number(g.ts))?.name !== snap.season) continue;
+    eaSaved.games += 1;
+    eaSaved.goals += Number(g.ea_goals ?? 0);
+    eaSaved.assists += Number(g.ea_assists ?? 0);
+    eaSaved.motm += g.ea_motm ? 1 : 0;
+    eaSaved.passes += Number(g.ea_passes_made ?? 0);
+    eaSaved.tackles += Number(g.ea_tackles_made ?? 0);
     const a = Number(g.archetype);
     const x = since.get(a) ?? zero();
     x.games += 1;
-    x.goals += Number(g.ea_goals ?? 0);
-    x.assists += Number(g.ea_assists ?? 0);
-    x.motm += g.ea_motm ? 1 : 0;
+    x.goals += Number(g.goals ?? 0);
+    x.assists += Number(g.assists ?? 0);
+    x.motm += g.motm ? 1 : 0;
     x.passes += Number(g.passes_made ?? 0);
     x.tackles += Number(g.tackles_made ?? 0);
     x.saves += Number(g.saves ?? 0);
@@ -515,10 +534,7 @@ export async function getArchetypeSeason(
     const members = await getSnapshot<{ members?: Record<string, string>[] }>("members");
     const m = members?.data?.members?.find((x) => x.name === player);
     if (m) {
-      const saved = rows.reduce((t, r) => {
-        for (const k of Object.keys(t) as (keyof typeof t)[]) t[k] += r.total[k];
-        return t;
-      }, zero());
+      const saved = eaSaved;
       const rest = (ea: number, ours: number) => Math.max(0, ea - ours);
       const unknown = {
         ...zero(),
@@ -632,9 +648,6 @@ export async function getRecords() {
   if (leaky?.goals_against) out.shame.push({ label: "Most conceded in a game", value: String(leaky.goals_against), who: `vs ${leaky.opp_name}`, detail: fmtDate(leaky.ts), matchId: leaky.id, crest: leaky.opp_crest });
   const lowR = await best(base("mp.seconds >= 2700", "asc", "mp.rating"));
   if (lowR) out.shame.push({ label: "Lowest match rating", value: lowR.rating.toFixed(1), who: lowR.player, detail: vs(lowR), matchId: lowR.match_id, crest: lowR.opp_crest });
-  const reds = await db`select player, sum(reds)::int as n from ${db(t)} group by player having sum(reds) > 0 order by n desc`;
-  if (reds.length)
-    out.shame.push({ label: "Red cards in saved games", value: String(reds[0].n), who: reds[0].player as string, detail: reds.map((r) => `${r.player} ${r.n}`).join(" · ") });
 
   if (await extrasReady()) {
     const idle = await best(db`

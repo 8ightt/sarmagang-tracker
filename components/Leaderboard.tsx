@@ -20,6 +20,8 @@ export type BoardRow = {
   /** from the saved matches, not EA's season totals */
   cleanSheets: number;
   controlsCpu: boolean;
+  /** games before the site saved matches whose EA totals may include the CPU's */
+  cpuEarlyGames: number;
   /** per game over the saved games with event counters (savedGames of them) */
   savedGames: number;
   interceptions: number;
@@ -29,12 +31,12 @@ export type BoardRow = {
 };
 
 const METRICS = [
-  { id: "goals", label: "Goals", perGame: true },
-  { id: "assists", label: "Assists", perGame: true },
-  { id: "ga", label: "G + A", perGame: true },
+  { id: "goals", label: "Goals", perGame: true, cpuSkewed: true },
+  { id: "assists", label: "Assists", perGame: true, cpuSkewed: true },
+  { id: "ga", label: "G + A", perGame: true, cpuSkewed: true },
   { id: "rating", label: "Avg rating", fmt: (v: number) => v.toFixed(1) },
   { id: "motm", label: "MOTM" },
-  { id: "passPct", label: "Pass %", fmt: (v: number) => `${v}%` },
+  { id: "passPct", label: "Pass %", fmt: (v: number) => `${v}%`, cpuSkewed: true },
   { id: "tackles", label: "Tackles", perGame: true, cpuSkewed: true },
   { id: "cleanSheets", label: "Clean sheets", note: "in saved games" },
   { id: "interceptions", label: "Interceptions", saved: true },
@@ -62,7 +64,7 @@ export function Leaderboard({ rows }: { rows: BoardRow[] }) {
       <div className="stack" style={{ gap: 10 }}>
         {sorted.map((r, i) => {
           const v = r[metric];
-          const skewed = "cpuSkewed" in m && m.cpuSkewed && r.controlsCpu;
+          const skewed = "cpuSkewed" in m && m.cpuSkewed && r.cpuEarlyGames > 0;
           return (
             <a key={r.gamertag} className="card row" style={{ gap: 20, padding: "16px 22px" }} href={`/players/${encodeURIComponent(r.gamertag)}`}>
               <span className="display muted" style={{ fontSize: 36, width: 40 }}>{i + 1}</span>
@@ -88,7 +90,7 @@ export function Leaderboard({ rows }: { rows: BoardRow[] }) {
                       : "note" in m
                         ? m.note
                         : m.label}
-                  {skewed ? " · incl. CPU" : ""}
+                  {skewed ? <span className="cpu-warn"> · ⚠ may incl. CPU from {r.cpuEarlyGames} earlier</span> : null}
                 </div>
               </div>
             </a>
