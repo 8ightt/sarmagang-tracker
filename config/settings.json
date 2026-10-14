@@ -50,6 +50,9 @@
     "targets": {
       "4": 9,
       "3": 12
+    },
+    "pointsAfterMissedPromotion": {
+      "3": 9
     }
   }
 }

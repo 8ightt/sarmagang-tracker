@@ -114,7 +114,9 @@ Run `supabase/migrations/0004_stat_fixes_and_season.sql` once. It adds:
   and exact positions from the in-game Player Performance screen; totals and records follow.
 - **Season tracker** on the club page, worked out from every result: win +3 points,
   draw +1, loss −1 chance. Reaching the division's target starts the promotion match, a short
-  series that needs one more win per division (Division 4: 2 wins from 3); losing the last
+  series that needs one more win per division (Division 4: 2 wins from 3). Missing promotion
+  gives all chances back and leaves the points one win short of the target (Division 3: 9 of
+  12; `league.pointsAfterMissedPromotion` if a division differs). Losing the last
   chance means a relegation match (win to stay, lose to go down). Series lengths per
   division are in `config/settings.json` under `league.promotion`.
   Points targets per division and the chances you get back after surviving are set in

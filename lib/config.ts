@@ -33,6 +33,8 @@ export type LeagueRules = {
   targets: Record<string, number>;
   /** the promotion match per division: a short series of `matches` games, `wins` of them to go up */
   promotion: Record<string, { matches: number; wins: number; confirmed?: boolean }>;
+  /** points the club keeps after missing promotion, per division; missing = one win short of the target */
+  pointsAfterMissedPromotion: Record<string, number>;
 };
 
 /** An EA Clubs season, copied from the in-game Season Info screen. */
@@ -73,6 +75,7 @@ export function loadSettings(): SiteSettings {
       chancesAfterSurviving: league.chancesAfterSurviving ?? 1,
       targets: league.targets ?? {},
       promotion: league.promotion ?? {},
+      pointsAfterMissedPromotion: league.pointsAfterMissedPromotion ?? {},
     },
   };
 }

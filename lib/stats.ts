@@ -700,7 +700,8 @@ export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
  * - League: win +3 points, draw +1, loss -1 chance.
  * - Reaching the division's points target starts the promotion match: a short series that
  *   gets one win harder per division (Division 4: 2 wins from 3). Falling short keeps the
- *   club in its division.
+ *   club in its division with all chances back and the points one win short of the target
+ *   (Division 3: 9 of 12, seen in the lobby on 14 Oct).
  * - Losing the last chance means a relegation match: win and you stay (with some chances
  *   back), lose and you go down a division.
  * Points targets per division and the chances you get back are in config/settings.json.
@@ -759,6 +760,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
       } else if (rule.wins - series.wins > rule.matches - series.played) {
         events.push({ ts, kind: "playoff-lost", division });
         newSeason(division);
+        points = league.pointsAfterMissedPromotion[String(division)] ?? Math.max(0, target - POINTS.W);
       }
       continue;
     }
