@@ -12,9 +12,9 @@
     {
       "project": "Interactive-63/eafc-pro-clubs-api-research",
       "url": "https://github.com/Interactive-63/eafc-pro-clubs-api-research",
-      "file": "README.md (event IDs and decoded stat formulas)",
+      "file": "README.md (event IDs and decoded stat formulas); data/eafc_27_raw_player_data.csv",
       "thanks": "Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.",
-      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153)"
+      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes"
     }
   ],
   "evidence": {
@@ -411,14 +411,14 @@
       "216": {
         "meaning": "own missed passes (not offside)",
         "status": "verified",
-        "evidence": "Angola fest: dirty8ightt 216 = 2 (12 passes, 9 completed, 1 offside), mo_nm 216 = 3 (11 passes, 8 completed); 215 + 216 + 153 + 191 = passattempts on 52 of 60 human-only lines; totals 954 vs 962",
+        "evidence": "Angola fest: dirty8ightt 216 = 2 (12 passes, 9 completed, 1 offside), mo_nm 216 = 3 (11 passes, 8 completed); 215 + 216 + 153 = passattempts on 37,819 of 42,451 human-only lines (89.1%) in the EA FC Pro Clubs API research dataset",
         "usedIn": "match_players.own_pass_attempts → match_players_effective.pass_attempts"
       },
       "191": {
-        "meaning": "own missed passes, part 2",
-        "status": "assumed",
-        "evidence": "see 216",
-        "usedIn": "see 216"
+        "meaning": "not part of missed passes",
+        "status": "wrong",
+        "evidence": "research dataset, 42,451 human-only lines: adding 191 to 215 + 216 + 153 drops the passattempts match from 89.1% to 86.9%; 1,038 of the 1,252 lines where 191 fires already match without it. Our first guess came from 60 lines",
+        "usedIn": "no longer used"
       },
       "164": {
         "meaning": "own tackles won",
@@ -460,8 +460,7 @@
       "118, 128, 131, 136, 12, 93, 123, 124, 137, 140, 238": { "meaning": "assist and goal descriptors: through-ball assist (118), first-time (128), weak foot (131), off the post (136), chip (123), other techniques; they overlap, so they don't add up to goals", "status": "assumed" }
     },
     "candidates": {
-      "114": { "guess": "key passes (passes that led to a teammate's shot); not in the research list", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0", "usedIn": "lib/counters.ts → More stats, leaderboard" },
-      "191": { "guess": "part of EA's missed passes (passattempts = 215 + 216 + 153 + 191 on 52/60 of our lines); not in the research list", "evidence": "see 216" }
+      "114": { "guess": "key passes (passes that led to a teammate's shot); not in the research list", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0", "usedIn": "lib/counters.ts → More stats, leaderboard" }
     },
     "notYetDecoded": "tackle attempts (no counter, pair or triple matches EA's tackleattempts); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.",
     "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"

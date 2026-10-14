@@ -327,10 +327,10 @@ The counters count the HUMAN's own actions. EA's headline goals/assists/shots ad
 | `11` | ✅ verified | own assists | equals assists on 86/98 lines; all 12 mismatches are CPU-controller lines, counter lower | match_players.own_assists → match_players_effective.assists |
 | `153` | ✅ verified | offside passes; EA's passesmade counts them as made, the in-game screen as attempted but not completed | dirty8ightt, Angola fest: Offside Passes 1 = 153; Passes 12 = 215 + 216 + 153 | see 215 |
 | `164` | ✅ verified | own tackles won | equals tacklesmade on 56 of 60 human-only lines (totals 62 vs 67); on CPU-controller lines EA is 7–17 higher. In game: dirty8ightt, Angola fest: 2 sliding tackles, 0 won, 164 absent | match_players.own_tackles_made → match_players_effective.tackles_made |
-| `191` | 🟡 assumed | own missed passes, part 2 | see 216 | see 216 |
+| `191` | ❌ wrong | not part of missed passes | research dataset, 42,451 human-only lines: adding 191 to 215 + 216 + 153 drops the passattempts match from 89.1% to 86.9%; 1,038 of the 1,252 lines where 191 fires already match without it. Our first guess came from 60 lines | no longer used |
 | `214` | ✅ verified | own goals scored | equals goals on 89/98 lines; all 9 mismatches are CPU-controller lines where the counter is lower | match_players.own_goals → match_players_effective.goals |
 | `215` | ✅ verified | own completed passes | in-game Player Performance, Angola fest (13 Oct): dirty8ightt Completed 9 = 215, mo_nm 8 = 215. EA's passesmade also counts offside passes: 215 + 153 = passesmade on 51 of 58 human-only lines of our club (22 games), the rest within ±2; totals 717 vs 716. On the 13 CPU-controller lines EA is 43–97 higher. A quitter (userResult 6) keeps them while EA wipes passes to 0 | match_players.own_passes_made → match_players_effective.passes_made |
-| `216` | ✅ verified | own missed passes (not offside) | Angola fest: dirty8ightt 216 = 2 (12 passes, 9 completed, 1 offside), mo_nm 216 = 3 (11 passes, 8 completed); 215 + 216 + 153 + 191 = passattempts on 52 of 60 human-only lines; totals 954 vs 962 | match_players.own_pass_attempts → match_players_effective.pass_attempts |
+| `216` | ✅ verified | own missed passes (not offside) | Angola fest: dirty8ightt 216 = 2 (12 passes, 9 completed, 1 offside), mo_nm 216 = 3 (11 passes, 8 completed); 215 + 216 + 153 = passattempts on 37,819 of 42,451 human-only lines (89.1%) in the EA FC Pro Clubs API research dataset | match_players.own_pass_attempts → match_players_effective.pass_attempts |
 | `217` | ✅ verified | own shots, part 1 (probably on target) | 217 + 218 equals shots on 85/98 lines; all 13 mismatches are CPU-controller lines, counter lower | match_players.own_shots → match_players_effective.shots |
 | `218` | ✅ verified | own shots, part 2 (probably off target) | see 217 | match_players.own_shots → match_players_effective.shots |
 
@@ -368,7 +368,6 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 Guesses not proven yet:
 
 - `114`: key passes (passes that led to a teammate's shot); not in the research list (≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0)
-- `191`: part of EA's missed passes (passattempts = 215 + 216 + 153 + 191 on 52/60 of our lines); not in the research list (see 216)
 
 Not decoded yet: tackle attempts (no counter, pair or triple matches EA's tackleattempts); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.
 
@@ -380,4 +379,4 @@ Derived:
 ## Thanks
 
 - [frdceri/clubs-hub](https://github.com/frdceri/clubs-hub) (`lib/lookups.js`): archetypeid → archetype names; regionId decoding. Thank you for working these out and publishing them.
-- [Interactive-63/eafc-pro-clubs-api-research](https://github.com/Interactive-63/eafc-pro-clubs-api-research) (`README.md (event IDs and decoded stat formulas)`): interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153). Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.
+- [Interactive-63/eafc-pro-clubs-api-research](https://github.com/Interactive-63/eafc-pro-clubs-api-research) (`README.md (event IDs and decoded stat formulas); data/eafc_27_raw_player_data.csv`): interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes. Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.

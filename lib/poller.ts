@@ -59,7 +59,7 @@ const OWN_ASSISTS = 11;
 const OWN_SHOTS = [217, 218];
 // completed passes; offside passes (153) count as made for EA but not on the in-game screen
 const OWN_PASSES_MADE = [215];
-const OWN_PASSES_MISSED = [153, 216, 191];
+const OWN_PASSES_MISSED = [153, 216];
 const OWN_TACKLES_MADE = 164;
 
 /** The player's own goals, assists, shots, passes and tackles (without the CPU's), or null without counters. */

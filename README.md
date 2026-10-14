@@ -48,7 +48,7 @@ site uses them for goals (counter 214), assists (11) and shots (217 + 218), so:
 
 - Goals, assists and shots everywhere are each player's own. Goals the CPU scored show as
   **CPU** among the scorers on match pages and in Discord posts.
-- Passes (counters 215 + 153 made, plus 216 + 191 missed) and tackles won (164) are each
+- Passes (counter 215 completed, plus 216 missed and 153 offside) and tackles won (164) are each
   player's own too. These are newer finds: they match EA exactly on most human-only lines
   and within 1–2 on the rest. They also keep the stats of a player who quit, which EA wipes.
 - Season totals take the CPU's share out for every game the site saved; EA's figure stays
@@ -184,7 +184,8 @@ Other people's work this site builds on. Thank you!
 - **[EA FC Pro Clubs API research](https://github.com/Interactive-63/eafc-pro-clubs-api-research)**
   (Interactive-63): their decoded event counters, worked out on 51,395 FC 27 player lines, give
   the site interceptions, second assists, through passes, dribbles, aerial duels, possession
-  won/lost, fouls and yellow cards, and explained counter 153 (offside passes). Found through
+  won/lost, fouls and yellow cards, and explained counter 153 (offside passes). Their raw dataset of those lines
+  also showed our counter 191 doesn't belong in missed passes. Found through
   [Pro Clubs Tracker](https://proclubstracker.com), which credits it. Mapped in
   [docs/ea-data.json](docs/ea-data.json).
 - **[Pro Clubs Analytics](https://www.proclubsanalytics.com)**: the division and reputation
