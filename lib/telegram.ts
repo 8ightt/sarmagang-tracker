@@ -7,7 +7,7 @@ export const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN ?? "";
 /** Largest file the Bot API lets a bot download. */
 export const MAX_FILE_BYTES = 20 * 1024 * 1024;
 /** Screenshots one sender can send per day, and all senders together. */
-export const PER_SENDER_PER_DAY = 40;
+export const PER_SENDER_PER_DAY = 150;
 export const ALL_PER_DAY = 300;
 
 /**
