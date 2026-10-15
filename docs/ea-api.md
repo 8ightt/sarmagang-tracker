@@ -355,7 +355,7 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 | `51, 52` | ✅ verified | cross saves (51 + 52); not in the research list *Note:* research dataset: 51 + 52 equals EA's crossSaves on 1,360 of 1,388 human keeper lines (98.0%); 49, 50, 55 and 113 match no other save type |  |
 | `13, 18` | 🟡 assumed | shots on target from inside (13) and outside (18) the box; 13 + 18 = 217 on all our 142 lines |  |
 | `14, 19` | 🟡 assumed | shots off target from inside (14) and outside (19) the box; 14 + 19 = 218 on 141/142 of ours |  |
-| `0, 1` | 🟡 assumed | tackles won (0) and lost (1) as the research counts them; our EA tacklesmade matches 164 instead, and 0 + 1 is not EA's tackleattempts |  |
+| `0, 1` | 🟡 assumed | tackles won (0) and lost (1) as the research counts them; our EA tacklesmade matches 164 instead, and 0 + 1 is not EA's tackleattempts *In game:* in-game Standing Tackles = 0 + 1, won = 0 (= 229): SfvErfff playoff (15 Oct, 11-0), dirty8ightt 4 = 3 + 1, won 3; LA Seigue FC mo_nm 1 = 1 + 0 |  |
 | `229, 230, 121` | 🟡 assumed | standing (229) and sliding (230) tackles won; 121 is a near-duplicate of 229 |  |
 | `30, 32, 34` | 🟡 assumed | completed passes forward, backward, sideways |  |
 | `24, 26, 28, 36` | 🟡 assumed | completed passes short, medium, long, crosses |  |
@@ -370,9 +370,14 @@ Mappings from the EA FC Pro Clubs API research project (github.com/Interactive-6
 
 Guesses not proven yet:
 
-- `114`: key passes (passes that led to a teammate's shot); not in the research list (≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0. LA Seigue FC (14 Oct): dirty8ightt 2 = 2, mo_nm 1 = 1, RUPPADOR 1 = 1, but x-LadruM-x Key Passes 1 with no 114 (team total 5 in game, 4 from 114))
+- `9`: clearances (research dataset: 0.49 per line for defenders vs 0.015 for forwards. SfvErfff playoff (15 Oct, 11-0), dirty8ightt: Clearances 1 = 1)
+- `46`: penalty goals (research dataset: never above goals (214) on 1,145 lines with it, mostly forwards. SfvErfff playoff (15 Oct, 11-0), dirty8ightt: Penalty Kick Goals 2 = 2)
+- `114`: key passes (passes that led to a teammate's shot); not in the research list (≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0. LA Seigue FC (14 Oct): dirty8ightt 2 = 2, mo_nm 1 = 1, RUPPADOR 1 = 1, but x-LadruM-x Key Passes 1 with no 114 (team total 5 in game, 4 from 114). SfvErfff playoff (15 Oct): dirty8ightt Key Passes 2 vs 114 = 4. So 5 of 7 lines match, off by one or two on the others)
+- `184`: set-piece passes (Pass Type Set Pieces 1, 0, 2 = 184 for dirty8ightt (Angola fest, LA Seigue, SfvErfff); research dataset: never above completed short passes (24))
+- `203`: penalties won (research dataset: never above fouls won (4) on 1,416 lines with it. SfvErfff playoff (15 Oct, 11-0), dirty8ightt: Penalties Won 1 = 1)
+- `120, 166`: sliding tackles attempted (120) and lost (166); 230 = won (research dataset: 120 = 230 + 166 on 93% of lines, 166 never above 120. SfvErfff playoff (15 Oct, 11-0), dirty8ightt: Sliding Tackles 1 = 120, so in-game Tackles 5 = 0 + 1 + 120. But Angola fest, dirty8ightt: Sliding Tackles 2 with 120 = 0 (one was a foul, 3 = 1), so not every sliding tackle is counted)
 
-Not decoded yet: tackle attempts (no counter, pair or triple matches EA's tackleattempts; 15 Oct, research dataset: 164 + event_1 is the best fit but exact on only 38% of 40,449 human-only lines and 55% of lines from games with 11 humans, so about a quarter of attempts have no counter; event_1 looks like missed tackles, above EA's missed on 9 lines only); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.
+Not decoded yet: tackle attempts: EA's tackleattempts is not the in-game Tackles (standing 0 + 1 plus sliding 120) and has no counter (no counter, pair or triple matches EA's tackleattempts; 15 Oct, research dataset: 164 + event_1 is the best fit but exact on only 38% of 40,449 human-only lines and 55% of lines from games with 11 humans, so about a quarter of attempts have no counter; event_1 looks like missed tackles, above EA's missed on 9 lines only); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings. Checked 15 Oct against 7 Player Performance screens (Angola fest, LA Seigue FC, SfvErfff): Possession Won/Lost, Offensive/Defensive Duels, Players Beaten By Passes, Passes Under Pressure, Dribbles attempted, Tackled By Opponent, Beat, Shot Type and Line Breaks match no counter or pair of counters; Key Passes no longer fits 114 (SfvErfff: 2 vs 4). Shot types are not in the counters: no combination adds up to shots in the research dataset.
 
 Derived:
 
