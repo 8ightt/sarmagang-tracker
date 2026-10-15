@@ -184,7 +184,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 <tr>
                   <th>Player</th>
                   {COUNTER_STATS.map((s) => (
-                    <th key={s.key} title={s.label}>{s.label}{s.rough ? "*" : ""}</th>
+                    <th key={s.key} title={s.approx ?? s.label}>{s.approx ? "≈ " : ""}{s.label}{s.rough ? "*" : ""}</th>
                   ))}
                 </tr>
               </thead>

@@ -41,7 +41,7 @@ const METRICS = [
   { id: "cleanSheets", label: "Clean sheets", note: "in saved games" },
   { id: "interceptions", label: "Interceptions", saved: true },
   { id: "dribbles", label: "Dribbles", saved: true },
-  { id: "keyPasses", label: "Key passes", saved: true },
+  { id: "keyPasses", label: "≈ Key passes", saved: true, approx: "Close to the in-game Key Passes but not exact: 5 of 7 checked lines match, off by one or two on the others" },
   { id: "secondAssists", label: "Second assists", saved: true },
 ] as const;
 
@@ -56,7 +56,7 @@ export function Leaderboard({ rows }: { rows: BoardRow[] }) {
     <div className="stack" style={{ gap: 24 }}>
       <div className="tabs" role="group" aria-label="Rank players by">
         {METRICS.map((x) => (
-          <button key={x.id} type="button" aria-pressed={x.id === metric} onClick={() => setMetric(x.id)}>
+          <button key={x.id} type="button" title={"approx" in x ? x.approx : undefined} aria-pressed={x.id === metric} onClick={() => setMetric(x.id)}>
             {x.label}
           </button>
         ))}

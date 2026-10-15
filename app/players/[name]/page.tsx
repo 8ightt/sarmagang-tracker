@@ -177,7 +177,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           <dl className="arch-stats">
             {COUNTER_STATS.map((s) => (
               <div key={s.key}>
-                <dt>{s.label}{s.rough ? "*" : ""}</dt>
+                <dt title={s.approx}>{s.approx ? "≈ " : ""}{s.label}{s.rough ? "*" : ""}</dt>
                 <dd className="num">
                   {adv.totals[s.key]} <span className="muted" style={{ fontSize: 12 }}>({(adv.totals[s.key] / adv.games).toFixed(1)} per game)</span>
                 </dd>
@@ -187,7 +187,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
             The player&apos;s own (never the CPU&apos;s), in the games the site saved, from EA&apos;s hidden event counters as decoded by
             the <a href="https://github.com/Interactive-63/eafc-pro-clubs-api-research">EA FC Pro Clubs API research</a> project.
-            * Not confirmed yet: didn't match the in-game screen exactly.
+            * Not confirmed yet: didn't match the in-game screen exactly. ≈ Close to the in-game number, but can be off by one or two in a game.
           </p>
         </section>
       ) : null}

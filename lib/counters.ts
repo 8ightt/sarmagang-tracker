@@ -12,11 +12,13 @@ export type CounterStat = {
   ids: number[];
   /** didn't match the in-game screen exactly yet */
   rough?: boolean;
+  /** close to the in-game number but not exact; shown as ≈ with this as the tooltip */
+  approx?: string;
 };
 
 export const COUNTER_STATS: CounterStat[] = [
   { key: "interceptions", label: "Interceptions", short: "Int", ids: [6] },
-  { key: "keyPasses", label: "Key passes", short: "Key", ids: [114] },
+  { key: "keyPasses", label: "Key passes", short: "Key", ids: [114], approx: "Close to the in-game Key Passes but not exact: 5 of 7 checked lines match, off by one or two on the others" },
   { key: "secondAssists", label: "Second assists", short: "2nd A", ids: [115] },
   { key: "throughPasses", label: "Through passes", short: "Thru", ids: [152], rough: true },
   { key: "dribbles", label: "Dribbles completed", short: "Drib", ids: [174] },
