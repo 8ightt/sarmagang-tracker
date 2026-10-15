@@ -13,6 +13,11 @@ function connect(): postgres.Sql {
     // pipelines queries onto a busy connection, and the transaction pooler can drop
     // the answers, leaving the page hanging.
     max: Number(process.env.DB_POOL_MAX ?? 10),
+    // ...and never pipeline: a page with more queries than connections otherwise sends several
+    // down one connection back to back, and the pooler mixes them up ("bind message supplies
+    // 1 parameters, but prepared statement "" requires 0") or never answers. 0 = one at a time.
+    // (a real postgres.js option, missing from its types)
+    ...({ max_pipeline: 0 } as object),
     idle_timeout: 20,
     // fail fast with a clear error instead of hanging a page render
     connect_timeout: 10,
