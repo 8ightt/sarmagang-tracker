@@ -12,12 +12,10 @@ import {
   webhookSecret,
   type TgUpdate,
 } from "@/lib/telegram";
+import { HELP, command } from "@/lib/telegram-commands";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-const HELP =
-  "Send me screenshots from EA FC (Player Performance, Archetypes › Statistics, match facts…) and I'll save them for the Sarma gang tracker.\n\nTip: send them as a file (📎 → File) to keep full quality.";
 
 /** Webhook for the screenshot bot. Telegram calls it with each message (see scripts/telegram-setup.mjs). */
 export async function POST(req: Request) {
@@ -32,6 +30,15 @@ export async function POST(req: Request) {
   // other update kinds (edits, joins…): nothing to do
   if (!update || !m) return NextResponse.json({ ok: true });
   const db = sql();
+
+  const answer = await command(m).catch((e) => {
+    console.error(e);
+    return "Something went wrong, please try again.";
+  });
+  if (answer) {
+    await reply(m.chat.id, answer, m.message_id);
+    return NextResponse.json({ ok: true });
+  }
 
   const img = imageOf(m);
   if (!img) {

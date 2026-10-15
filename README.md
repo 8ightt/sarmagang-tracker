@@ -59,6 +59,14 @@ site uses them for goals (counter 214), assists (11) and shots (217 + 218), so:
   with the club password (and given back the same way).
 - Tackle attempts still include the CPU's for whoever controls it. The site marks that line
   **+CPU**, and **Fix stats** takes the real numbers from the in-game screen.
+- Ratings: EA's on that line is the average of the player's and every CPU teammate's, and EA
+  doesn't send the CPU's. The site shows an estimate instead, "≈ 6.9 est.", worked out from the
+  player's own counters and the result by a model (`lib/rating-model.ts`) trained on the research
+  dataset's human-only lines and tuned on our games without the CPU: within 0.5 of EA's rating
+  for about 85% of lines. Estimates count in averages, never in records. The real in-game rating
+  replaces it: send it to the bot (`/iam <gamertag>` once, then `/rr 7.4`) or use **Fix stats**.
+  Retrain with `node --experimental-strip-types --env-file=.env.local scripts/rating-model.mjs <csv>`,
+  then `... scripts/rating-model.mjs --backfill`.
 
 ## Setup
 
@@ -146,7 +154,10 @@ uses it: the pages work without the new columns, but saving matches doesn't.
 - **Screenshot bot**: set `TELEGRAM_TOKEN` (from @BotFather) in Vercel and `.env.local`, then run
   `node --env-file=.env.local scripts/telegram-setup.mjs` once. Teammates send in-game screenshots to
   the bot; they're kept in a private table until `node --env-file=.env.local scripts/telegram-pull.mjs`
-  copies them into `inbox/` (local only) and clears them. Limits: 20 MB a file, 40 a day per sender.
+  copies them into `inbox/` (local only) and clears them. Limits: 20 MB a file, 150 a day per sender.
+  The bot also takes ratings: `/iam <gamertag>` links a Telegram account to a gamertag (the first
+  account to claim one keeps it), then `/rr 7.4` saves that player's in-game rating for their
+  latest game where they ran the CPU (`/rr 7.4 Toz` picks the latest against a club matching "Toz").
 - **Season by archetype**: every player page splits the season by archetype from the saved league
   games, with the rest of EA's season totals as "Earlier games". EA's API can't split those, but the game
   can. Copy a player's in-game Archetypes › Statistics screen (one screenshot per archetype) into
@@ -191,7 +202,7 @@ Other people's work this site builds on. Thank you!
   the site interceptions, second assists, through passes, dribbles, aerial duels, possession
   won/lost, fouls and yellow cards, and explained counter 153 (offside passes). Their raw dataset of those lines
   also showed our counter 191 doesn't belong in missed passes, decoded red cards (96 or a second
-  yellow) and cross saves (51 + 52). Found through
+  yellow) and cross saves (51 + 52), and is what the rating estimate for +CPU lines learned from. Found through
   [Pro Clubs Tracker](https://proclubstracker.com), which credits it. Mapped in
   [docs/ea-data.json](docs/ea-data.json).
 - **[Pro Clubs Analytics](https://www.proclubsanalytics.com)**: the division and reputation
