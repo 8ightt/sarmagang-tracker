@@ -156,8 +156,10 @@ uses it: the pages work without the new columns, but saving matches doesn't.
   the bot; they're kept in a private table until `node --env-file=.env.local scripts/telegram-pull.mjs`
   copies them into `inbox/` (local only) and clears them. Limits: 20 MB a file, 150 a day per sender.
   The bot also takes ratings: `/iam <gamertag>` links a Telegram account to a gamertag (the first
-  account to claim one keeps it), then `/rr 7.4` saves that player's in-game rating for their
-  latest game where they ran the CPU (`/rr 7.4 Toz` picks the latest against a club matching "Toz").
+  account to claim one keeps it), then `/rr 7.4` saves that player's in-game rating for the game
+  they just played, if they ran the CPU: it has to be their latest saved game and under an hour
+  old, so a game that isn't saved yet can't send it to an older one. `/rr 7.4 Toz` picks the latest
+  CPU game against a club matching "Toz". `/undo` puts back what the last `/rr` changed.
 - **Season by archetype**: every player page splits the season by archetype from the saved league
   games, with the rest of EA's season totals as "Earlier games". EA's API can't split those, but the game
   can. Copy a player's in-game Archetypes › Statistics screen (one screenshot per archetype) into
