@@ -1,6 +1,6 @@
 {
   "about": "Every field EA's Pro Clubs API sends, what it means and how sure we are of it. Only mark a field 'verified' after checking it against real data, and note the evidence. docs/ea-api.md is generated from this file: run `node scripts/ea-docs.mjs` after editing, and `node scripts/ea-docs.mjs <folder of saved responses>` to list fields EA sends that aren't documented here yet.",
-  "updated": "2026-10-11",
+  "updated": "2026-10-15",
   "thanks": [
     {
       "project": "frdceri/clubs-hub",
@@ -466,7 +466,7 @@
     "candidates": {
       "114": { "guess": "key passes (passes that led to a teammate's shot); not in the research list", "evidence": "≤ passes; per team ≤ the team's shots in 40/44 games; a player's assists are ≤ it on 133/142 lines. In game (Angola fest): dirty8ightt Key Passes 1 = 114, mo_nm 0 = 0. LA Seigue FC (14 Oct): dirty8ightt 2 = 2, mo_nm 1 = 1, RUPPADOR 1 = 1, but x-LadruM-x Key Passes 1 with no 114 (team total 5 in game, 4 from 114)", "usedIn": "lib/counters.ts → More stats, leaderboard" }
     },
-    "notYetDecoded": "tackle attempts (no counter, pair or triple matches EA's tackleattempts); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.",
+    "notYetDecoded": "tackle attempts (no counter, pair or triple matches EA's tackleattempts; 15 Oct, research dataset: 164 + event_1 is the best fit but exact on only 38% of 40,449 human-only lines and 55% of lines from games with 11 humans, so about a quarter of attempts have no counter; event_1 looks like missed tackles, above EA's missed on 9 lines only); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings.",
     "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"
   }
 }

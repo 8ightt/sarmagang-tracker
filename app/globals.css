@@ -250,3 +250,13 @@ details > summary { cursor: pointer; color: var(--text-2); }
 .top100-bar { position: relative; height: 10px; background: #2a2a2a; border-radius: 5px; }
 .top100-zone { position: absolute; top: 0; bottom: 0; right: 0; background: var(--accent); opacity: .35; border-radius: 0 5px 5px 0; }
 .top100-us { position: absolute; top: -4px; width: 4px; height: 18px; margin-left: -2px; background: var(--accent); border-radius: 2px; }
+
+/* EA data page: long text columns wrap */
+.small { font-size: 13px; }
+.nowrap { white-space: nowrap; }
+.ea-doc h3 { margin: 8px 0 0; font-size: 18px; }
+.ea-doc code { font-size: 0.92em; color: var(--text-2); }
+.ea-doc td { text-align: left; vertical-align: top; white-space: normal; min-width: 120px; }
+.ea-doc td:nth-child(3) { min-width: 280px; }
+.ea-doc th { text-align: left; }
+.ea-doc td.num { text-align: right; min-width: 0; }
