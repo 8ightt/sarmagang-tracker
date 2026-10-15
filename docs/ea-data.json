@@ -14,7 +14,7 @@
       "url": "https://github.com/Interactive-63/eafc-pro-clubs-api-research",
       "file": "README.md (event IDs and decoded stat formulas); data/eafc_27_raw_player_data.csv",
       "thanks": "Thank you for decoding and publishing the event counters. Found through Pro Clubs Tracker (proclubstracker.com), which credits it.",
-      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes and decoded red cards (96, second yellow) and cross saves (51 + 52)"
+      "usedFor": "interceptions, second assists, through passes, dribbles, aerial duels, fouls and yellow cards from the hidden event counters; offside passes (153); their raw dataset showed counter 191 is not part of missed passes and decoded red cards (96, second yellow) and cross saves (51 + 52); the rating estimate for +CPU lines (lib/rating-model.ts) is trained on its human-only lines"
     }
   ],
   "evidence": {

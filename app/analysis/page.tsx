@@ -48,8 +48,8 @@ export default async function AnalysisPage() {
               </div>
               <div className="row" style={{ gap: 4 }}>
                 {f.recent.map((r, i) => (
-                  <span key={i} className={`badge badge-${r.result}`} title={r.rating === null ? "Rating unknown: ran the CPU" : `Rating ${r.rating.toFixed(1)}`} style={{ fontSize: 12 }}>
-                    {r.rating === null ? "–" : r.rating.toFixed(1)}
+                  <span key={i} className={`badge badge-${r.result}`} title={r.rating === null ? "Rating unknown: ran the CPU" : r.est ? `Rating ≈ ${r.rating.toFixed(1)}, estimated: ran the CPU` : `Rating ${r.rating.toFixed(1)}`} style={{ fontSize: 12 }}>
+                    {r.rating === null ? "–" : `${r.est ? "≈" : ""}${r.rating.toFixed(1)}`}
                   </span>
                 ))}
               </div>

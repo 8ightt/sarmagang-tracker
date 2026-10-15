@@ -53,7 +53,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
     {
       label: "Avg rating",
       value: p.rating.toFixed(1),
-      sub: `Squad avg ${squadRating.toFixed(1)}${p.ratingUnknown ? ` · ${p.ratingUnknown} +CPU game${p.ratingUnknown === 1 ? "" : "s"} left out · EA: ${p.ratingEa.toFixed(1)} incl. CPU` : ""}`,
+      sub: `Squad avg ${squadRating.toFixed(1)}${p.ratingEstimated ? ` · ${p.ratingEstimated} +CPU game${p.ratingEstimated === 1 ? "" : "s"} estimated` : ""}${p.ratingUnknown ? ` · ${p.ratingUnknown} +CPU game${p.ratingUnknown === 1 ? "" : "s"} left out` : ""}${p.ratingEstimated || p.ratingUnknown ? ` · EA: ${p.ratingEa.toFixed(1)} incl. CPU` : ""}`,
       warn: cpuWarn,
     },
     { label: "MOTM", value: p.motm, sub: p.games ? `${Math.round((p.motm / p.games) * 100)}% of games` : "" },
@@ -345,7 +345,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                       </a>
                     </td>
                     <td>{m.position ? <PosLabel position={m.position} /> : <span className="text-2">{groupShort(m.pos)}</span>}</td>
-                    <td style={{ fontWeight: 700 }}><Rating rating={m.rating} ea={m.ea_rating} /></td>
+                    <td style={{ fontWeight: 700 }}><Rating rating={m.rating} ea={m.ea_rating} est={m.rating_est} /></td>
                     <td>{m.goals}</td><td>{m.assists}</td><td>{m.shots}</td>
                     <td>{m.passes_made}{m.pass_attempts !== null ? `/${m.pass_attempts}` : ""}</td>
                     <td>{m.tackles_made}{m.tackle_attempts !== null ? `/${m.tackle_attempts}` : ""}</td>

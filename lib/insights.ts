@@ -25,8 +25,11 @@ type Game = {
   oppSr: number | null;
 };
 
-/** rating is null on a +CPU line without a fix (EA averages the CPU's into it) */
-type Line = { matchId: string; player: string; rating: number | null; goals: number; assists: number; position: string };
+/**
+ * rating on a +CPU line without a fix is the estimate (est: true), since EA averages the CPU's into
+ * its own; null when there's no estimate either
+ */
+type Line = { matchId: string; player: string; rating: number | null; est: boolean; goals: number; assists: number; position: string };
 
 export type Record3 = { games: number; w: number; d: number; l: number; ppg: number; gf: number; ga: number };
 
@@ -46,7 +49,7 @@ function record(games: Game[]): Record3 {
 }
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-/** average rating over the lines whose rating is known */
+/** average rating over the lines whose rating is known or estimated */
 const avgRating = (ls: Line[]) => {
   const xs = ls.flatMap((l) => (l.rating === null ? [] : [l.rating]));
   return xs.length ? avg(xs) : null;
@@ -66,7 +69,7 @@ const load = cache(async () => {
   const srSelect = db.unsafe(srCols?.ok ? "our_sr, opp_sr" : "null as our_sr, null as opp_sr");
   const [gameRows, lineRows] = await Promise.all([
     db`select id, ts, result, goals_for, goals_against, opp_name, opp_crest, dnf, ${srSelect} from matches order by ts desc`,
-    db`select match_id, player, rating, goals, assists, position, pos from match_players_effective where seconds > 0`,
+    db`select match_id, player, rating, rating_est, goals, assists, position, pos from match_players_effective where seconds > 0`,
   ]);
   const games: Game[] = gameRows.map((r) => ({
     id: r.id,
@@ -83,7 +86,8 @@ const load = cache(async () => {
   const lines: Line[] = lineRows.map((r) => ({
     matchId: r.match_id,
     player: r.player,
-    rating: r.rating === null ? null : Number(r.rating),
+    rating: r.rating !== null ? Number(r.rating) : r.rating_est !== null ? Number(r.rating_est) : null,
+    est: r.rating === null && r.rating_est !== null,
     goals: r.goals,
     assists: r.assists,
     position: r.position || groupShort(r.pos) || "?",
@@ -99,7 +103,7 @@ export type FormRow = {
   last5GoalsAssists: number;
   trend: "hot" | "cold" | "steady";
   /** newest last */
-  recent: { rating: number | null; result: Result }[];
+  recent: { rating: number | null; est: boolean; result: Result }[];
 };
 
 export type WithWithoutRow = { player: string; with: Record3; without: Record3; ppgDiff: number | null };
@@ -154,7 +158,7 @@ export const getInsights = cache(async (): Promise<Insights> => {
         last5Rating,
         last5GoalsAssists: last5.reduce((s, l) => s + l.goals + l.assists, 0),
         trend: (diff >= FORM_GAP ? "hot" : diff <= -FORM_GAP ? "cold" : "steady") as FormRow["trend"],
-        recent: last5.map((l) => ({ rating: l.rating, result: byId.get(l.matchId)!.result })).reverse(),
+        recent: last5.map((l) => ({ rating: l.rating, est: l.est, result: byId.get(l.matchId)!.result })).reverse(),
       };
     })
     .sort((a, b) => b.last5Rating - a.last5Rating);

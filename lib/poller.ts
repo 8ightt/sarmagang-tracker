@@ -2,6 +2,7 @@ import type postgres from "postgres";
 import { CLUB_ID, DISCORD_WEBHOOK_URL, SITE_URL } from "./config";
 import { getSnapshot, setSnapshot, sql } from "./db";
 import { ea, eaHeaderMode, type EaMatch } from "./ea";
+import { estimateRating } from "./rating-model";
 
 const MATCH_TYPES = ["leagueMatch", "playoffMatch", "friendlyMatch"] as const;
 const n = (v: unknown) => (v === undefined || v === null || v === "" ? 0 : Number(v));
@@ -154,6 +155,8 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
       motm: n(p.mom) === 1,
       seconds: n(p.secondsPlayed),
       controls_cpu: p.playername === controller,
+      // EA averages the CPU teammates' ratings into this line: an estimate of the player's own (lib/rating-model.ts)
+      rating_est: p.playername === controller ? estimateRating(p, true) : null,
       // EA wipes a quitter's line (userResult 6) to 0; the game ends there, so they conceded the team's goals
       quit: n(p.userResult) === 6,
       goals_conceded: n(p.userResult) === 6 ? ga : n(p.goalsconceded),
@@ -197,7 +200,8 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
           dive_saves = excluded.dive_saves, cross_saves = excluded.cross_saves, direction_saves = excluded.direction_saves,
           own_goals = excluded.own_goals, own_assists = excluded.own_assists, own_shots = excluded.own_shots,
           own_passes_made = excluded.own_passes_made, own_pass_attempts = excluded.own_pass_attempts,
-          own_tackles_made = excluded.own_tackles_made, counters = excluded.counters`;
+          own_tackles_made = excluded.own_tackles_made, counters = excluded.counters,
+          rating_est = excluded.rating_est`;
     }
     // Only on the first save, so a red the club gave back to the player stays theirs
     const cpuReds = ours.filter((p) => n(p.redcards) > 0 && ownRedPossible(p) === false);

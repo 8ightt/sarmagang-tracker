@@ -76,6 +76,8 @@ export type MatchPlayer = {
   ea_tackles_made: number;
   /** EA's rating; on a +CPU line it's the average of the player's and the CPU teammates' */
   ea_rating?: number | null;
+  /** on a +CPU line without an entered rating: the estimate of the player's own (lib/rating-model.ts) */
+  rating_est?: number | null;
   /** the fields below are 0/false until supabase/migrations/0005 has been run */
   goals_conceded: number;
   clean_sheet: boolean;
@@ -221,8 +223,10 @@ export type Member = {
   controlsCpu: boolean;
   /** EA's season average rating; on +CPU games it's averaged with the CPU teammates' */
   ratingEa: number;
-  /** saved +CPU games left out of rating (no in-game RR entered) */
+  /** saved +CPU games left out of rating (no in-game RR entered, no estimate) */
   ratingUnknown: number;
+  /** saved +CPU games whose rating in the average is an estimate */
+  ratingEstimated: number;
   /** this season's games from before the site saved matches, when the player runs the CPU: EA's totals may include its stats from those */
   cpuEarlyGames: number;
 };
@@ -237,8 +241,8 @@ export const getMembers = cache(async (): Promise<Member[]> => {
     db`select player, sum(amount)::int as n from corrections where stat = 'reds' group by player`,
     db`select distinct player from match_players where controls_cpu`,
     db`select mp.player, m.ts from match_players mp join matches m on m.id = mp.match_id where mp.seconds > 0`,
-    // lines whose rating isn't EA's: unknown (+CPU) or fixed from the in-game screen; needs migration 0016
-    db`select mp.player, m.ts, mp.rating, mp.ea_rating from match_players_effective mp join matches m on m.id = mp.match_id
+    // lines whose rating isn't EA's: unknown or estimated (+CPU), or fixed from the in-game screen; needs migration 0017
+    db`select mp.player, m.ts, mp.rating, mp.ea_rating, mp.rating_est from match_players_effective mp join matches m on m.id = mp.match_id
         where mp.seconds > 0 and mp.rating is distinct from mp.ea_rating`.catch(() => [] as postgres.Row[]),
     // how far the own/corrected lines differ from EA's, per player
     fixesReady
@@ -265,14 +269,17 @@ export const getMembers = cache(async (): Promise<Member[]> => {
   const savedGames = new Map<string, number>();
   for (const r of savedRows)
     if (seasonOf(Number(r.ts))?.name === season) savedGames.set(r.player as string, (savedGames.get(r.player as string) ?? 0) + 1);
-  // per player: EA ratings to take out of the season average, games to drop, fixed ratings to put in
-  const ratingFix = new Map<string, { eaOut: number; dropped: number; fixedIn: number }>();
+  // per player: EA ratings to take out of the season average, games to drop, entered or estimated ratings to put in
+  const ratingFix = new Map<string, { eaOut: number; dropped: number; fixedIn: number; estimated: number }>();
   for (const r of ratingRows) {
     if (seasonOf(Number(r.ts))?.name !== season) continue;
-    const x = ratingFix.get(r.player as string) ?? { eaOut: 0, dropped: 0, fixedIn: 0 };
+    const x = ratingFix.get(r.player as string) ?? { eaOut: 0, dropped: 0, fixedIn: 0, estimated: 0 };
     x.eaOut += Number(r.ea_rating ?? 0);
-    if (r.rating === null) x.dropped += 1;
-    else x.fixedIn += Number(r.rating);
+    if (r.rating !== null) x.fixedIn += Number(r.rating);
+    else if (r.rating_est !== null && r.rating_est !== undefined) {
+      x.fixedIn += Number(r.rating_est);
+      x.estimated += 1;
+    } else x.dropped += 1;
     ratingFix.set(r.player as string, x);
   }
   return members
@@ -314,6 +321,7 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         })(),
         ratingEa: num(m.ratingAve),
         ratingUnknown: ratingFix.get(m.name)?.dropped ?? 0,
+        ratingEstimated: ratingFix.get(m.name)?.estimated ?? 0,
         motm: Math.max(0, num(m.manOfTheMatch) + fix.motm),
         redsEa,
         redsCpu,
@@ -464,7 +472,7 @@ export async function getArchetypes(player: string): Promise<ArchetypeRow[]> {
   const rows = await db`
     select mp.archetype, count(*)::int as games,
            count(*) filter (where m.result = 'W')::int as w, count(*) filter (where m.result = 'D')::int as d,
-           count(*) filter (where m.result = 'L')::int as l, avg(mp.rating)::float as rating,
+           count(*) filter (where m.result = 'L')::int as l, avg(coalesce(mp.rating, mp.rating_est))::float as rating,
            sum(mp.goals)::int as goals, sum(mp.assists)::int as assists, sum(mp.motm::int)::int as motm, sum(mp.saves)::int as saves
     from ${db(await playersTable())} mp join matches m on m.id = mp.match_id
     where mp.player = ${player} and mp.seconds > 0

@@ -61,9 +61,21 @@ export function PosLabel({ position, role }: { position: string; role?: string }
   );
 }
 
-/** A match rating; on a +CPU line without a fix it's unknown and EA's (averaged with the CPU's) is shown small. */
-export function Rating({ rating, ea }: { rating: number | null; ea?: number | null }) {
+const EST_NOTE =
+  "Estimated from this player's own stats: EA averages the CPU teammates' ratings into theirs. Send the in-game rating to the bot (/rr) or use Fix stats to replace it.";
+
+/**
+ * A match rating. On a +CPU line without a fix EA's (averaged with the CPU's) isn't the player's:
+ * the estimate is shown as "≈ 6.9 est.", or "–" without one, with EA's small.
+ */
+export function Rating({ rating, ea, est }: { rating: number | null; ea?: number | null; est?: number | null }) {
   if (rating !== null && rating !== undefined) return <>{Number(rating).toFixed(1)}</>;
+  if (est !== null && est !== undefined)
+    return (
+      <span title={`${EST_NOTE}${ea ? ` EA's figure incl. CPU: ${Number(ea).toFixed(1)}.` : ""}`}>
+        ≈ {Number(est).toFixed(1)}<span className="muted" style={{ fontSize: 12, fontWeight: 400 }}> est.</span>
+      </span>
+    );
   return (
     <span className="muted" title="EA averages the CPU teammates' ratings into this player's. Fix stats can enter the in-game RR.">
       –{ea ? <span style={{ fontSize: 12, fontWeight: 400 }}> EA {Number(ea).toFixed(1)} incl. CPU</span> : null}

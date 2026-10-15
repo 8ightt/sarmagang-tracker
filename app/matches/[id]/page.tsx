@@ -75,7 +75,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           {motm ? (
             <span className="row" style={{ gap: 8, background: "var(--surface-2)", borderRadius: 999, padding: "10px 18px" }}>
               <Flag nation={members.get(motm.player)?.nation} />
-              Man of the match: <strong>{motm.player}</strong> · <Rating rating={motm.rating} ea={motm.ea_rating} />
+              Man of the match: <strong>{motm.player}</strong> · <Rating rating={motm.rating} ea={motm.ea_rating} est={motm.rating_est} />
             </span>
           ) : null}
           {m.captain ? <span className="chip chip-ghost" style={{ padding: "8px 12px" }}>Captain: {m.captain}</span> : null}
@@ -142,7 +142,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                         <span className="text-2" title="EA only records the group; set the exact position with Fix stats">{groupShort(p.pos)}</span>
                       )}
                     </td>
-                    <td style={{ fontWeight: 700, color: p.motm ? "var(--accent)" : undefined }}><Rating rating={p.rating} ea={p.ea_rating} /></td>
+                    <td style={{ fontWeight: 700, color: p.motm ? "var(--accent)" : undefined }}><Rating rating={p.rating} ea={p.ea_rating} est={p.rating_est} /></td>
                     <td title={p.goals !== p.ea_goals ? `EA: ${p.ea_goals} incl. CPU` : undefined}>{p.goals}</td>
                     <td title={p.assists !== p.ea_assists ? `EA: ${p.ea_assists} incl. CPU` : undefined}>{p.assists}</td>
                     <td>{p.shots}</td>
