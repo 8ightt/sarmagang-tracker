@@ -1,4 +1,5 @@
 import { Crest, ResultBadge, when } from "@/components/bits";
+import { Lineup } from "@/components/Lineup";
 import { getInsights, MIN_GAMES, SR_GAP, type Record3 } from "@/lib/insights";
 
 export const dynamic = "force-dynamic";
@@ -87,6 +88,14 @@ export default async function AnalysisPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="stack">
+        <div className="section-head">
+          <h2 className="display">Pick a lineup</h2>
+          <span className="muted" style={{ fontSize: 13 }}>How the club does with some players in and others out</span>
+        </div>
+        <Lineup players={x.lineup.players} games={x.lineup.games.map(({ ts, ...g }) => ({ ...g, date: when(ts) }))} />
       </section>
 
       <section className="stack">

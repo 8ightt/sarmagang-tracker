@@ -112,6 +112,9 @@ export type DuoRow = { players: [string, string]; rec: Record3; goalsAssists: nu
 
 export type PositionRow = { player: string; position: string; games: number; rating: number | null; goalsAssistsPerGame: number };
 
+/** one saved game with who played in it, for picking games by lineup */
+export type LineupGame = { id: string; ts: number; result: Result; gf: number; ga: number; opp: string; players: string[] };
+
 export type OpponentBucket = { label: string; note: string; rec: Record3 };
 
 export type Insights = {
@@ -119,6 +122,8 @@ export type Insights = {
   since: number | null;
   form: FormRow[];
   withWithout: WithWithoutRow[];
+  /** every game, newest first, for the lineup picker (players: the regulars who played) */
+  lineup: { players: string[]; games: LineupGame[] };
   duos: DuoRow[];
   positions: PositionRow[];
   opponents: {
@@ -172,6 +177,20 @@ export const getInsights = cache(async (): Promise<Insights> => {
     })
     .sort((a, b) => (b.ppgDiff ?? -99) - (a.ppgDiff ?? -99) || b.with.ppg - a.with.ppg);
 
+  const playedBy = new Map(regulars.map((p) => [p, new Set(byPlayer.get(p)!.map((l) => l.matchId))]));
+  const lineup = {
+    players: [...regulars].sort((a, b) => playedBy.get(b)!.size - playedBy.get(a)!.size),
+    games: games.map((g) => ({
+      id: g.id,
+      ts: g.ts,
+      result: g.result,
+      gf: g.gf,
+      ga: g.ga,
+      opp: g.opp,
+      players: regulars.filter((p) => playedBy.get(p)!.has(g.id)),
+    })),
+  };
+
   const duos: DuoRow[] = [];
   for (let i = 0; i < regulars.length; i++) {
     for (let j = i + 1; j < regulars.length; j++) {
@@ -219,6 +238,7 @@ export const getInsights = cache(async (): Promise<Insights> => {
     since: games.length ? games[games.length - 1].ts : null,
     form,
     withWithout,
+    lineup,
     duos,
     positions,
     opponents: { buckets, upsets, toughest, rated: rated.length, estimated: rated.some((g) => g.ourSr === null) },
