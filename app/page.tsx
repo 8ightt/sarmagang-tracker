@@ -1,5 +1,5 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
-import { currentSeason, loadSettings, playoffsWindow, promotionRule } from "@/lib/config";
+import { currentSeason, loadSettings, playoffsWindow, promotionRule, seasonEnd } from "@/lib/config";
 import { reputationName, reputationUrl } from "@/lib/ea-assets";
 import { DivisionLadder, ReputationLadder, TopHundred } from "@/components/Ladders";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, getTop100, lastPoll } from "@/lib/stats";
@@ -30,7 +30,7 @@ export default async function Home() {
   const nowSec = Date.now() / 1000;
   const playoffsWin = clubSeason ? playoffsWindow(clubSeason) : null;
   const playoffsAt = playoffsWin?.from ?? null;
-  const seasonEnd = clubSeason ? (playoffsWin?.to ?? Date.parse(`${clubSeason.end}T23:59:59Z`) / 1000) : null;
+  const seasonEndTs = clubSeason ? seasonEnd(clubSeason) : null;
   const dayLabel = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   const countdown = (secs: number) => {
     const d = Math.floor(secs / 86400);
@@ -39,7 +39,7 @@ export default async function Home() {
   };
   const seasonLine = !clubSeason
     ? null
-    : seasonEnd !== null && nowSec > seasonEnd
+    : seasonEndTs !== null && nowSec > seasonEndTs
       ? `${clubSeason.name} (${dayLabel(clubSeason.start)} – ${dayLabel(clubSeason.end)}) has ended`
       : `${clubSeason.name} · ${dayLabel(clubSeason.start)} – ${dayLabel(clubSeason.end)}` +
         (playoffsAt === null

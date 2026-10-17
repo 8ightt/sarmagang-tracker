@@ -33,6 +33,7 @@
       "name": "Season 1",
       "start": "2026-08-21",
       "end": "2026-10-22",
+      "endsAt": "2026-10-22T09:00:00+02:00",
       "playoffsStart": "2026-10-15T09:00:00+02:00",
       "playoffsMatches": 12
     }

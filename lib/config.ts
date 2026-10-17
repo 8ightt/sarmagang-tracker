@@ -43,16 +43,21 @@ export type ClubSeason = {
   /** first and last day, YYYY-MM-DD */
   start: string;
   end: string;
+  /** when the season ends on its last day, ISO time (the lobby shows a countdown); missing = end of that day */
+  endsAt?: string;
   /** when the end-of-season Playoffs open, ISO time (the lobby only shows a countdown) */
   playoffsStart?: string;
   /** games in the Season Playoffs (12 in Season 1; the lobby counts down Matches Remaining) */
   playoffsMatches?: number;
 };
 
+/** When a season ends (seconds). */
+export const seasonEnd = (x: ClubSeason) => Date.parse(x.endsAt ?? `${x.end}T23:59:59Z`) / 1000;
+
 /** Start and end (seconds) of a season's end-of-season Playoffs, if known. */
 export function playoffsWindow(x: ClubSeason): { from: number; to: number } | null {
   if (!x.playoffsStart) return null;
-  return { from: Date.parse(x.playoffsStart) / 1000, to: Date.parse(`${x.end}T23:59:59Z`) / 1000 };
+  return { from: Date.parse(x.playoffsStart) / 1000, to: seasonEnd(x) };
 }
 
 export type SiteSettings = {
@@ -103,7 +108,7 @@ export const localDay = (ts: number) => new Date(ts * 1000).toLocaleDateString("
 /** The season a game belongs to, by its date. */
 export function seasonOf(ts: number): ClubSeason | null {
   const day = localDay(ts);
-  return loadSettings().seasons.find((x) => x.start <= day && day <= x.end) ?? null;
+  return loadSettings().seasons.find((x) => x.start <= day && day <= x.end && ts <= seasonEnd(x)) ?? null;
 }
 
 export type MatchKind = "league" | "promotion" | "playoffs" | "friendly";
