@@ -41,7 +41,7 @@ const METRICS = [
   { id: "cleanSheets", label: "Clean sheets", note: "in saved games" },
   { id: "interceptions", label: "Interceptions", saved: true },
   { id: "dribbles", label: "Dribbles", saved: true },
-  { id: "keyPasses", label: "≈ Key passes", saved: true, approx: "Close to the in-game Key Passes but not exact: 5 of 7 checked lines match, off by one or two on the others" },
+  { id: "keyPasses", label: "≈ Key passes", saved: true, approx: "Close to the in-game Key Passes but not exact: 5 of 9 checked lines match, off by one to three on the others (mostly low)" },
   { id: "secondAssists", label: "Second assists", saved: true },
 ] as const;
 
