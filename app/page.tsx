@@ -107,7 +107,7 @@ export default async function Home() {
                 {playoffs.games.length}
                 {playoffs.planned ? <span className="muted" style={{ fontSize: 24 }}>/{playoffs.planned}</span> : null}
               </div>
-              <div className="kpi-sub">{playoffs.w}-{playoffs.d}-{playoffs.l} W-D-L</div>
+              <div className="kpi-sub">{playoffs.w}-{playoffs.d}-{playoffs.l} W-D-L{playoffs.planned && playoffs.games.length >= playoffs.planned ? " · all played" : ""}</div>
             </div>
             <div>
               <div className="kpi-label">Points</div>

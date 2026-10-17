@@ -45,7 +45,7 @@ export type ClubSeason = {
   end: string;
   /** when the end-of-season Playoffs open, ISO time (the lobby only shows a countdown) */
   playoffsStart?: string;
-  /** games in the Season Playoffs (about 15, played until the season ends) */
+  /** games in the Season Playoffs (12 in Season 1; the lobby counts down Matches Remaining) */
   playoffsMatches?: number;
 };
 
