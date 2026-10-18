@@ -14,6 +14,8 @@ export type CounterStat = {
   rough?: boolean;
   /** close to the in-game number but not exact; shown as ≈ with this as the tooltip */
   approx?: string;
+  /** matched the in-game screen, but in few games with the stat above 0; shown as † with this as the tooltip */
+  fewChecks?: string;
 };
 
 export const COUNTER_STATS: CounterStat[] = [
@@ -25,6 +27,12 @@ export const COUNTER_STATS: CounterStat[] = [
   { key: "aerials", label: "Aerial duels won", short: "Air", ids: [265, 266] },
   { key: "fouls", label: "Fouls", short: "Fouls", ids: [2, 3] },
   { key: "yellows", label: "Yellow cards", short: "YC", ids: [95, 213] },
+  { key: "standingTackles", label: "Standing tackles", short: "STkl", ids: [0, 1] },
+  { key: "standingTacklesWon", label: "Standing tackles won", short: "STkl W", ids: [0] },
+  { key: "offsidePasses", label: "Offside passes", short: "Off P", ids: [153] },
+  { key: "clearances", label: "Clearances", short: "Clr", ids: [9], fewChecks: "Matched the in-game screen, but only one checked game had any" },
+  { key: "penaltiesWon", label: "Penalties won", short: "Pen W", ids: [203], fewChecks: "Matched the in-game screen, but only one checked game had any" },
+  { key: "penaltyGoals", label: "Penalty goals", short: "Pen G", ids: [46], fewChecks: "Matched the in-game screen, but only one checked game had any" },
 ];
 
 export type Counters = Record<string, number>;

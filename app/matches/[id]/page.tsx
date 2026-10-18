@@ -184,7 +184,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 <tr>
                   <th>Player</th>
                   {COUNTER_STATS.map((s) => (
-                    <th key={s.key} title={s.approx ?? s.label}>{s.approx ? "≈ " : ""}{s.label}{s.rough ? "*" : ""}</th>
+                    <th key={s.key} title={s.approx ?? s.fewChecks ?? s.label}>{s.approx ? "≈ " : ""}{s.label}{s.rough ? "*" : ""}{s.fewChecks ? "†" : ""}</th>
                   ))}
                 </tr>
               </thead>
@@ -203,7 +203,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           <p className="muted" style={{ fontSize: 13, margin: 0 }}>
             Each player&apos;s own, from EA&apos;s hidden event counters, decoded by the{" "}
             <a href="https://github.com/Interactive-63/eafc-pro-clubs-api-research">EA FC Pro Clubs API research</a> project.
-            * Not confirmed yet: didn't match the in-game screen exactly.
+            * Not confirmed yet: didn't match the in-game screen exactly. ≈ Close, can be off by one to three. † Matched the in-game screen, but only one checked game had any.
           </p>
         </section>
       ) : null}
