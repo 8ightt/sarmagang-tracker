@@ -2,7 +2,7 @@
 
 <!-- generated from docs/ea-data.json by scripts/ea-docs.mjs; edit the JSON, not this file -->
 
-Everything EA's Pro Clubs API sends, what it means, how sure we are, and where the site uses it. Last checked 2026-10-15.
+Everything EA's Pro Clubs API sends, what it means, how sure we are, and where the site uses it. Last checked 2026-10-18.
 
 - **Base URL:** `https://proclubs.ea.com/api/fc`, no login. Every call needs ?platform=common-gen5 (current gen) or common-gen4.
 - **Bot filter:** EA rejects clients whose TLS fingerprint doesn't match a browser; scripts/fetch-ea.py uses curl_cffi with impersonate='chrome'.
@@ -11,7 +11,7 @@ Everything EA's Pro Clubs API sends, what it means, how sure we are, and where t
 - **Not available:** matches older than the last 10 per match type; minute-by-minute events, goal times, xG, heatmaps; season totals per archetype (only the in-game Archetypes > Statistics screen has them); Rush, Live Tournament and Drop In matches (empty for this club); pro attributes (vproattr is 'NH').
 - **Endpoints that don't exist:** tried 2026-10-11, all HTTP 404: clubs/search, seasonRankLeaderboard, clubs/seasonalStats, clubs/playoffAchievements, members/archetypes, members/archetype/stats, members/stats/archetypes, members/seasonal/stats.
 
-**How sure:** ✅ verified: Checked against real data; safe to build on. · 🟡 assumed: Meaning follows from the name or a few examples, not proven. · ❓ unknown: Seen in the data, meaning not worked out. · ⛔ useless: Always the same value, or contradicts other fields.
+**How sure:** ✅ verified: Checked against real data; safe to build on. · 🟡 assumed: Meaning follows from the name or a few examples, not proven. · ❓ unknown: Seen in the data, meaning not worked out. · ⛔ useless: Always the same value, or contradicts other fields. · ➗ derived: Worked out from other numbers (a percentage). · ➖ not in the API: Nothing in the API fits; only the in-game screen has it.
 
 ## Endpoints
 
@@ -385,6 +385,127 @@ Derived:
 - **cpuGoals**: club score minus the sum of counter 214 over the club's players; shown as “CPU” among the scorers on match pages and in Discord posts. Checked on 22 games (44 club-games): when someone runs the CPU, its goals sit on that player's EA line; when nobody does, they appear only in the score (6 goals, all in such games). No counter or club field marks own goals, so an opponent own goal can't be told apart and also lands here.
 - **cpuReds**: an EA red on a line whose counters have neither 96 (straight red) nor 95 + 213 >= 2 (second yellow) is the CPU's; saved as a corrections row (created_by auto) when the match is first saved, so the club can give it back. 0 misses on the research dataset's 692 human reds.
 - **cpuController**: the line whose EA goals/assists/shots exceed its counters; failing that, the line whose EA passesmade is 5+ above counters 215 + 153 (EA counts offside passes as made) (the CPU nearly always passes, rarely scores).
+
+## In-game Player Performance screen
+
+Every stat on the in-game Player Performance screen (tabs Summary, Possession, Shooting, Passing, Defending, Goalkeeping) and where it comes from in the API: a counter id, an EA field, worked out from others (derived), or nothing (none). Checked against 9 player-games: dirty8ightt in Angola fest, LA Seigue FC, SfvErfff, El dihbie and Bluvils B; mo_nm (keeper) in Angola fest and LA Seigue FC; RUPPADOR and x-LadruM-x in LA Seigue FC. 'n of m' = lines where the API number equals the screen. The screen leaves the CPU out, like the counters. Team totals on the Match Facts screens include the CPU, so they can't be checked this way. Last checked 2026-10-18.
+
+### Summary
+
+| Stat | How sure | From the API | Evidence |
+|---|---|---|---|
+| Total Rating | ✅ verified | EA field rating | equals EA's rating, except on the line of whoever runs the CPU: there EA gives the plain average of their rating and the CPU teammates' (El dihbie 7.3 = avg of 9.5, 6.2, 8.0, 7.4, 7.4, 5.2; Bluvils B 6.8 = avg of 6.6, 7.1, 7.1, 7.3, 5.9; a CPU subbed off early is left out). The real one comes from /rr, Fix stats or screenshots |
+| Goals | ✅ verified | counter 214 | 9 of 9 |
+| Assists | ✅ verified | counter 11 | 9 of 9 |
+| Shots | ✅ verified | counters 217 + 218 | 9 of 9 |
+| Shot Accuracy (%) | ➗ derived | 217 / (217 + 218) |  |
+| Passes | ✅ verified | counters 215 + 216 + 153 | 7 of 9, the others off by one |
+| Pass Accuracy (%) | ➗ derived | 215 / passes |  |
+| Dribbles | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits; 174 + 212 (completed + failed) fits 5 of 9 |
+| Dribble Success Rate (%) | ➗ derived | 174 / dribbles | needs Dribbles |
+| Tackles | 🟡 assumed | counters 0 + 1 + 120 | standing + sliding tackles; 8 of 9, Angola fest had 2 sliding tackles the counters miss |
+| Tackle Success Rate (%) | ➗ derived | 0 / tackles |  |
+| Offsides | 🟡 assumed | counter 204 | 8 of 9 (dirty8ightt, Angola fest: 2 vs 1) |
+| Fouls Committed | 🟡 assumed | counters 2 + 3 | 9 of 9, only one above 0 |
+| Possession Won | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits; 108-110 were the research guess and don't fit |
+| Possession Lost | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits; 105-107 were the research guess and don't fit |
+| Minutes Played vs Team Average | 🟡 assumed | EA field secondsPlayed |  |
+| Distance Covered vs Team Average (km) | ➖ not in the API | – | not in the API |
+| Distance Sprinted vs Team Average (km) | ➖ not in the API | – | not in the API |
+
+### Possession
+
+| Stat | How sure | From the API | Evidence |
+|---|---|---|---|
+| Possession % | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Dribbles | ➖ not in the API | – | see Summary |
+| Dribbles Completed | ✅ verified | counter 174 | 9 of 9 |
+| Dribble Success Rate (%) | ➗ derived | 174 / dribbles |  |
+| Distance Dribbled (km) | ➖ not in the API | – | not in the API |
+| Tackled By Opponent | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Corners Won | 🟠 doubtful | counter 158 | 9 of 9 but only two above 0; the research reads 158 as opponent dispossessed |
+| Fouls Won | 🟡 assumed | counter 4 | 9 of 9, one above 0 (2); the research agrees |
+| Penalties Won | 🟡 assumed | counter 203 | 9 of 9, one above 0; the research agrees (shown with †) |
+| Assists From Dummy | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Regular / Shield / Strafe / Agile Dribble (%) | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Forward / Midfield / Defensive Line Breaks (through, around; attempted, completed) | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Dribble Style: Beat | 🟡 assumed | counters 112 − 38 | 5 of 5 (0, 2, 7, 2, 0); the research reads 112 as beats incl. skill-move beats |
+| Dribble Style: Skill move Beat | 🟡 assumed | counter 38 | 5 of 5, one above 0 (4); the research agrees |
+| Dribble Style: Nutmeg | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Dribble Style: Knock-ons | 🟠 doubtful | counter 202 | 5 of 5, one above 0 (2); the research reads 202 as shots saved |
+
+### Shooting
+
+| Stat | How sure | From the API | Evidence |
+|---|---|---|---|
+| Goals Excluding Penalties | 🟡 assumed | counters 214 − 46 | 8 of 8 |
+| xG Excluding Penalties | ➖ not in the API | – | not in the API |
+| Shots | ✅ verified | counters 217 + 218 |  |
+| Shots On Target | 🟡 assumed | counter 217 (= 13 + 18) | 6 of 7 |
+| Shots Off Target | 🟡 assumed | counter 218 (= 14 + 19) | 7 of 7, one above 0 |
+| Shots Blocked | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Free Kick Goals | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Penalty Kick Goals | 🟡 assumed | counter 46 | 7 of 7, one above 0 (2); the research agrees (shown with †) |
+| Shootout Goals | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Assists from Shots | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Shot Type: Normal / Header / Power / Volley / Chip / Set Pieces | ➖ not in the API | – | no fit; the research found no shot-type counters that add up to shots |
+| Shot Type: Finesse | 🟠 doubtful | counter 18 | 7 of 7 but only two above 0; the research reads 18 as on target from outside the box |
+
+### Passing
+
+| Stat | How sure | From the API | Evidence |
+|---|---|---|---|
+| Assists | ✅ verified | counter 11 |  |
+| Expected Assists | ➖ not in the API | – | not in the API |
+| Second Assist | ✅ verified | counter 115 | 9 of 9 |
+| Key Passes | 🟡 assumed | counter 114 | close, not exact: 5 of 9, off by one to three (shown as ≈) |
+| Players Beaten By Passes | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits; 97 doesn't fit |
+| Passes | ✅ verified | counters 215 + 216 + 153 |  |
+| Completed | ✅ verified | counter 215 | 9 of 9 |
+| Intercepted | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits; missed passes 216 fits only 4 of 9 |
+| Pass Accuracy (%) | ➗ derived | 215 / passes |  |
+| Offside Passes | ✅ verified | counter 153 | 9 of 9 |
+| Crosses Attempted | 🟠 doubtful | counter 100 | 9 of 9 but only two above 0; the research reads 100 as out of position |
+| Successful Crosses | ➖ not in the API | – | 36 (research: completed crosses) fits only 5 of 9 |
+| Crosses Blocked | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet (research: 156) |
+| Crossing Success Rate (%) | ➗ derived | – | needs crosses |
+| Passes Attempted / Completed Under Pressure | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Pass Type: Through + Lobbed Through | 🟠 doubtful | counter 152 | 3 of 5 (shown with *) |
+| Pass Type: Lob | 🟠 doubtful | counter 28 | 5 of 5, two above 0; the research reads 28 as completed long passes |
+| Pass Type: Ground / Cross / Set Pieces | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits; 184 fit set pieces on 3 games, then failed |
+| Forward / Midfield / Defensive Line Breaks (through, around, over; attempted, completed) | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+
+### Defending
+
+| Stat | How sure | From the API | Evidence |
+|---|---|---|---|
+| Standing Tackles | ✅ verified | counters 0 + 1 | 7 of 7 (1, 4, 2 among them) |
+| Standing Tackles Won | ✅ verified | counter 0 | 7 of 7 (121 and 229 fit too) |
+| Sliding Tackles | 🟡 assumed | counter 120 | 6 of 7: Angola fest had 2, counter 0 |
+| Sliding Tackles Won | 🟡 assumed | counter 230 | 0 on every screen so far, so any always-0 counter fits; can't tell yet; the research reads 230 as sliding tackles won |
+| Interceptions | ✅ verified | counter 6 | 7 of 7 |
+| Blocks | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Clearances | 🟡 assumed | counter 9 | 7 of 7, one above 0; the research agrees (shown with †) |
+| Offsides Caused | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Offensive Duels (won) | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Defensive Duels (won) | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Aerial Duels | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Aerial Duels Won | 🟡 assumed | counters 265 + 266 | 5 of 5 (counter 8 fits too) |
+| Beaten by Opponent | ➖ not in the API | – | no counter, pair, difference or triple of the 150 ids fits |
+| Beaten In Defensive Third / In Box | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+| Infractions: Fouls Committed | 🟡 assumed | counters 2 + 3 |  |
+| Infractions: Penalties Committed | 🟡 assumed | counter 94 | 0 on every screen so far, so any always-0 counter fits; can't tell yet; the research reads 94 as penalties conceded |
+| Infractions: Own Goals | ❓ unknown | – | 0 on every screen so far, so any always-0 counter fits; can't tell yet |
+
+### Goalkeeping
+
+| Stat | How sure | From the API | Evidence |
+|---|---|---|---|
+| Shots Against / Shots On Target | ➖ not in the API | – | one keeper screen so far (mo_nm, Angola fest) |
+| Saves | 🟡 assumed | EA field saves | one keeper screen so far |
+| Goals Conceded | 🟠 doubtful | counter 29 | 3 of 3, one above 0 |
+| Punch / Rush / Penalty / Shootout Saves, Punch Clearance, Cross Claim | ❓ unknown | EA save fields | 0 on the keeper screen; EA sends reflex, parry, punch, dive, cross and good-direction saves |
+| Shot Type Saved | ➖ not in the API | – | one keeper screen so far |
 
 ## Thanks
 

@@ -1,6 +1,6 @@
 {
   "about": "Every field EA's Pro Clubs API sends, what it means and how sure we are of it. Only mark a field 'verified' after checking it against real data, and note the evidence. docs/ea-api.md is generated from this file: run `node scripts/ea-docs.mjs` after editing, and `node scripts/ea-docs.mjs <folder of saved responses>` to list fields EA sends that aren't documented here yet.",
-  "updated": "2026-10-15",
+  "updated": "2026-10-18",
   "thanks": [
     {
       "project": "frdceri/clubs-hub",
@@ -26,7 +26,9 @@
     "verified": "Checked against real data; safe to build on.",
     "assumed": "Meaning follows from the name or a few examples, not proven.",
     "unknown": "Seen in the data, meaning not worked out.",
-    "useless": "Always the same value, or contradicts other fields."
+    "useless": "Always the same value, or contradicts other fields.",
+    "derived": "Worked out from other numbers (a percentage).",
+    "none": "Nothing in the API fits; only the in-game screen has it."
   },
   "api": {
     "base": "https://proclubs.ea.com/api/fc",
@@ -474,5 +476,448 @@
     },
     "notYetDecoded": "tackle attempts: EA's tackleattempts is not the in-game Tackles (standing 0 + 1 plus sliding 120) and has no counter (no counter, pair or triple matches EA's tackleattempts; 15 Oct, research dataset: 164 + event_1 is the best fit but exact on only 38% of 40,449 human-only lines and 55% of lines from games with 11 humans, so about a quarter of attempts have no counter; event_1 looks like missed tackles, above EA's missed on 9 lines only); possession won/lost; players beaten by passes; failed dribbles (212 = 4 = 11 − 7 for dirty8ightt, one line only). In-game Player Performance screens can confirm the fromResearch mappings. Checked 15 Oct against 7 Player Performance screens (Angola fest, LA Seigue FC, SfvErfff), and again 17-18 Oct with dirty8ightt's El dihbie and Bluvils B screens (9 lines, every single counter, pair, difference and triple of the 150 ids; triples only fit low-variety stats, dozens at once, so they're chance): Possession Won/Lost, Offensive/Defensive Duels, Players Beaten By Passes, Passes Under Pressure, Dribbles attempted, Tackled By Opponent, Beat, Shot Type and Line Breaks match no counter or pair of counters; Key Passes no longer fits 114 (SfvErfff: 2 vs 4). Shot types are not in the counters: no combination adds up to shots in the research dataset.",
     "method": "for each id compare per-line values with known stats (exact, correlation, pair sums) and check where mismatches fall"
+  },
+  "inGameScreen": {
+    "about": "Every stat on the in-game Player Performance screen (tabs Summary, Possession, Shooting, Passing, Defending, Goalkeeping) and where it comes from in the API: a counter id, an EA field, worked out from others (derived), or nothing (none). Checked against 9 player-games: dirty8ightt in Angola fest, LA Seigue FC, SfvErfff, El dihbie and Bluvils B; mo_nm (keeper) in Angola fest and LA Seigue FC; RUPPADOR and x-LadruM-x in LA Seigue FC. 'n of m' = lines where the API number equals the screen. The screen leaves the CPU out, like the counters. Team totals on the Match Facts screens include the CPU, so they can't be checked this way.",
+    "checked": "2026-10-18",
+    "tabs": {
+      "Summary": {
+        "Total Rating": {
+          "source": "EA field rating",
+          "status": "verified",
+          "note": "equals EA's rating, except on the line of whoever runs the CPU: there EA gives the plain average of their rating and the CPU teammates' (El dihbie 7.3 = avg of 9.5, 6.2, 8.0, 7.4, 7.4, 5.2; Bluvils B 6.8 = avg of 6.6, 7.1, 7.1, 7.3, 5.9; a CPU subbed off early is left out). The real one comes from /rr, Fix stats or screenshots"
+        },
+        "Goals": {
+          "source": "counter 214",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Assists": {
+          "source": "counter 11",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Shots": {
+          "source": "counters 217 + 218",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Shot Accuracy (%)": {
+          "source": "217 / (217 + 218)",
+          "status": "derived"
+        },
+        "Passes": {
+          "source": "counters 215 + 216 + 153",
+          "status": "verified",
+          "note": "7 of 9, the others off by one"
+        },
+        "Pass Accuracy (%)": {
+          "source": "215 / passes",
+          "status": "derived"
+        },
+        "Dribbles": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits; 174 + 212 (completed + failed) fits 5 of 9"
+        },
+        "Dribble Success Rate (%)": {
+          "source": "174 / dribbles",
+          "status": "derived",
+          "note": "needs Dribbles"
+        },
+        "Tackles": {
+          "source": "counters 0 + 1 + 120",
+          "status": "assumed",
+          "note": "standing + sliding tackles; 8 of 9, Angola fest had 2 sliding tackles the counters miss"
+        },
+        "Tackle Success Rate (%)": {
+          "source": "0 / tackles",
+          "status": "derived"
+        },
+        "Offsides": {
+          "source": "counter 204",
+          "status": "assumed",
+          "note": "8 of 9 (dirty8ightt, Angola fest: 2 vs 1)"
+        },
+        "Fouls Committed": {
+          "source": "counters 2 + 3",
+          "status": "assumed",
+          "note": "9 of 9, only one above 0"
+        },
+        "Possession Won": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits; 108-110 were the research guess and don't fit"
+        },
+        "Possession Lost": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits; 105-107 were the research guess and don't fit"
+        },
+        "Minutes Played vs Team Average": {
+          "source": "EA field secondsPlayed",
+          "status": "assumed"
+        },
+        "Distance Covered vs Team Average (km)": {
+          "source": null,
+          "status": "none",
+          "note": "not in the API"
+        },
+        "Distance Sprinted vs Team Average (km)": {
+          "source": null,
+          "status": "none",
+          "note": "not in the API"
+        }
+      },
+      "Possession": {
+        "Possession %": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Dribbles": {
+          "source": null,
+          "status": "none",
+          "note": "see Summary"
+        },
+        "Dribbles Completed": {
+          "source": "counter 174",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Dribble Success Rate (%)": {
+          "source": "174 / dribbles",
+          "status": "derived"
+        },
+        "Distance Dribbled (km)": {
+          "source": null,
+          "status": "none",
+          "note": "not in the API"
+        },
+        "Tackled By Opponent": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Corners Won": {
+          "source": "counter 158",
+          "status": "doubtful",
+          "note": "9 of 9 but only two above 0; the research reads 158 as opponent dispossessed"
+        },
+        "Fouls Won": {
+          "source": "counter 4",
+          "status": "assumed",
+          "note": "9 of 9, one above 0 (2); the research agrees"
+        },
+        "Penalties Won": {
+          "source": "counter 203",
+          "status": "assumed",
+          "note": "9 of 9, one above 0; the research agrees (shown with †)"
+        },
+        "Assists From Dummy": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Regular / Shield / Strafe / Agile Dribble (%)": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Forward / Midfield / Defensive Line Breaks (through, around; attempted, completed)": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Dribble Style: Beat": {
+          "source": "counters 112 − 38",
+          "status": "assumed",
+          "note": "5 of 5 (0, 2, 7, 2, 0); the research reads 112 as beats incl. skill-move beats"
+        },
+        "Dribble Style: Skill move Beat": {
+          "source": "counter 38",
+          "status": "assumed",
+          "note": "5 of 5, one above 0 (4); the research agrees"
+        },
+        "Dribble Style: Nutmeg": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Dribble Style: Knock-ons": {
+          "source": "counter 202",
+          "status": "doubtful",
+          "note": "5 of 5, one above 0 (2); the research reads 202 as shots saved"
+        }
+      },
+      "Shooting": {
+        "Goals Excluding Penalties": {
+          "source": "counters 214 − 46",
+          "status": "assumed",
+          "note": "8 of 8"
+        },
+        "xG Excluding Penalties": {
+          "source": null,
+          "status": "none",
+          "note": "not in the API"
+        },
+        "Shots": {
+          "source": "counters 217 + 218",
+          "status": "verified"
+        },
+        "Shots On Target": {
+          "source": "counter 217 (= 13 + 18)",
+          "status": "assumed",
+          "note": "6 of 7"
+        },
+        "Shots Off Target": {
+          "source": "counter 218 (= 14 + 19)",
+          "status": "assumed",
+          "note": "7 of 7, one above 0"
+        },
+        "Shots Blocked": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Free Kick Goals": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Penalty Kick Goals": {
+          "source": "counter 46",
+          "status": "assumed",
+          "note": "7 of 7, one above 0 (2); the research agrees (shown with †)"
+        },
+        "Shootout Goals": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Assists from Shots": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Shot Type: Normal / Header / Power / Volley / Chip / Set Pieces": {
+          "source": null,
+          "status": "none",
+          "note": "no fit; the research found no shot-type counters that add up to shots"
+        },
+        "Shot Type: Finesse": {
+          "source": "counter 18",
+          "status": "doubtful",
+          "note": "7 of 7 but only two above 0; the research reads 18 as on target from outside the box"
+        }
+      },
+      "Passing": {
+        "Assists": {
+          "source": "counter 11",
+          "status": "verified"
+        },
+        "Expected Assists": {
+          "source": null,
+          "status": "none",
+          "note": "not in the API"
+        },
+        "Second Assist": {
+          "source": "counter 115",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Key Passes": {
+          "source": "counter 114",
+          "status": "assumed",
+          "note": "close, not exact: 5 of 9, off by one to three (shown as ≈)"
+        },
+        "Players Beaten By Passes": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits; 97 doesn't fit"
+        },
+        "Passes": {
+          "source": "counters 215 + 216 + 153",
+          "status": "verified"
+        },
+        "Completed": {
+          "source": "counter 215",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Intercepted": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits; missed passes 216 fits only 4 of 9"
+        },
+        "Pass Accuracy (%)": {
+          "source": "215 / passes",
+          "status": "derived"
+        },
+        "Offside Passes": {
+          "source": "counter 153",
+          "status": "verified",
+          "note": "9 of 9"
+        },
+        "Crosses Attempted": {
+          "source": "counter 100",
+          "status": "doubtful",
+          "note": "9 of 9 but only two above 0; the research reads 100 as out of position"
+        },
+        "Successful Crosses": {
+          "source": null,
+          "status": "none",
+          "note": "36 (research: completed crosses) fits only 5 of 9"
+        },
+        "Crosses Blocked": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet (research: 156)"
+        },
+        "Crossing Success Rate (%)": {
+          "source": null,
+          "status": "derived",
+          "note": "needs crosses"
+        },
+        "Passes Attempted / Completed Under Pressure": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Pass Type: Through + Lobbed Through": {
+          "source": "counter 152",
+          "status": "doubtful",
+          "note": "3 of 5 (shown with *)"
+        },
+        "Pass Type: Lob": {
+          "source": "counter 28",
+          "status": "doubtful",
+          "note": "5 of 5, two above 0; the research reads 28 as completed long passes"
+        },
+        "Pass Type: Ground / Cross / Set Pieces": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits; 184 fit set pieces on 3 games, then failed"
+        },
+        "Forward / Midfield / Defensive Line Breaks (through, around, over; attempted, completed)": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        }
+      },
+      "Defending": {
+        "Standing Tackles": {
+          "source": "counters 0 + 1",
+          "status": "verified",
+          "note": "7 of 7 (1, 4, 2 among them)"
+        },
+        "Standing Tackles Won": {
+          "source": "counter 0",
+          "status": "verified",
+          "note": "7 of 7 (121 and 229 fit too)"
+        },
+        "Sliding Tackles": {
+          "source": "counter 120",
+          "status": "assumed",
+          "note": "6 of 7: Angola fest had 2, counter 0"
+        },
+        "Sliding Tackles Won": {
+          "source": "counter 230",
+          "status": "assumed",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet; the research reads 230 as sliding tackles won"
+        },
+        "Interceptions": {
+          "source": "counter 6",
+          "status": "verified",
+          "note": "7 of 7"
+        },
+        "Blocks": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Clearances": {
+          "source": "counter 9",
+          "status": "assumed",
+          "note": "7 of 7, one above 0; the research agrees (shown with †)"
+        },
+        "Offsides Caused": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Offensive Duels (won)": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Defensive Duels (won)": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Aerial Duels": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Aerial Duels Won": {
+          "source": "counters 265 + 266",
+          "status": "assumed",
+          "note": "5 of 5 (counter 8 fits too)"
+        },
+        "Beaten by Opponent": {
+          "source": null,
+          "status": "none",
+          "note": "no counter, pair, difference or triple of the 150 ids fits"
+        },
+        "Beaten In Defensive Third / In Box": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        },
+        "Infractions: Fouls Committed": {
+          "source": "counters 2 + 3",
+          "status": "assumed"
+        },
+        "Infractions: Penalties Committed": {
+          "source": "counter 94",
+          "status": "assumed",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet; the research reads 94 as penalties conceded"
+        },
+        "Infractions: Own Goals": {
+          "source": null,
+          "status": "unknown",
+          "note": "0 on every screen so far, so any always-0 counter fits; can't tell yet"
+        }
+      },
+      "Goalkeeping": {
+        "Shots Against / Shots On Target": {
+          "source": null,
+          "status": "none",
+          "note": "one keeper screen so far (mo_nm, Angola fest)"
+        },
+        "Saves": {
+          "source": "EA field saves",
+          "status": "assumed",
+          "note": "one keeper screen so far"
+        },
+        "Goals Conceded": {
+          "source": "counter 29",
+          "status": "doubtful",
+          "note": "3 of 3, one above 0"
+        },
+        "Punch / Rush / Penalty / Shootout Saves, Punch Clearance, Cross Claim": {
+          "source": "EA save fields",
+          "status": "unknown",
+          "note": "0 on the keeper screen; EA sends reflex, parry, punch, dive, cross and good-direction saves"
+        },
+        "Shot Type Saved": {
+          "source": null,
+          "status": "none",
+          "note": "one keeper screen so far"
+        }
+      }
+    }
   }
 }

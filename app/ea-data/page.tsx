@@ -11,7 +11,7 @@ type Section = { title: string; path: string; about?: string; fields: Record<str
 type Endpoint = { query: string; about: string; sections: Section[] };
 type Counter = { meaning?: string; guess?: string; status?: string; evidence?: string; screen?: string; note?: string; usedIn?: string };
 
-const STATUS_ICON: Record<string, string> = { verified: "✅", assumed: "🟡", unknown: "❓", useless: "⛔", doubtful: "🟠", wrong: "❌", guess: "🔍" };
+const STATUS_ICON: Record<string, string> = { verified: "✅", assumed: "🟡", unknown: "❓", useless: "⛔", doubtful: "🟠", wrong: "❌", guess: "🔍", derived: "➗", none: "➖" };
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 /** "265, 266" → [265, 266]; "99-103, 219" → [99..103, 219] */
@@ -83,6 +83,11 @@ export default async function EaDataPage() {
   const counters = data.matchEventCounters as unknown as Record<string, unknown>;
   const seen = await countersSeen();
   const known = counterIndex();
+  const screen = data.inGameScreen as unknown as {
+    about: string;
+    checked: string;
+    tabs: Record<string, Record<string, { source: string | null; status: string; note?: string }>>;
+  };
 
   return (
     <main className="wrap ea-doc">
@@ -97,6 +102,7 @@ export default async function EaDataPage() {
           {Object.keys(endpoints).map((k) => <a key={k} href={`#${slug(k)}`}>{k}</a>)}
           <a href="#counters">Hidden counters</a>
           <a href="#seen">Counters in our games</a>
+          <a href="#screen">In-game screen</a>
           <a href="#thanks">Thanks</a>
         </nav>
         <p className="muted small">
@@ -221,6 +227,31 @@ export default async function EaDataPage() {
             </table>
           </div>
         )}
+      </section>
+
+      <section id="screen" className="stack">
+        <h2 className="display">In-game Player Performance screen</h2>
+        <p className="muted">{screen.about} Last checked {screen.checked}.</p>
+        {Object.entries(screen.tabs).map(([tab, stats]) => (
+          <div key={tab} className="stack">
+            <h3>{tab}</h3>
+            <div className="table-box">
+              <table>
+                <thead><tr><th>Stat</th><th>How sure</th><th>From the API</th><th>Evidence</th></tr></thead>
+                <tbody>
+                  {Object.entries(stats).map(([name, f]) => (
+                    <tr key={name}>
+                      <td>{name}</td>
+                      <td><Status s={f.status} /></td>
+                      <td>{f.source ?? <span className="muted">–</span>}</td>
+                      <td className="muted">{f.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
       </section>
 
       <section id="thanks" className="stack">

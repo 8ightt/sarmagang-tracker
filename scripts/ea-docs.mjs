@@ -24,7 +24,7 @@ function expand(key) {
 }
 
 const esc = (s) => String(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
-const STATUS = { verified: "✅ verified", assumed: "🟡 assumed", unknown: "❓ unknown", useless: "⛔ useless", doubtful: "🟠 doubtful", wrong: "❌ wrong" };
+const STATUS = { verified: "✅ verified", assumed: "🟡 assumed", unknown: "❓ unknown", useless: "⛔ useless", doubtful: "🟠 doubtful", wrong: "❌ wrong", derived: "➗ derived", none: "➖ not in the API" };
 
 function explain(f) {
   const parts = [f.meaning ?? ""];
@@ -102,6 +102,18 @@ lines.push(
   "",
   ...Object.entries(c.derived).map(([k, v]) => `- **${k}**: ${v}.`),
   "",
+  "## In-game Player Performance screen",
+  "",
+  `${doc.inGameScreen.about} Last checked ${doc.inGameScreen.checked}.`,
+  "",
+  ...Object.entries(doc.inGameScreen.tabs).flatMap(([tab, stats]) => [
+    `### ${tab}`,
+    "",
+    "| Stat | How sure | From the API | Evidence |",
+    "|---|---|---|---|",
+    ...Object.entries(stats).map(([name, f]) => `| ${esc(name)} | ${STATUS[f.status] ?? f.status} | ${f.source ? esc(f.source) : "–"} | ${esc(f.note ?? "")} |`),
+    "",
+  ]),
   "## Thanks",
   "",
   ...doc.thanks.map((t) => `- [${t.project}](${t.url}) (\`${t.file}\`): ${t.usedFor}. ${t.thanks}`),
