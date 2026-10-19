@@ -46,7 +46,7 @@ export default async function Home() {
           ? ""
           : nowSec < playoffsAt
             ? ` · Season Playoffs start in about ${countdown(playoffsAt - nowSec)}, in the highest division reached`
-            : " · Season Playoffs are on: league points and chances are paused");
+            : ` · Season Playoffs are on, ending in ${countdown(Math.max(0, seasonEndTs! - nowSec))}: league points and chances are paused`);
   const playing = members.filter((m) => m.games > 0);
   const top = (key: "goals" | "assists" | "motm") => [...playing].sort((a, b) => b[key] - a[key])[0];
   const lethal = [...playing].filter((m) => m.games >= 10).sort((a, b) => (b.goals + b.assists) / b.games - (a.goals + a.assists) / a.games)[0];
@@ -98,6 +98,7 @@ export default async function Home() {
             <h2 className="display">{playoffs.name} Playoffs</h2>
             <span className="muted" style={{ fontSize: 13 }}>
               {division !== null ? `${divisionName(division)} · ` : ""}until {new Date(playoffs.to * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}
+              {playoffs.to > nowSec ? ` · ${countdown(playoffs.to - nowSec)} left` : ""}
             </span>
           </div>
           <div className="grid grid-170">
