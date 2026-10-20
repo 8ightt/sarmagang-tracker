@@ -1,5 +1,5 @@
 import { CLUB_ID } from "@/lib/config";
-import { REPUTATION_TIERS, reputationName, reputationUrl } from "@/lib/ea-assets";
+import { REPUTATION_TIERS, divisionCrestUrl, reputationName, reputationUrl } from "@/lib/ea-assets";
 import type { TopClub } from "@/lib/poller";
 import { Crest } from "./bits";
 
@@ -17,7 +17,7 @@ export function DivisionLadder({ current, best, promotions, relegations }: { cur
           const state = i === at ? "current" : i < at ? "done" : "ahead";
           return (
             <div key={d} className={`ladder-step ${state}`}>
-              <span className="shield">{d === 0 ? "E" : d}</span>
+              <img src={divisionCrestUrl(d)} alt="" width={44} height={44} className="ladder-badge" style={{ objectFit: "contain" }} />
               <span className="ladder-name">
                 {d === 0 ? "Elite" : `Div ${d}`}
                 {best === d && i !== at ? <em> best</em> : null}
@@ -45,7 +45,7 @@ export function ReputationLadder({ tier }: { tier: number }) {
           const state = i === tier ? "current" : i < tier ? "done" : "ahead";
           return (
             <div key={i} className={`ladder-step ${state}`}>
-              <img src={reputationUrl(i)} alt="" width={44} height={44} className="rep-badge" />
+              <img src={reputationUrl(i)} alt="" width={44} height={44} className="ladder-badge" />
               <span className="ladder-name">{reputationName(i)}</span>
             </div>
           );
@@ -68,7 +68,7 @@ export function TopHundred({ clubs, us }: { clubs: TopClub[]; us: number | null 
   const floor = 1000;
   const pct = (sr: number) => Math.max(0, Math.min(100, ((sr - floor) / Math.max(1, first.skillRating - floor)) * 100));
   return (
-    <a className="card stack" href="/top-100" style={{ gap: 14, textDecoration: "none", color: "var(--text)" }}>
+    <a className="card stack" href="/top-100" style={{ gap: 14, textDecoration: "none", color: "var(--text)", justifyContent: "space-between" }}>
       <div className="row between">
         <span className="kpi-label">World top 100</span>
         <span className="muted" style={{ fontSize: 13 }}>By Skill Rating →</span>
@@ -76,9 +76,18 @@ export function TopHundred({ clubs, us }: { clubs: TopClub[]; us: number | null 
       {mine ? (
         <span className="display num accent" style={{ fontSize: 40, lineHeight: 1 }}>#{mine.rank}</span>
       ) : (
-        <span className="display num" style={{ fontSize: 28, lineHeight: 1.1 }}>
-          {gap !== null ? `${gap} SR short` : "Not ranked"}
-        </span>
+        <div className="stack" style={{ gap: 8 }}>
+          <span className="display num" style={{ fontSize: 28, lineHeight: 1.1 }}>
+            {gap !== null ? `${gap} SR short` : "Not ranked"}
+          </span>
+          {last ? (
+            <div className="row" style={{ gap: 8, flexWrap: "nowrap", fontSize: 13 }}>
+              <span className="muted">To pass #100</span>
+              <Crest id={last.crest} size={22} />
+              <strong style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{last.name}</strong>
+            </div>
+          ) : null}
+        </div>
       )}
       <div className="stack" style={{ gap: 6 }}>
         <div className="top100-bar">

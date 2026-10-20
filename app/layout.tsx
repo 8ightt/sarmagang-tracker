@@ -32,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const vars = {
     "--accent": theme.accent,
     "--on-accent": theme.onAccent,
+    "--accent-light": theme.accentLight,
     "--club": theme.club,
     "--on-club": theme.onClub,
     "--win": theme.win,

@@ -7,7 +7,10 @@ export const crestUrl = (crestAssetId?: string | number | null) =>
 export const flagUrl = (nationId?: string | number | null) =>
   nationId ? `${CONTENT}/fut/items/images/mobile/flags/card/${nationId}.png` : "";
 
-export const reputationUrl = (tier?: string | number | null) =>
+/** EA's division shield: divisioncrest1 is Elite (0), divisioncrestN is Division N-1 (checked by eye, 20 Oct 2026). */
+export const divisionCrestUrl = (division: number) => `${MEDIA}/divisioncrest${Math.max(0, Math.min(5, division)) + 1}.png`;
+
+export const reputationUrl =(tier?: string | number | null) =>
   `${MEDIA}/reputation-tier${Math.max(0, Math.min(3, Number(tier ?? 0)))}.png`;
 
 /** Club reputation tiers, lowest first (EA's reputationtier 0-3). Only names seen in-game are filled in. */

@@ -55,6 +55,7 @@ img { display: block; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 html { scrollbar-color: var(--line-2) var(--bg); }
 
+/* the wide face is for headings and big headline numbers (about 32px and up); smaller numbers use the body face at 800 */
 .display {
   font-family: var(--font-display), system-ui, sans-serif;
   font-stretch: 125%;
@@ -82,8 +83,57 @@ main.wrap { padding-top: 48px; padding-bottom: 72px; display: flex; flex-directi
 .grid-240 { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
 .grid-270 { grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); }
 
-/* a light band, for pages that alternate sections */
-.section-light { background: var(--paper); color: var(--ink); --text: var(--ink); --text-2: var(--ink-2); --muted: var(--ink-2); --line: #dcddd9; --line-2: #c9cbc6; --surface: #ffffff; --surface-2: #ebece8; color-scheme: light; }
+/* a light band, for pages that alternate sections; the accent darkens to stay readable on it */
+.section-light { background: var(--paper); color: var(--ink); --text: var(--ink); --text-2: var(--ink-2); --muted: var(--ink-2); --line: #dcddd9; --line-2: #c9cbc6; --surface: #ffffff; --surface-2: #ebece8; --accent: var(--accent-light, #2a2c2c); color-scheme: light; }
+
+/* full-width page bands, as on EA's Clubs pages: each band holds its own .wrap */
+main.bands { display: flex; flex-direction: column; }
+.band { padding: 64px 0 72px; }
+.band > .wrap { display: flex; flex-direction: column; gap: 56px; }
+.band-club {
+  background: var(--club); color: var(--on-club);
+  --text: var(--on-club);
+  --text-2: color-mix(in srgb, var(--on-club) 80%, var(--club));
+  --muted: color-mix(in srgb, var(--on-club) 68%, var(--club));
+  --line: color-mix(in srgb, var(--on-club) 16%, var(--club));
+  --surface: color-mix(in srgb, var(--on-club) 7%, var(--club));
+}
+
+/* club page hero: crest, name and standing on the club's shirt colour, season totals along the bottom */
+.club-hero { padding: 56px 0 40px; }
+.club-hero .hero-main { display: grid; grid-template-columns: auto 1fr auto; gap: 40px; align-items: center; }
+.club-hero .hero-crest { width: 180px; height: 180px; object-fit: contain; filter: drop-shadow(0 12px 24px rgb(0 0 0 / .35)); }
+.club-hero h1.display { font-size: clamp(56px, 6.6vw, 96px); }
+.club-hero .tagline { font-size: 20px; font-weight: 500; margin-top: 14px; }
+.club-hero .meta { color: var(--text-2); margin-top: 6px; }
+.hero-side { display: flex; flex-direction: column; gap: 18px; align-items: flex-end; }
+.hero-standing { display: flex; gap: 24px; align-items: center; }
+.hero-standing > div { display: flex; align-items: center; gap: 10px; }
+.hero-standing small { display: block; font-size: 13px; color: var(--muted); }
+.hero-standing strong { font-weight: 700; }
+.hero-form { display: flex; gap: 8px; align-items: center; }
+.hero-form span { font-size: 13px; color: var(--text-2); margin-right: 4px; }
+.hero-stats { display: flex; justify-content: space-between; gap: 24px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
+.hero-stats > div { min-width: 0; }
+.hero-stats .kpi-value { font-size: clamp(30px, 3vw, 44px); }
+
+/* player card (club page): who they are, then four numbers, then the bio */
+a.card.player-card { display: flex; flex-direction: column; gap: 18px; padding: 22px; }
+.player-card-head { display: flex; gap: 14px; align-items: center; }
+.player-card-who { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.player-card-who strong { font-size: 19px; font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-card-nick { font-size: 22px; color: var(--accent); margin: -4px 0 -6px; }
+.player-card-meta { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.player-card-meta .accent { font-size: 13px; }
+.player-card-ovr { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.player-card-ovr .display { font-size: 34px; }
+.player-card-ovr small { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 4px; letter-spacing: .04em; }
+.player-card-stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 14px 0 0; border-top: 1px solid var(--line); }
+.player-card-stats dt { font-size: 12px; font-weight: 600; color: var(--muted); }
+.player-card-stats dd { margin: 2px 0 0; font-size: 22px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.player-card-bio { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-2); }
+.avatar { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; background: var(--club); color: var(--on-club); font-size: 19px; font-weight: 800; letter-spacing: .02em; }
+.award-label { font-size: 14px; font-weight: 600; color: var(--text-2); }
 
 /* header: crest and club name, live state, sections as underline tabs */
 .site-header { background: var(--bar); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); }
@@ -129,8 +179,8 @@ a.card, a.card-strong { text-decoration: none; color: var(--text); display: bloc
 a.card:hover { border-color: var(--line-2); }
 
 .kpi-label { font-size: 14px; color: var(--text-2); font-weight: 500; }
-/* sized to its card so a long value ("32–11–39") stays on one line */
-.kpi-value { font-family: var(--font-display), system-ui, sans-serif; font-stretch: 125%; font-weight: 900; font-size: clamp(24px, 15cqi, 44px); line-height: 1; margin: 8px 0 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 44px, unless a long value (--chars set inline, e.g. "32–11–39" = 8) has to shrink to fit its card */
+.kpi-value { font-family: var(--font-display), system-ui, sans-serif; font-stretch: 125%; font-weight: 900; font-size: min(44px, calc(100cqi / (var(--chars, 1) * 0.8))); line-height: 1; margin: 8px 0 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .kpi-sub { font-size: 14px; color: var(--muted); }
 .cpu-warn { color: var(--shame); }
 
@@ -144,11 +194,10 @@ a.card:hover { border-color: var(--line-2); }
 .chip-shame { background: var(--shame-line); color: var(--shame); }
 
 /* tables: a header band in the club's shirt colour over separate rounded rows, tabular numbers */
-.table-box { overflow-x: auto; }
-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin: -6px 0; }
+.table-box { overflow-x: auto; overflow-y: hidden; }
+table { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
 th, td { padding: 12px; text-align: right; white-space: nowrap; }
 th { background: var(--club); color: var(--on-club); font-weight: 700; font-size: 14px; }
-.section-light th { background: var(--ink); color: var(--paper); }
 td { background: var(--surface); font-variant-numeric: tabular-nums; transition: background .15s; }
 th:first-child, td:first-child { text-align: left; padding-left: 18px; border-radius: 10px 0 0 10px; }
 th:last-child, td:last-child { padding-right: 18px; border-radius: 0 10px 10px 0; }
@@ -167,7 +216,7 @@ tbody tr:hover td { background: var(--surface-2); }
 /* match list */
 .match-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 14px 20px; text-decoration: none; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); transition: border-color .15s; }
 .match-row:hover { border-color: var(--line-2); color: var(--text); }
-.score { font-family: var(--font-display), system-ui, sans-serif; font-size: 22px; font-weight: 900; font-stretch: 125%; font-variant-numeric: tabular-nums; }
+.score { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 /* forms: pill fields and pill buttons */
 .inline-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -259,9 +308,9 @@ details > summary:hover { color: var(--text); }
 }
 .ladder-step.done .shield { background: var(--line-2); color: var(--text-2); }
 .ladder-step.current .shield { background: var(--accent); color: var(--on-accent); transform: scale(1.18); }
-.ladder-step .rep-badge { opacity: 0.3; filter: grayscale(1); }
-.ladder-step.done .rep-badge { opacity: 0.7; filter: none; }
-.ladder-step.current .rep-badge { opacity: 1; filter: none; transform: scale(1.2); }
+.ladder-step .ladder-badge { opacity: 0.3; filter: grayscale(1); }
+.ladder-step.done .ladder-badge { opacity: 0.7; filter: none; }
+.ladder-step.current .ladder-badge { opacity: 1; filter: none; transform: scale(1.2); }
 .ladder-step:first-child { align-items: flex-start; }
 .ladder-step:last-child { align-items: flex-end; }
 .ladder-step:first-child .ladder-name { text-align: left; }

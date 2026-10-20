@@ -11,7 +11,7 @@ import type { TopClub } from "./poller";
  * Player lines with the club's stat fixes applied. Falls back to EA's raw lines
  * until supabase/migrations/0004 has been run.
  */
-const playersTable = cache(async (): Promise<string> => {
+export const playersTable = cache(async (): Promise<string> => {
   const [r] = await sql()`select to_regclass('public.match_players_effective') is not null as ok`;
   return r?.ok ? "match_players_effective" : "match_players";
 });

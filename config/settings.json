@@ -5,27 +5,36 @@
       "position": "CAM",
       "role": "ANY",
       "nickname": "The Engine",
-      "bio": "Plays ANY and runs the CPU teammates, so their passes, tackles and cards land on his line too."
+      "bio": "Runs the CPU and the midfield: 17 assists in the last 20, the most in the squad. The MOTM voters haven't noticed yet."
     },
     "mo_nm": {
       "nickname": "Big Game Mo",
-      "bio": "Target man who happily goes in goal when the squad is short."
+      "bio": "23 goals in the last 20 and seven straight games on the scoresheet. Still the first to volunteer for goal when we're short."
     },
     "EnEsC-37": {
       "nickname": "Mr Efficient",
-      "bio": "Best goal-involvement rate in the club."
+      "bio": "Splits it right down the middle: 13 goals and 13 assists in the last 20. Won 10 of them too."
     },
     "Pakst-": {
       "nickname": "The Sniper",
-      "bio": "Doesn't shoot often, but when he does…"
+      "bio": "The scope needs cleaning: no goal in 7 games. Leads the squad in tackles lately though, 28 in the last 20."
     },
     "x-LadruM-x": {
       "nickname": "The Wall",
-      "bio": "The club's first real centre-back."
+      "bio": "The club's first real centre-back has 5 MOTM in the last 20, more than anyone. Chipped in 7 goals on top."
     },
     "RUPPADOR": {
       "nickname": "New Signing",
-      "bio": "Scored on his debut."
+      "bio": "Scored on debut and hasn't really stopped: 9 goals in 11 games, and only 2 of them lost."
+    },
+    "Hamza__075": {
+      "bio": "4 games, 4 goals, 4 wins. Small sample, perfect record."
+    },
+    "Its-1-Shot-Wisk": {
+      "bio": "Two games, two wins, one MOTM and an 8.4 average. The name promises one shot; hasn't needed it yet."
+    },
+    "HachMonsterrr": {
+      "bio": "Two games, two wins. The stats sheet is still warming up."
     }
   },
   "seasons": [
