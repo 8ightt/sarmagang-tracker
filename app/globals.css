@@ -18,6 +18,8 @@
   --on-accent: #0b0c0c;
   --club: #2a2c2c;
   --on-club: #ffffff;
+  --win: #e8e8e3;
+  --on-win: #0b0c0c;
   --shame: #eba4ac;
   --shame-line: #3d2428;
   --loss: #5c1a22;
@@ -118,36 +120,39 @@ h2.display { font-size: clamp(26px, 3.2vw, 36px); margin: 0; text-wrap: balance;
 .eyebrow { font-size: 15px; color: var(--text-2); font-weight: 500; }
 
 /* cards */
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
-.card-strong { background: var(--surface-2); border-radius: var(--radius); padding: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; container-type: inline-size; }
+.card-strong { background: var(--surface-2); border-radius: var(--radius); padding: 20px; container-type: inline-size; }
+/* a block in the club's shirt colour */
+.card-club { background: var(--club); color: var(--on-club); border-radius: var(--radius); padding: 20px; --text: var(--on-club); --text-2: color-mix(in srgb, var(--on-club) 78%, var(--club)); --muted: color-mix(in srgb, var(--on-club) 66%, var(--club)); }
 .card-shame { background: var(--surface); border: 1px solid var(--shame-line); border-radius: var(--radius); padding: 20px; }
 a.card, a.card-strong { text-decoration: none; color: var(--text); display: block; transition: border-color .15s; }
 a.card:hover { border-color: var(--line-2); }
 
 .kpi-label { font-size: 14px; color: var(--text-2); font-weight: 500; }
-.kpi-value { font-family: var(--font-display), system-ui, sans-serif; font-stretch: 125%; font-weight: 900; font-size: 44px; line-height: 1; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+/* sized to its card so a long value ("32–11–39") stays on one line */
+.kpi-value { font-family: var(--font-display), system-ui, sans-serif; font-stretch: 125%; font-weight: 900; font-size: clamp(24px, 15cqi, 44px); line-height: 1; margin: 8px 0 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .kpi-sub { font-size: 14px; color: var(--muted); }
 .cpu-warn { color: var(--shame); }
 
 /* result badges: the letter carries the result, the fill only repeats it */
 .badge { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; }
-.badge-W { background: var(--accent); color: var(--on-accent); }
+.badge-W { background: var(--win); color: var(--on-win); }
 .badge-D { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px var(--line-2); }
 .badge-L { background: var(--loss); color: var(--loss-text); }
 .chip { display: inline-block; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 2px 8px; background: var(--accent); color: var(--on-accent); }
 .chip-ghost { background: var(--surface-2); color: var(--text-2); }
 .chip-shame { background: var(--shame-line); color: var(--shame); }
 
-/* tables: a solid header band, quiet rows, tabular numbers */
-.table-box { overflow-x: auto; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
-table { width: 100%; border-collapse: collapse; }
+/* tables: a header band in the club's shirt colour over separate rounded rows, tabular numbers */
+.table-box { overflow-x: auto; }
+table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin: -6px 0; }
 th, td { padding: 12px; text-align: right; white-space: nowrap; }
-th { background: var(--bar); color: var(--text); font-weight: 700; font-size: 14px; }
+th { background: var(--club); color: var(--on-club); font-weight: 700; font-size: 14px; }
 .section-light th { background: var(--ink); color: var(--paper); }
-td { border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-th:first-child, td:first-child { text-align: left; padding-left: 18px; }
-th:last-child, td:last-child { padding-right: 18px; }
-tbody tr:hover { background: var(--surface-2); }
+td { background: var(--surface); font-variant-numeric: tabular-nums; transition: background .15s; }
+th:first-child, td:first-child { text-align: left; padding-left: 18px; border-radius: 10px 0 0 10px; }
+th:last-child, td:last-child { padding-right: 18px; border-radius: 0 10px 10px 0; }
+tbody tr:hover td { background: var(--surface-2); }
 
 .flag { width: 24px; height: 14px; object-fit: cover; border-radius: 2px; }
 .crest-sm { width: 30px; height: 34px; object-fit: contain; }
@@ -181,7 +186,15 @@ button:disabled { opacity: 0.55; cursor: wait; filter: none; }
 .form-msg { font-size: 14px; }
 .form-msg.ok { color: var(--accent); }
 .form-msg.err { color: var(--shame); }
-details > summary { cursor: pointer; color: var(--text-2); }
+details > summary { cursor: pointer; color: var(--text-2); list-style: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: ""; width: 14px; height: 14px; flex: 0 0 14px; background: var(--muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3l5 5-5 5'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform .2s cubic-bezier(.16, 1, .3, 1);
+}
+details[open] > summary::before { transform: rotate(90deg); }
+details > summary:hover { color: var(--text); }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
 .tabs button { background: transparent; color: var(--text-2); border-color: var(--line-2); }
@@ -208,10 +221,11 @@ details > summary { cursor: pointer; color: var(--text-2); }
 .filter-label { font-size: 14px; font-weight: 700; color: var(--muted); min-width: 72px; }
 .pill { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--line-2); color: var(--text-2); text-decoration: none; font-weight: 700; font-size: 14px; transition: border-color .15s, color .15s; }
 .pill:hover { color: var(--text); border-color: var(--text-2); }
-.pill[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+/* a selected toggle is outlined; solid fill is kept for actions (buttons) */
+.pill[aria-current="true"] { border-color: var(--accent); color: var(--accent); }
 .pill.is-empty { opacity: 0.45; }
 .pill .count { font-size: 12px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); }
-.pill[aria-current="true"] .count { background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: var(--on-accent); }
+.pill[aria-current="true"] .count { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
 .pill .dot { width: 10px; height: 10px; border-radius: 50%; }
 .filter-search { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .filter-search .field { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--line-2); border-radius: 999px; background: var(--bg); }
@@ -231,7 +245,6 @@ details > summary { cursor: pointer; color: var(--text-2); }
   .filter-search button { flex: 1 1 100%; }
   .filter-search .field input { flex: 1; min-width: 0; }
 }
-.pill[aria-current="true"] .dot { box-shadow: 0 0 0 2px var(--on-accent); }
 
 /* division and reputation ladders (club page) */
 .ladder { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -268,7 +281,7 @@ details > summary { cursor: pointer; color: var(--text-2); }
   border-radius: var(--radius); background: var(--surface-2); border: 1.5px solid var(--line-2);
   text-decoration: none; color: var(--text); text-align: center; min-width: 0;
 }
-.series-slot.is-W { border-color: var(--accent); }
+.series-slot.is-W { border-color: var(--win); }
 .series-slot.is-L { border-color: #c4485a; }
 .series-slot.is-next { border-style: dashed; border-color: var(--accent); }
 .series-n { font-size: 13px; color: var(--muted); }

@@ -54,7 +54,13 @@ function lift(c: Rgb, ground: Rgb): Rgb {
   return [255, 255, 255];
 }
 
-export type ClubTheme = { accent: string; onAccent: string; club: string; onClub: string };
+export type ClubTheme = { accent: string; onAccent: string; club: string; onClub: string; win: string; onWin: string };
+
+/** Reds read as losses next to the maroon L badge; a red club's wins get a neutral fill instead. */
+const isRed = (c: Rgb) => {
+  const [h, s] = toHsl(c);
+  return s > 0.25 && (h < 25 || h > 335);
+};
 
 /** Black or white, whichever reads better on `c`. */
 const inkOn = (c: Rgb) => (contrast(c, [255, 255, 255]) >= contrast(c, [0, 0, 0]) ? "#ffffff" : "#0b0c0c");
@@ -70,11 +76,13 @@ export function clubTheme(club: Pick<Club, "kits" | "crestColor">): ClubTheme {
   const valid = (n: number | undefined): n is number => Number.isFinite(n) && (n as number) > 0;
   const home = (club.kits.find((k) => k.name === "Home")?.colors ?? []).filter(valid).map(toRgb);
   const candidates = [...(valid(club.crestColor) ? [toRgb(club.crestColor)] : []), ...home];
-  if (!candidates.length) return { accent: "#e8e8e3", onAccent: "#0b0c0c", club: "#2a2c2c", onClub: "#ffffff" };
+  if (!candidates.length)
+    return { accent: "#e8e8e3", onAccent: "#0b0c0c", club: "#2a2c2c", onClub: "#ffffff", win: "#e8e8e3", onWin: "#0b0c0c" };
 
   const byColour = (a: Rgb, b: Rgb) => chroma(b) - chroma(a);
   const readable = candidates.filter((c) => contrast(c, ground) >= MIN_CONTRAST && chroma(c) > 0.08);
   const accent = readable.length ? readable.sort(byColour)[0] : lift([...candidates].sort(byColour)[0], ground);
   const body = home[0] ?? candidates[0];
-  return { accent: toHex(accent), onAccent: inkOn(accent), club: toHex(body), onClub: inkOn(body) };
+  const win: Rgb = isRed(accent) ? [244, 244, 241] : accent;
+  return { accent: toHex(accent), onAccent: inkOn(accent), club: toHex(body), onClub: inkOn(body), win: toHex(win), onWin: inkOn(win) };
 }

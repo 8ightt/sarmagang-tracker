@@ -14,8 +14,8 @@ export const maxDuration = 20;
 // display: heavy and wide, uppercase (see .display in globals.css)
 const display = Anybody({ subsets: ["latin"], axes: ["wdth"], variable: "--font-display" });
 const body = Hanken_Grotesk({ subsets: ["latin", "latin-ext"], variable: "--font-body" });
-// one emphasised word at a time, never a heading or a paragraph
-const accent = Gloock({ subsets: ["latin"], weight: "400", variable: "--font-accent" });
+// one emphasised word at a time, never a heading or a paragraph; not preloaded until a page uses .serif
+const accent = Gloock({ subsets: ["latin"], weight: "400", variable: "--font-accent", preload: false });
 
 export async function generateMetadata(): Promise<Metadata> {
   const club = await getClub();
@@ -34,6 +34,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--on-accent": theme.onAccent,
     "--club": theme.club,
     "--on-club": theme.onClub,
+    "--win": theme.win,
+    "--on-win": theme.onWin,
   } as React.CSSProperties;
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${accent.variable}`} style={vars}>
