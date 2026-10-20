@@ -1,5 +1,5 @@
 import { Crest, ResultBadge, when } from "@/components/bits";
-import { currentSeason, loadSettings, localDay, matchKind, seasonOf, type MatchKind } from "@/lib/config";
+import { TIMEZONE, currentSeason, loadSettings, localDay, matchKind, seasonOf, type MatchKind } from "@/lib/config";
 import { getClub, getMatches, getSeason } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +16,12 @@ const RESULTS = [
   { value: "D", label: "Draws" },
   { value: "L", label: "Losses" },
 ];
+/** games less than this apart (seconds) belong to the same play session */
+const SESSION_GAP = 3 * 3600;
 const day = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 const isDay = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+const sessionDay = (ts: number) => new Date(ts * 1000).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: TIMEZONE });
+const clock = (ts: number) => new Date(ts * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIMEZONE });
 
 type Params = Record<string, string | string[] | undefined>;
 
@@ -60,6 +64,15 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
   const gf = matches.reduce((s, m) => s + m.goals_for, 0);
   const ga = matches.reduce((s, m) => s + m.goals_against, 0);
 
+  // newest first, grouped into play sessions
+  const sessions: (typeof matches)[] = [];
+  for (const m of matches) {
+    const last = sessions[sessions.length - 1];
+    if (last && Number(last[last.length - 1].ts) - Number(m.ts) < SESSION_GAP) last.push(m);
+    else sessions.push([m]);
+  }
+  const record = (ms: typeof matches) => ["W", "D", "L"].map((r) => ms.filter((m) => m.result === r).length).join("-");
+
   const state = { season: season ? season.name : "all", type: kind as string, result, from, to, q: one("q").trim() };
   const defaultSeason = current?.name ?? "all";
   const href = (change: Partial<typeof state>) => {
@@ -76,131 +89,148 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
     to && { label: `To ${short(to)}`, clear: href({ to: "" }) },
     state.q && { label: `“${state.q}”`, clear: href({ q: "" }) },
   ].filter(Boolean) as { label: string; clear: string }[];
-  const dotColor: Record<string, string> = { W: "var(--accent)", D: "var(--muted)", L: "#c4485a" };
+  const dotColor: Record<string, string> = { W: "var(--win)", D: "var(--muted)", L: "var(--loss-mark)" };
 
   return (
-    <main className="wrap">
-      <div className="stack" style={{ gap: 8 }}>
-        <span className="eyebrow">Seasons</span>
-        <h1 className="display">{season ? season.name : "Every game"}</h1>
-        <span className="text-2">
-          {season
-            ? `${day(season.start)} – ${day(season.end)}${season.playoffsStart ? ` · Season Playoffs from ${when(Date.parse(season.playoffsStart) / 1000)}` : ""}`
-            : "All saved games. EA only keeps the latest 10, so this site is the full record."}
-        </span>
-      </div>
-
-      <div className="stack" style={{ gap: 16 }}>
-        <nav className="season-tabs" aria-label="Season">
-          {[...seasons].reverse().map((x) => (
-            <a key={x.name} href={href({ season: x.name })} aria-current={season?.name === x.name ? "page" : undefined}>{x.name}</a>
-          ))}
-          <a href={href({ season: "all" })} aria-current={!season ? "page" : undefined}>All seasons</a>
-        </nav>
-
-        <div className="card filter-bar">
-          <div className="filter-group" role="group" aria-label="Match type">
-            <span className="filter-label">Type</span>
-            <a className="pill" href={href({ type: "" })} aria-current={!kind}>All <span className="count">{byType.length}</span></a>
-            {KINDS.map((k) => {
-              const n = byType.filter((m) => kindOf(m) === k.value).length;
-              return (
-                <a key={k.value} className={`pill${n ? "" : " is-empty"}`} href={href({ type: k.value })} aria-current={kind === k.value}>
-                  {k.label} <span className="count">{n}</span>
-                </a>
-              );
-            })}
-          </div>
-          <div className="filter-group" role="group" aria-label="Result">
-            <span className="filter-label">Result</span>
-            <a className="pill" href={href({ result: "" })} aria-current={!result}>All <span className="count">{byResult.length}</span></a>
-            {RESULTS.map((r) => {
-              const n = byResult.filter((m) => m.result === r.value).length;
-              return (
-                <a key={r.value} className={`pill${n ? "" : " is-empty"}`} href={href({ result: r.value })} aria-current={result === r.value}>
-                  <span className="dot" style={{ background: dotColor[r.value] }} />
-                  {r.label} <span className="count">{n}</span>
-                </a>
-              );
-            })}
-          </div>
-          <form method="get" action="/seasons" className="filter-search">
-            {state.season !== defaultSeason ? <input type="hidden" name="season" value={state.season} /> : null}
-            {kind ? <input type="hidden" name="type" value={kind} /> : null}
-            {result ? <input type="hidden" name="result" value={result} /> : null}
-            <label className="field" style={{ flex: "1 1 220px" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ color: "var(--muted)" }}>
-                <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-              </svg>
-              <input type="text" name="q" defaultValue={state.q} placeholder="Search opponent" aria-label="Opponent" style={{ flex: 1 }} />
-            </label>
-            <label className="field date" aria-label="From">
-              <span>From</span>
-              <input type="date" name="from" defaultValue={from} />
-            </label>
-            <label className="field date" aria-label="To">
-              <span>To</span>
-              <input type="date" name="to" defaultValue={to} />
-            </label>
-            <button type="submit">Search</button>
-          </form>
-          {active.length ? (
-            <div className="active-filters">
-              {active.map((a) => (
-                <a key={a.label} className="chip-x" href={a.clear} aria-label={`Remove ${a.label}`}>{a.label} <b>✕</b></a>
-              ))}
-              <a href={href({ type: "", result: "", from: "", to: "", q: "" })} className="text-2" style={{ fontSize: 13 }}>Clear all</a>
+    <main className="bands">
+      <section className="band band-club board-head">
+        <div className="wrap" style={{ gap: 0 }}>
+          <h1 className="display">{season ? season.name : "Every game"}</h1>
+          <p className="text-2" style={{ margin: "14px 0 0", fontSize: 17 }}>
+            {season
+              ? `${day(season.start)} – ${day(season.end)}${season.playoffsStart ? ` · Season Playoffs from ${when(Date.parse(season.playoffsStart) / 1000)}` : ""}`
+              : "All saved games. EA only keeps the latest 10, so this site is the full record."}
+          </p>
+          <nav className="season-tabs" aria-label="Season" style={{ marginTop: 28 }}>
+            {[...seasons].reverse().map((x) => (
+              <a key={x.name} href={href({ season: x.name })} aria-current={season?.name === x.name ? "page" : undefined}>{x.name}</a>
+            ))}
+            <a href={href({ season: "all" })} aria-current={!season ? "page" : undefined}>All seasons</a>
+          </nav>
+          <div className="selection-stats">
+            <div>
+              <div className="kpi-label">Games</div>
+              <div className="kpi-value">{matches.length}</div>
+              <div className="kpi-sub">{matches.length ? `${Math.round((w / matches.length) * 100)}% won` : "none match"}</div>
             </div>
-          ) : null}
-        </div>
-      </div>
-
-      <section className="grid grid-170">
-        <div className="card">
-          <div className="kpi-label">Games</div>
-          <div className="display kpi-value num">{matches.length}</div>
-          <div className="kpi-sub">{matches.length ? `${Math.round((w / matches.length) * 100)}% won` : "none match"}</div>
-        </div>
-        <div className="card">
-          <div className="kpi-label">W-D-L</div>
-          <div className="display kpi-value num">{w}-{d}-{l}</div>
-          <div className="kpi-sub">{w * 3 + d} points (win 3, draw 1)</div>
-        </div>
-        <div className="card">
-          <div className="kpi-label">Goals</div>
-          <div className="display kpi-value num">{gf}–{ga}</div>
-          <div className="kpi-sub">{matches.length ? `${(gf / matches.length).toFixed(1)} for, ${(ga / matches.length).toFixed(1)} against per game` : "for–against"}</div>
+            <div>
+              <div className="kpi-label">W-D-L</div>
+              <div className="kpi-value">{w}-{d}-{l}</div>
+              <div className="kpi-sub">{w * 3 + d} points (win 3, draw 1)</div>
+            </div>
+            <div>
+              <div className="kpi-label">Goals</div>
+              <div className="kpi-value">{gf}–{ga}</div>
+              <div className="kpi-sub">{matches.length ? `${(gf / matches.length).toFixed(1)} for, ${(ga / matches.length).toFixed(1)} against per game` : "for–against"}</div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="stack" style={{ gap: 8 }}>
-        {matches.map((m) => (
-          <a key={m.id} className="match-row" href={`/matches/${m.id}`}>
-            <ResultBadge r={m.result} />
-            <span className="muted" style={{ fontSize: 13, width: 140 }}>{when(m.ts)}</span>
-            <div className="row" style={{ gap: 12, flex: "1 1 320px", flexWrap: "nowrap" }}>
-              <Crest id={club.crestAssetId} size={30} />
-              <span className="score num">{m.goals_for}–{m.goals_against}</span>
-              <Crest id={m.opp_crest} size={30} />
-              <span style={{ fontWeight: 700 }}>{m.opp_name}</span>
+      <section className="band section-light">
+        <div className="wrap" style={{ gap: 40 }}>
+          <div className="card filter-bar">
+            <div className="filter-group" role="group" aria-label="Match type">
+              <span className="filter-label">Type</span>
+              <a className="pill" href={href({ type: "" })} aria-current={!kind}>All <span className="count">{byType.length}</span></a>
+              {KINDS.map((k) => {
+                const n = byType.filter((m) => kindOf(m) === k.value).length;
+                return (
+                  <a key={k.value} className={`pill${n ? "" : " is-empty"}`} href={href({ type: k.value })} aria-current={kind === k.value}>
+                    {k.label} <span className="count">{n}</span>
+                  </a>
+                );
+              })}
             </div>
-            <span className="row" style={{ gap: 8 }}>
-              <span className="chip chip-ghost">
-                {KINDS.find((k) => k.value === kindOf(m))?.label}
-                {promo[m.id] ? ` · Game ${promo[m.id].game}/${promo[m.id].of}` : ""}
-              </span>
-              {m.dnf ? <span className="chip chip-ghost">They quit · {m.minutes} min</span> : null}
-              {m.captain ? <span className="chip chip-ghost">C · {m.captain}</span> : null}
-            </span>
-          </a>
-        ))}
-        {!matches.length ? <p className="muted">{all.length ? "No games match these filters." : "No matches saved yet."}</p> : null}
-      </div>
-      <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-        Promotion = games in a promotion match series (EA sends them as league games; the site spots them from the points
-        target). Playoffs = EA&apos;s playoff games plus every game during a season&apos;s end-of-season Playoffs. Season dates come from
-        config/settings.json.
-      </p>
+            <div className="filter-group" role="group" aria-label="Result">
+              <span className="filter-label">Result</span>
+              <a className="pill" href={href({ result: "" })} aria-current={!result}>All <span className="count">{byResult.length}</span></a>
+              {RESULTS.map((r) => {
+                const n = byResult.filter((m) => m.result === r.value).length;
+                return (
+                  <a key={r.value} className={`pill${n ? "" : " is-empty"}`} href={href({ result: r.value })} aria-current={result === r.value}>
+                    <span className="dot" style={{ background: dotColor[r.value] }} />
+                    {r.label} <span className="count">{n}</span>
+                  </a>
+                );
+              })}
+            </div>
+            <form method="get" action="/seasons" className="filter-search">
+              {state.season !== defaultSeason ? <input type="hidden" name="season" value={state.season} /> : null}
+              {kind ? <input type="hidden" name="type" value={kind} /> : null}
+              {result ? <input type="hidden" name="result" value={result} /> : null}
+              <label className="field" style={{ flex: "1 1 220px" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ color: "var(--muted)" }}>
+                  <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+                </svg>
+                <input type="text" name="q" defaultValue={state.q} placeholder="Search opponent" aria-label="Opponent" style={{ flex: 1 }} />
+              </label>
+              <label className="field date" aria-label="From">
+                <span>From</span>
+                <input type="date" name="from" defaultValue={from} />
+              </label>
+              <label className="field date" aria-label="To">
+                <span>To</span>
+                <input type="date" name="to" defaultValue={to} />
+              </label>
+              <button type="submit">Search</button>
+            </form>
+            {active.length ? (
+              <div className="active-filters">
+                {active.map((a) => (
+                  <a key={a.label} className="chip-x" href={a.clear} aria-label={`Remove ${a.label}`}>
+                    {a.label}
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                      <path d="M3 3l6 6M9 3l-6 6" />
+                    </svg>
+                  </a>
+                ))}
+                <a href={href({ type: "", result: "", from: "", to: "", q: "" })} className="text-2" style={{ fontSize: 14 }}>Clear all</a>
+              </div>
+            ) : null}
+          </div>
+
+          {sessions.map((ms) => {
+            const started = Number(ms[ms.length - 1].ts);
+            return (
+              <section key={ms[0].id} className="session" aria-label={`Session on ${sessionDay(started)}`}>
+                <header className="session-head">
+                  <h2>{sessionDay(started)}</h2>
+                  <span>{ms.length} game{ms.length === 1 ? "" : "s"} · {record(ms)}</span>
+                </header>
+                <div className="stack" style={{ gap: 8 }}>
+                  {ms.map((m) => (
+                    <a key={m.id} className="match-row" href={`/matches/${m.id}`}>
+                      <ResultBadge r={m.result} />
+                      <span className="muted num" style={{ fontSize: 14, width: 48 }}>{clock(Number(m.ts))}</span>
+                      <div className="row" style={{ gap: 12, flex: "1 1 320px", flexWrap: "nowrap" }}>
+                        <Crest id={club.crestAssetId} size={30} />
+                        <span className="score num">{m.goals_for}–{m.goals_against}</span>
+                        <Crest id={m.opp_crest} size={30} />
+                        <span style={{ fontWeight: 700 }}>{m.opp_name}</span>
+                      </div>
+                      <span className="row" style={{ gap: 8 }}>
+                        <span className="chip chip-ghost">
+                          {KINDS.find((k) => k.value === kindOf(m))?.label}
+                          {promo[m.id] ? ` · Game ${promo[m.id].game}/${promo[m.id].of}` : ""}
+                        </span>
+                        {m.dnf ? <span className="chip chip-ghost">They quit · {m.minutes} min</span> : null}
+                        {m.captain ? <span className="chip chip-ghost">C · {m.captain}</span> : null}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+          {!matches.length ? <p className="muted">{all.length ? "No games match these filters." : "No matches saved yet."}</p> : null}
+          <p className="muted" style={{ fontSize: 14, margin: 0, maxWidth: "75ch" }}>
+            Promotion = games in a promotion match series (EA sends them as league games; the site spots them from the points
+            target). Playoffs = EA&apos;s playoff games plus every game during a season&apos;s end-of-season Playoffs. Season dates come from
+            config/settings.json.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

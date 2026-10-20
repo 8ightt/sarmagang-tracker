@@ -24,6 +24,8 @@
   --shame-line: #3d2428;
   --loss: #5c1a22;
   --loss-text: #f7dde0;
+  /* a loss as a mark (dots, series slots); reads on both the dark ground and the light bands */
+  --loss-mark: #c4485a;
   /* light sections */
   --paper: #f4f4f1;
   --ink: #121313;
@@ -84,7 +86,8 @@ main.wrap { padding-top: 48px; padding-bottom: 72px; display: flex; flex-directi
 .grid-270 { grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); }
 
 /* a light band, for pages that alternate sections; the accent darkens to stay readable on it */
-.section-light { background: var(--paper); color: var(--ink); --text: var(--ink); --text-2: var(--ink-2); --muted: var(--ink-2); --line: #dcddd9; --line-2: #c9cbc6; --surface: #ffffff; --surface-2: #ebece8; --accent: var(--accent-light, #2a2c2c); color-scheme: light; }
+.section-light { background: var(--paper); color: var(--ink); --text: var(--ink); --text-2: var(--ink-2); --muted: var(--ink-2); --line: #dcddd9; --line-2: #c9cbc6; --surface: #ffffff; --surface-2: #ebece8; --accent: var(--accent-light, #2a2c2c); --bg: #ffffff; color-scheme: light; }
+.section-light .filter-search .field input { color-scheme: light; }
 
 /* full-width page bands, as on EA's Clubs pages: each band holds its own .wrap */
 main.bands { display: flex; flex-direction: column; }
@@ -132,6 +135,16 @@ a.card.player-card { display: flex; flex-direction: column; gap: 18px; padding: 
 .player-card-stats dt { font-size: 12px; font-weight: 600; color: var(--muted); }
 .player-card-stats dd { margin: 2px 0 0; font-size: 22px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .player-card-bio { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-2); }
+/* seasons: the selection's totals in the header band, matches grouped by play session */
+.selection-stats { display: flex; gap: 72px; margin-top: 32px; }
+.band-club .season-tabs { border-bottom-color: var(--line); }
+.band-club .season-tabs a[aria-current="page"] { border-bottom-color: var(--on-club); }
+.session { display: flex; flex-direction: column; gap: 12px; }
+.session-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+.session-head h2 { margin: 0; font-size: 20px; font-weight: 800; }
+.session-head span { font-size: 15px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.active-filters a.chip-x svg { color: var(--muted); }
+
 /* players leaderboard: one row per player on the light band; the leader in the club's colour */
 .board-head { padding: 56px 0 40px; }
 /* on the club colour the accent can be too close to the ground: a selected toggle goes white instead */
@@ -356,7 +369,7 @@ details > summary:hover { color: var(--text); }
   text-decoration: none; color: var(--text); text-align: center; min-width: 0;
 }
 .series-slot.is-W { border-color: var(--win); }
-.series-slot.is-L { border-color: #c4485a; }
+.series-slot.is-L { border-color: var(--loss-mark); }
 .series-slot.is-next { border-style: dashed; border-color: var(--accent); }
 .series-n { font-size: 13px; color: var(--muted); }
 .series-opp { font-size: 13px; color: var(--text-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
