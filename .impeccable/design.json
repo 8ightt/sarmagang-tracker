@@ -1,0 +1,600 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T21:03:49.441Z",
+  "title": "Design System: FC Clubs Tracker",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Club Accent",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#189745",
+        "tonalRamp": [
+          "#0a421e",
+          "#127234",
+          "#1aa34a",
+          "#22d361",
+          "#4be280",
+          "#7beaa2",
+          "#b0f2c7",
+          "#e9fcf0"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On Accent",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#0b0c0c"
+      },
+      "accent-light": {
+        "role": "primary",
+        "displayName": "Accent Light",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#147d39",
+        "tonalRamp": [
+          "#0b421e",
+          "#127234",
+          "#1aa34a",
+          "#22d360",
+          "#4be280",
+          "#7beaa2",
+          "#b0f2c7",
+          "#e9fbf0"
+        ]
+      },
+      "club": {
+        "role": "secondary",
+        "displayName": "Club Shirt",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#002e0a",
+        "tonalRamp": [
+          "#004d11",
+          "#00851d",
+          "#00bd29",
+          "#00f535",
+          "#2eff5b",
+          "#66ff87",
+          "#a3ffb7",
+          "#e5ffeb"
+        ]
+      },
+      "on-club": {
+        "role": "secondary",
+        "displayName": "On Club",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#ffffff"
+      },
+      "win": {
+        "role": "tertiary",
+        "displayName": "Win Fill",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#189745",
+        "tonalRamp": [
+          "#0a421e",
+          "#127234",
+          "#1aa34a",
+          "#22d361",
+          "#4be280",
+          "#7beaa2",
+          "#b0f2c7",
+          "#e9fcf0"
+        ]
+      },
+      "on-win": {
+        "role": "tertiary",
+        "displayName": "On Win",
+        "runtime": true,
+        "source": "lib/club-theme.ts, set on <html> in app/layout.tsx",
+        "fallback": "app/globals.css :root",
+        "exampleSarmaGang": "#0b0c0c"
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Pitch Night",
+        "tonalRamp": [
+          "#252727",
+          "#414444",
+          "#5c6161",
+          "#777e7e",
+          "#949999",
+          "#b0b5b5",
+          "#d0d2d2",
+          "#f2f3f3"
+        ]
+      },
+      "bar": {
+        "role": "neutral",
+        "displayName": "Tunnel Black",
+        "tonalRamp": [
+          "#252828",
+          "#3f4545",
+          "#5a6262",
+          "#758080",
+          "#929b9b",
+          "#afb6b6",
+          "#cfd3d3",
+          "#f2f3f3"
+        ]
+      },
+      "stripe": {
+        "role": "neutral",
+        "displayName": "Stripe",
+        "tonalRamp": [
+          "#252828",
+          "#404545",
+          "#5a6262",
+          "#757f7f",
+          "#929b9b",
+          "#afb6b6",
+          "#cfd3d3",
+          "#f2f3f3"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Raised Slate",
+        "tonalRamp": [
+          "#252828",
+          "#404545",
+          "#5b6262",
+          "#767f7f",
+          "#939a9a",
+          "#b0b5b5",
+          "#cfd3d3",
+          "#f2f3f3"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Raised Slate Strong",
+        "tonalRamp": [
+          "#252828",
+          "#404545",
+          "#5b6262",
+          "#767f7f",
+          "#929b9b",
+          "#b0b5b5",
+          "#cfd3d3",
+          "#f2f3f3"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Touchline",
+        "tonalRamp": [
+          "#252828",
+          "#404545",
+          "#5b6262",
+          "#767f7f",
+          "#939a9a",
+          "#b0b5b5",
+          "#d0d3d3",
+          "#f2f3f3"
+        ]
+      },
+      "line-2": {
+        "role": "neutral",
+        "displayName": "Touchline Strong",
+        "tonalRamp": [
+          "#252828",
+          "#404444",
+          "#5b6161",
+          "#767e7e",
+          "#939a9a",
+          "#b0b5b5",
+          "#d0d3d3",
+          "#f2f3f3"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "tonalRamp": [
+          "#2b2b22",
+          "#4a4a3a",
+          "#6a6a53",
+          "#89896c",
+          "#a3a38a",
+          "#bcbca9",
+          "#d7d7cc",
+          "#f4f4f1"
+        ]
+      },
+      "text-2": {
+        "role": "neutral",
+        "displayName": "Chalk Secondary",
+        "tonalRamp": [
+          "#252826",
+          "#404542",
+          "#5b625e",
+          "#767f7a",
+          "#929b96",
+          "#afb6b3",
+          "#cfd3d1",
+          "#f2f3f2"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Chalk Muted",
+        "tonalRamp": [
+          "#252726",
+          "#414443",
+          "#5c615f",
+          "#777e7b",
+          "#949997",
+          "#b0b5b3",
+          "#d0d2d1",
+          "#f2f3f2"
+        ]
+      },
+      "shame": {
+        "role": "tertiary",
+        "displayName": "Shame Rose",
+        "tonalRamp": [
+          "#3f0e13",
+          "#6d1821",
+          "#9b2230",
+          "#c92c3e",
+          "#d95463",
+          "#e3828d",
+          "#eeb4ba",
+          "#faeaec"
+        ]
+      },
+      "shame-line": {
+        "role": "tertiary",
+        "displayName": "Shame Line",
+        "tonalRamp": [
+          "#301c20",
+          "#533137",
+          "#77464e",
+          "#9a5b65",
+          "#b17c84",
+          "#c69fa5",
+          "#ddc5c9",
+          "#f6eff0"
+        ]
+      },
+      "loss": {
+        "role": "tertiary",
+        "displayName": "Loss Maroon",
+        "tonalRamp": [
+          "#3c1116",
+          "#671d26",
+          "#932a36",
+          "#bf3647",
+          "#d15c6a",
+          "#dd8892",
+          "#ebb7be",
+          "#f9ebed"
+        ]
+      },
+      "loss-text": {
+        "role": "tertiary",
+        "displayName": "Loss Text",
+        "tonalRamp": [
+          "#3e0f14",
+          "#6b1923",
+          "#992431",
+          "#c62f40",
+          "#d75665",
+          "#e2838e",
+          "#eeb5bb",
+          "#faeaec"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Programme Paper",
+        "tonalRamp": [
+          "#2b2b22",
+          "#4a4a3a",
+          "#6a6a53",
+          "#89896c",
+          "#a3a38a",
+          "#bcbca9",
+          "#d7d7cc",
+          "#f4f4f1"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Programme Ink",
+        "tonalRamp": [
+          "#252727",
+          "#414444",
+          "#5c6161",
+          "#777e7e",
+          "#949999",
+          "#b0b5b5",
+          "#d0d2d2",
+          "#f2f3f3"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Programme Ink Secondary",
+        "tonalRamp": [
+          "#252727",
+          "#414444",
+          "#5c6161",
+          "#787d7d",
+          "#949999",
+          "#b1b4b4",
+          "#d0d2d2",
+          "#f2f3f3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-hero": {
+        "displayName": "Display hero",
+        "purpose": "The club name in the club-colour hero band."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page h1 headings. Uppercase, width 125."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section h2 headings."
+      },
+      "number-display": {
+        "displayName": "Number display",
+        "purpose": "Big headline numbers, about 32px and up; shrinks to its card via --chars."
+      },
+      "nickname": {
+        "displayName": "Nickname",
+        "purpose": "Player nicknames on player cards, in the accent. The one display use below 32px."
+      },
+      "number": {
+        "displayName": "Number",
+        "purpose": "Numbers under about 32px: card stats, scores, record values."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Gamertags and award holders."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "KPI, filter and table header labels."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Meta lines, dates, ladder names."
+      },
+      "accent-word": {
+        "displayName": "Accent word",
+        "purpose": "One emphasised word at a time, never a heading or paragraph. Not yet used on any surface."
+      }
+    },
+    "runtimeTokens": {
+      "note": "accent, on-accent, accent-light, club, on-club, win and on-win are computed per club by lib/club-theme.ts from EA's crestColor and Home kit colours, and set as inline CSS vars on <html> in app/layout.tsx. Frontmatter values are the app/globals.css :root fallbacks for a club without kit colours.",
+      "exampleSarmaGang": {
+        "accent": "#189745",
+        "club": "#002e0a",
+        "accent-light": "#147d39",
+        "ground": "#121313"
+      },
+      "minContrast": 4.5,
+      "grounds": {
+        "dark": "#121313 (GROUND, keep in step with --bg)",
+        "light": "#f4f4f1 (PAPER, keep in step with --paper)"
+      }
+    },
+    "shadows": [
+      {
+        "name": "crest-lift",
+        "value": "drop-shadow(0 12px 24px rgb(0 0 0 / .35))",
+        "purpose": "Hero crest only (CSS filter)."
+      },
+      {
+        "name": "live-pulse",
+        "value": "0 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent), fading over 2s, infinite",
+        "purpose": "Live dot; off under prefers-reduced-motion."
+      },
+      {
+        "name": "tab-underline",
+        "value": "inset 0 -3px 0 var(--accent)",
+        "purpose": "Current nav tab; a line, not elevation."
+      },
+      {
+        "name": "draw-ring",
+        "value": "inset 0 0 0 2px var(--line-2)",
+        "purpose": "Draw result badge outline."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": ".15s",
+        "purpose": "Colour, border and row background changes on hover."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": ".2s cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Tab underline and disclosure chevron rotation."
+      },
+      {
+        "name": "live-flash",
+        "value": ".3s",
+        "purpose": "Live badge flashing to the accent when a new match lands."
+      },
+      {
+        "name": "live-pulse",
+        "value": "2s infinite",
+        "purpose": "Live dot pulse; off for reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "nav-scroll",
+        "value": "760px",
+        "purpose": "Nav drops to its own scrolling row. Stopgap; the phone layout is a later pass."
+      },
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "16px gutters, smaller KPI values, stacked filters. Stopgap."
+      },
+      {
+        "name": "series",
+        "value": "560px",
+        "purpose": "Promotion series grid drops to two columns."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid accent pill for actions only.",
+      "html": "<button class=\"ds-btn\">Save</button>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-btn{font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;min-height:46px;padding:8px 22px;border-radius:999px;border:1.5px solid var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700;font-size:16px;cursor:pointer;transition:filter .15s}.ds-btn:hover{filter:brightness(1.08)}.ds-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action, outlined in text-2.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-btn-ghost{font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;min-height:46px;padding:8px 22px;border-radius:999px;border:1.5px solid var(--text-2);background:transparent;color:var(--text);font-weight:700;font-size:16px;cursor:pointer;transition:border-color .15s}.ds-btn-ghost:hover{border-color:var(--text)}.ds-btn-ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    },
+    {
+      "name": "Filter Pills",
+      "kind": "chip",
+      "refersTo": "toggle-pill",
+      "description": "Toggles: selected is an accent outline, never a fill.",
+      "html": "<div class=\"ds-pills\"><a class=\"ds-pill\" aria-current=\"true\" href=\"#\">League <span class=\"ds-count\">24</span></a><a class=\"ds-pill\" href=\"#\">Playoffs <span class=\"ds-count\">6</span></a><a class=\"ds-pill\" href=\"#\">Friendly <span class=\"ds-count\">3</span></a></div>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-pills{display:flex;gap:8px;font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;}.ds-pill{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:6px 16px;border-radius:999px;border:1.5px solid var(--line-2);color:var(--text-2);text-decoration:none;font-weight:700;font-size:14px;transition:border-color .15s,color .15s}.ds-pill:hover{color:var(--text);border-color:var(--text-2)}.ds-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-pill[aria-current=true]{border-color:var(--accent);color:var(--accent)}.ds-count{font-size:12px;font-weight:800;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}.ds-pill[aria-current=true] .ds-count{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Pill field; the stroke turns to the accent on focus.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Opponent\">",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-input{font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;font-size:16px;min-height:46px;padding:8px 18px;border-radius:999px;border:1.5px solid var(--line-2);background:var(--bg);color:var(--text)}.ds-input::placeholder{color:var(--muted)}.ds-input:focus-visible{outline:none;border-color:var(--accent)}"
+    },
+    {
+      "name": "Header Nav",
+      "kind": "nav",
+      "refersTo": "nav-tab",
+      "description": "Full-height tabs in the bar; a 3px accent underline marks the current page.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Club</a><a href=\"#\">Players</a><a href=\"#\">Seasons</a><a href=\"#\">Records</a><a href=\"#\">Analysis</a></nav>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-nav{display:flex;gap:4px;height:68px;background:var(--bar);padding:0 12px;font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;}.ds-nav a{display:flex;align-items:center;padding:0 14px;color:var(--text-2);text-decoration:none;font-weight:600;box-shadow:inset 0 -3px 0 transparent;transition:color .15s,box-shadow .2s cubic-bezier(.16,1,.3,1)}.ds-nav a:hover{color:var(--text);box-shadow:inset 0 -3px 0 var(--line-2)}.ds-nav a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}.ds-nav a[aria-current=page]{color:var(--text);box-shadow:inset 0 -3px 0 var(--accent)}"
+    },
+    {
+      "name": "Result Badges",
+      "kind": "custom",
+      "refersTo": "badge-win",
+      "description": "The letter carries the result; the fill only repeats it.",
+      "html": "<div class=\"ds-form\"><span class=\"ds-badge ds-W\" aria-label=\"Win\">W</span><span class=\"ds-badge ds-D\" aria-label=\"Draw\">D</span><span class=\"ds-badge ds-L\" aria-label=\"Loss\">L</span></div>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-form{display:flex;gap:8px;font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;}.ds-badge{width:36px;height:36px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}.ds-W{background:var(--win);color:var(--on-win)}.ds-D{color:var(--text);box-shadow:inset 0 0 0 2px var(--line-2)}.ds-L{background:var(--loss);color:var(--loss-text)}"
+    },
+    {
+      "name": "Stat Table",
+      "kind": "custom",
+      "refersTo": "table-header",
+      "description": "Separate rounded rows under a header band in the club shirt colour.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Player</th><th>GP</th><th>G</th><th>A</th></tr></thead><tbody><tr><td>Gamertag</td><td>42</td><td>18</td><td>9</td></tr><tr><td>Another</td><td>39</td><td>7</td><td>14</td></tr></tbody></table>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-table{font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;width:100%;border-collapse:separate;border-spacing:0 6px;color:var(--text)}.ds-table th,.ds-table td{padding:12px;text-align:right}.ds-table th{background:var(--club);color:var(--on-club);font-weight:700;font-size:14px}.ds-table td{background:var(--surface);font-variant-numeric:tabular-nums;transition:background .15s}.ds-table th:first-child,.ds-table td:first-child{text-align:left;padding-left:18px;border-radius:10px 0 0 10px}.ds-table th:last-child,.ds-table td:last-child{padding-right:18px;border-radius:0 10px 10px 0}.ds-table tbody tr:hover td{background:var(--surface-2)}"
+    },
+    {
+      "name": "Player Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Who they are, the accent nickname, four numbers, then the bio.",
+      "html": "<a class=\"ds-pc\" href=\"#\"><div class=\"ds-pc-head\"><div class=\"ds-av\">GT</div><div class=\"ds-who\"><strong>Gamertag</strong><span>Pro Name · ST</span></div><div class=\"ds-ovr\"><span>84</span><small>OVR</small></div></div><div class=\"ds-nick\">“The Wall”</div><dl class=\"ds-stats\"><div><dt>Games</dt><dd>42</dd></div><div><dt>Goals</dt><dd>18</dd></div><div><dt>Assists</dt><dd>9</dd></div><div><dt>MOTM</dt><dd>6</dd></div></dl><p class=\"ds-bio\">Scored in five straight league games.</p></a>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-pc{font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;display:flex;flex-direction:column;gap:18px;padding:22px;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);color:var(--text);text-decoration:none;transition:border-color .15s}.ds-pc:hover{border-color:var(--line-2)}.ds-pc:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-pc-head{display:flex;gap:14px;align-items:center}.ds-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--club);color:var(--on-club);font-weight:800;font-size:19px}.ds-who{flex:1;display:flex;flex-direction:column;gap:3px}.ds-who strong{font-size:19px;font-weight:700;line-height:1.2}.ds-who span{font-size:13px;color:var(--muted)}.ds-ovr{display:flex;flex-direction:column;align-items:center;line-height:1}.ds-ovr span{font-family:var(--font-display),Anybody,system-ui,sans-serif;font-stretch:125%;font-weight:900;text-transform:uppercase;line-height:.95;font-size:34px;font-variant-numeric:tabular-nums}.ds-ovr small{font-size:11px;font-weight:700;color:var(--muted);margin-top:4px}.ds-nick{font-family:var(--font-display),Anybody,system-ui,sans-serif;font-stretch:125%;font-weight:900;text-transform:uppercase;line-height:.95;font-size:22px;color:var(--accent);margin:-4px 0 -6px}.ds-stats{display:grid;grid-template-columns:repeat(4,1fr);margin:0;padding:14px 0 0;border-top:1px solid var(--line)}.ds-stats dt{font-size:12px;font-weight:600;color:var(--muted)}.ds-stats dd{margin:2px 0 0;font-size:22px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}.ds-bio{margin:0;font-size:14px;line-height:1.55;color:var(--text-2)}"
+    },
+    {
+      "name": "Club Hero Band",
+      "kind": "custom",
+      "refersTo": "display-hero",
+      "description": "Full-width band in the club shirt colour: the name in display hero, the totals along a ruled bottom line.",
+      "html": "<section class=\"ds-hero\"><h1>Club name</h1><p>Home ground: Stadium · Updated 2 minutes ago</p><div class=\"ds-kpis\"><div><span>Played</span><b>82</b><small>League matches</small></div><div><span>Record</span><b>32–11–39</b><small>W–D–L</small></div><div><span>Goals for</span><b>164</b><small>2.0 per game</small></div></div></section>",
+      "css": ":host{--bg:#121313;--bar:#0b0c0c;--surface:#1b1d1d;--surface-2:#252828;--line:#2a2d2d;--line-2:#3b3f3f;--text:#f4f4f1;--text-2:#cbcfcd;--muted:#9ea3a1;--accent:#189745;--on-accent:#0b0c0c;--club:#002e0a;--on-club:#ffffff;--win:#189745;--on-win:#0b0c0c;--loss:#5c1a22;--loss-text:#f7dde0;--radius:14px;}.ds-hero{font-family:var(--font-body),'Hanken Grotesk',system-ui,sans-serif;background:var(--club);color:var(--on-club);padding:56px 32px 40px}.ds-hero h1{font-family:var(--font-display),Anybody,system-ui,sans-serif;font-stretch:125%;font-weight:900;text-transform:uppercase;line-height:.95;font-size:clamp(56px,6.6vw,96px);margin:0}.ds-hero p{margin:6px 0 0;color:color-mix(in srgb,var(--on-club) 80%,var(--club))}.ds-kpis{display:flex;justify-content:space-between;gap:24px;margin-top:40px;padding-top:24px;border-top:1px solid color-mix(in srgb,var(--on-club) 16%,var(--club))}.ds-kpis span{display:block;font-size:14px;font-weight:500;color:color-mix(in srgb,var(--on-club) 80%,var(--club))}.ds-kpis b{display:block;font-family:var(--font-display),Anybody,system-ui,sans-serif;font-stretch:125%;font-weight:900;font-size:clamp(30px,3vw,44px);line-height:1;margin:8px 0 6px;font-variant-numeric:tabular-nums}.ds-kpis small{font-size:14px;color:color-mix(in srgb,var(--on-club) 68%,var(--club))}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Club Wears the Site",
+    "overview": "The site borrows the matchday language of EA's Clubs pages (heavy, wide uppercase headings, a clean grotesk, pill controls, full-width dark and light bands) and dresses it in the club's own kit. Two clubs running the same code should look like two different clubs, not two skins of one product. The colour tokens that carry identity are computed at runtime from what EA sends for that club, so the stylesheet holds only neutral fallbacks.\n\nIt is dense where the data is dense (tables, ladders, rows of numbers) and loud only where it counts: the club's name, the big season totals and the section headings. Everything else is plain, factual and set in the body face. The world rejects two things: the generic dark stats-app card grid, and an EA look-alike. The club's colour replaces EA's green everywhere, and the site never wears EA's own patterns or marks.\n\nThe world is built desktop first. The club page is the first surface in it. A phone layout pass comes later, and the existing small-screen rules are stopgaps, not decisions.",
+    "keyCharacteristics": [
+      "Club colours applied at runtime: one computed accent and one shirt colour repaint the whole site.",
+      "Near-black ground, a darker sticky bar, raised surfaces one step lighter, and off-white light bands.",
+      "Wide 900-weight uppercase display face for headings and big numbers only. Everything else is Hanken Grotesk.",
+      "Pills for everything you can press or pick. Solid fill means action; an accent outline means selected.",
+      "Tables as separate rounded rows under a header band in the club's shirt colour, with tabular numbers throughout.",
+      "Full-width bands, each holding its own 1240px column."
+    ],
+    "rules": [
+      {
+        "name": "The Club Colour Rule",
+        "body": "The accent is always the club's own colour, computed by `lib/club-theme.ts`. Never use EA's green (#07F468) or any other fixed brand colour in its place. Never hardcode one club's colours. Sarma gang's green is an example output, not a token.",
+        "section": "colors"
+      },
+      {
+        "name": "The Legible Accent Rule",
+        "body": "The accent always reaches 4.5:1 on the surface it sits on: on the ground through `accent`, on paper through `accent-light`. Any new surface colour needs its own version computed the same way.",
+        "section": "colors"
+      },
+      {
+        "name": "The Not Colour Alone Rule",
+        "body": "A result is never shown by colour alone. Badges carry the letter W, D or L and an aria-label. The fill only repeats the letter. Draw is an outline ring, not a third hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Wide Face Threshold Rule",
+        "body": "The display face is only for headings and big headline numbers, about 32px and up. Smaller numbers use Hanken Grotesk at 800 with tabular numerals. There are two exceptions: player nicknames (display lettering at 22px in the accent colour) and the club name in the header and the product name in the footer, which work as a wordmark (confirmed by the user, 20 Oct 2026).",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every number that sits in a column, a row or next to another number uses tabular numerals.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Step Rule",
+        "body": "To raise something, move it up one surface step. Don't add a shadow. The crest is the only drop shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** take every identity colour from the runtime tokens (`--accent`, `--on-accent`, `--accent-light`, `--club`, `--on-club`, `--win`, `--on-win`). The `:root` values are fallbacks only.",
+      "**Do** keep `GROUND` and `PAPER` in `lib/club-theme.ts` in step with `--bg` and `--paper` in `app/globals.css`.",
+      "**Do** outline a selected toggle in the accent, and keep solid accent fill for buttons and other actions.",
+      "**Do** put the result letter (W, D or L) and an aria-label on every result mark. Colour only repeats it.",
+      "**Do** use the display face only for headings and numbers of about 32px and up. Use Hanken Grotesk 800 with tabular numerals below that. Nicknames at 22px in the accent are the one exception.",
+      "**Do** map EA division badges as `divisioncrestN` for Division N−1, with `divisioncrest1` for Elite.",
+      "**Do** state \"not affiliated with EA\" on every page, in the footer.",
+      "**Do** design desktop first. Phone layouts are a later pass."
+    ],
+    "donts": [
+      "**Don't** use EA's green (#07F468), EA's logos, or EA's triangle background pattern. Future hero patterns must be the project's own.",
+      "**Don't** fill a selected filter or toggle with the accent. A fill reads as an action.",
+      "**Don't** show a win, draw or loss by colour alone, and don't give a red club a red win fill (the win token switches to paper).",
+      "**Don't** set small labels, table numbers or card stats in the display face.",
+      "**Don't** add drop shadows to cards or rows. Raise them one tonal step instead.",
+      "**Don't** hardcode one club's colours, name or crest in a component."
+    ]
+  }
+}
