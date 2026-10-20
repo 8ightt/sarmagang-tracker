@@ -210,7 +210,7 @@ The site borrows the matchday language of EA's Clubs pages (heavy, wide uppercas
 
 It is dense where the data is dense (tables, ladders, rows of numbers) and loud only where it counts: the club's name, the big season totals and the section headings. Everything else is plain, factual and set in the body face. The world rejects two things: the generic dark stats-app card grid, and an EA look-alike. The club's colour replaces EA's green everywhere, and the site never wears EA's own patterns or marks.
 
-The world is built desktop first. The club page is the first surface in it. A phone layout pass comes later, and the existing small-screen rules are stopgaps, not decisions.
+The world is built desktop first, then adapted for phones: every page fits a 390px screen without scrolling sideways.
 
 **Key Characteristics:**
 - Club colours applied at runtime: one computed accent and one shirt colour repaint the whole site.
@@ -288,7 +288,12 @@ The rhythm is 8, 12, 16 and 24px: 12px between grid items, 16px between rows and
 
 The header is a sticky 68px bar. The crest and club name sit on the left; the section tabs fill the full height of the bar on the right; the live state is a pill. Nothing decorative sits between the bar and the data.
 
-Desktop is the designed layout. The breakpoints at 760, 640 and 560px stop overflow (the nav scrolls sideways, filter fields stack, the series grid drops to two columns). The phone layout is a later pass, not part of this system yet.
+Desktop is the primary layout; 1000px and 760px are the breakpoints. Below 1000px three-up grids go two-up. Below 760px (phones):
+- bands tighten (40px vertical padding) and two- and three-up grids go to one column, except stat tiles (`grid-170`), which stay two-up;
+- totals strips become a two-column grid, and a long value (`.is-long`, such as a W-D-L record) takes the full row;
+- the section nav and the Players metric toggles become one sideways-scrolling row;
+- ranking rows put the bar under the name, the scoreboard shrinks (56px crests, 48px score, kits hidden), date fields keep their From/To labels and go full width;
+- long unbroken words in headings may break (`overflow-wrap: anywhere`).
 
 ## Elevation & Depth
 
@@ -306,7 +311,7 @@ The system is flat. Depth comes from tonal steps (bar, then ground, then surface
 
 Corners are soft and consistent: cards and match rows 14px, table row ends 10px, bars 5px, flags 2px. Everything you press, pick or read as a status is a full pill (999px): buttons, toggles, inputs, chips, ladder tags, the live badge, and the round result badges. Avatars are circles. Strokes are 1px for card borders and dividers, 1.5px for interactive outlines and series slots, and 3px for the active tab underline. A dashed accent outline marks the next game slot in a series.
 
-Hero background patterns are deferred. When they arrive they will be the project's own artwork, never EA's triangle pattern.
+Club-colour bands carry the club's own material, computed at runtime: fine vertical shirt pinstripes (1px in on-club at 5%, every 28px, fading in from the left) and the club's crest as a large greyscale watermark at 8% on the right, tilted -8° (300px on phones). Both are hidden under `prefers-contrast: more`. Never EA's triangle pattern or any EA mark.
 
 ## Components
 
@@ -381,10 +386,10 @@ In tables of other clubs (World top 100), the club's own row (`tr.is-us`) is fil
 - **Do** use the display face only for headings and numbers of about 32px and up. Use Hanken Grotesk 800 with tabular numerals below that. Nicknames at 22px in the accent are the one exception.
 - **Do** map EA division badges as `divisioncrestN` for Division N−1, with `divisioncrest1` for Elite.
 - **Do** state "not affiliated with EA" on every page, in the footer.
-- **Do** design desktop first. Phone layouts are a later pass.
+- **Do** design desktop first, then check every page at 390px: nothing may scroll sideways.
 
 ### Don't:
-- **Don't** use EA's green (#07F468), EA's logos, or EA's triangle background pattern. Future hero patterns must be the project's own.
+- **Don't** use EA's green (#07F468), EA's logos, or EA's triangle background pattern. Background patterns are the club's own (pinstripes, crest watermark).
 - **Don't** fill a selected filter or toggle with the accent. A fill reads as an action.
 - **Don't** show a win, draw or loss by colour alone, and don't give a red club a red win fill (the win token switches to paper).
 - **Don't** set small labels, table numbers or card stats in the display face.

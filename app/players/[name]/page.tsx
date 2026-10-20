@@ -121,7 +121,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
         {tiles.map((t) => (
           <div key={t.label} className="card">
             <div className="kpi-label">{t.label}</div>
-            <div className="kpi-value">{t.value}</div>
+            <div className="kpi-value" style={{ ["--chars" as string]: String(t.value).length }}>{t.value}</div>
             <div className="kpi-sub">{t.sub}</div>
             {t.warn ? <div className="kpi-sub cpu-warn">{t.warn}</div> : null}
           </div>

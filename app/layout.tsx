@@ -37,6 +37,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--on-club": theme.onClub,
     "--win": theme.win,
     "--on-win": theme.onWin,
+    // the crest, as the watermark on the club-colour bands
+    "--crest": `url("${crestUrl(club.crestAssetId)}")`,
   } as React.CSSProperties;
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${accent.variable}`} style={vars}>

@@ -101,7 +101,7 @@ export default async function Home() {
           </div>
           <div className="hero-stats">
             {kpis.map((k) => (
-              <div key={k.label}>
+              <div key={k.label} className={String(k.value).length > 6 ? "is-long" : undefined}>
                 <div className="kpi-label">{k.label}</div>
                 <div className="kpi-value">{k.value}</div>
                 <div className="kpi-sub">{k.sub}</div>
@@ -336,7 +336,7 @@ export default async function Home() {
         <div className="wrap">
           <section className="stack">
             <h2 className="display">Meet the gang</h2>
-            <div className="grid" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+            <div className="grid grid-cols-3">
               {playing.map((m) => (
                 <a key={m.gamertag} className="card player-card" href={`/players/${encodeURIComponent(m.gamertag)}`}>
                   <div className="player-card-head">
@@ -412,7 +412,7 @@ export default async function Home() {
           <section className="row" style={{ alignItems: "stretch", gap: 24 }}>
             <div className="stack" style={{ flex: "2 1 560px" }}>
               <h2 className="display">Season awards</h2>
-              <div className="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+              <div className="grid grid-cols-2">
                 {[
                   { cat: "Golden boot", m: top("goals"), v: top("goals")?.goals },
                   { cat: "Chief playmaker", m: top("assists"), v: top("assists")?.assists },
