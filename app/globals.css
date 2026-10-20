@@ -132,6 +132,31 @@ a.card.player-card { display: flex; flex-direction: column; gap: 18px; padding: 
 .player-card-stats dt { font-size: 12px; font-weight: 600; color: var(--muted); }
 .player-card-stats dd { margin: 2px 0 0; font-size: 22px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .player-card-bio { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-2); }
+/* players leaderboard: one row per player on the light band; the leader in the club's colour */
+.board-head { padding: 56px 0 40px; }
+/* on the club colour the accent can be too close to the ground: a selected toggle goes white instead */
+.band-club .tabs button { border-color: color-mix(in srgb, var(--on-club) 30%, var(--club)); color: var(--text-2); }
+.band-club .tabs button:hover { border-color: color-mix(in srgb, var(--on-club) 70%, var(--club)); color: var(--on-club); }
+.band-club .tabs button[aria-pressed="true"] { border: 2px solid var(--on-club); color: var(--on-club); }
+.board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.board-row { display: grid; grid-template-columns: 56px minmax(240px, 1.1fr) minmax(160px, 2fr) 180px; gap: 24px; align-items: center; padding: 14px 24px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); text-decoration: none; transition: border-color .15s; }
+.board-row:hover { border-color: var(--line-2); color: var(--text); }
+.board-rank { font-size: 32px; color: var(--muted); }
+.board-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.board-name { display: flex; align-items: center; gap: 10px; }
+.board-name strong { font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-meta { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-bar { height: 10px; }
+.board-bar > span { height: 100%; background: var(--accent); border-radius: 5px; }
+.board-value { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.board-value .num { font-family: var(--font-display), system-ui, sans-serif; font-stretch: 125%; font-weight: 900; font-size: 34px; line-height: 1; }
+.board-value small { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.board-who .cpu-warn { font-size: 13px; color: var(--shame); }
+.section-light .board-who .cpu-warn { color: #a3263b; }
+.board-row.is-lead { background: var(--club); border-color: var(--club); color: var(--on-club); --text: var(--on-club); --muted: color-mix(in srgb, var(--on-club) 70%, var(--club)); }
+.board-row.is-lead .board-rank { color: var(--on-club); }
+.board-row.is-lead .board-bar { background: color-mix(in srgb, var(--on-club) 18%, var(--club)); }
+.board-row.is-lead .board-bar > span { background: var(--on-club); }
 .avatar { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; background: var(--club); color: var(--on-club); font-size: 19px; font-weight: 800; letter-spacing: .02em; }
 .award-label { font-size: 14px; font-weight: 600; color: var(--text-2); }
 

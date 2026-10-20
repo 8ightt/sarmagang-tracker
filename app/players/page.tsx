@@ -38,17 +38,18 @@ export default async function PlayersPage() {
       secondAssists: perGame(m.gamertag, "secondAssists"),
     }));
   return (
-    <main className="wrap">
-      <div className="stack" style={{ gap: 8 }}>
-        <span className="eyebrow">Season leaderboard</span>
-        <h1 className="display">Who&apos;s carrying</h1>
-      </div>
-      <Leaderboard rows={rows} />
-      <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-        Goals, assists, passes and tackles are each player&apos;s own: the CPU&apos;s share is taken out for every game this
-        site saved. Games from before that still include it for players who ran the CPU (marked ANY), and EA keeps
-        tackle success and red cards as one total.
-      </p>
+    <main className="bands">
+      <Leaderboard
+        rows={rows}
+        title={<h1 className="display">Who&apos;s carrying</h1>}
+        note={
+          <p className="muted" style={{ fontSize: 14, margin: 0, maxWidth: "75ch" }}>
+            Goals, assists, passes and tackles are each player&apos;s own: the CPU&apos;s share is taken out for every game this
+            site saved. Games from before that still include it for players who ran the CPU (marked ANY), and EA keeps
+            tackle success and red cards as one total.
+          </p>
+        }
+      />
     </main>
   );
 }
