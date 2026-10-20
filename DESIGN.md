@@ -356,6 +356,21 @@ Division and reputation progress shown as a row of EA's badges joined by a 4px t
 ### Player card (signature)
 A linked card. The top row holds a 56px avatar (a photo, or initials on the club shirt colour), the gamertag at 19px/700, a muted meta line (flag, pro name, position), and the OVR in display numerals at 34px. Below that, an optional nickname in the accent display lettering. Then a ruled four-column stat strip (Games, Goals, Assists, MOTM) in 22px/800 body numerals. Last, an optional bio at 14px in text-2.
 
+### Page bands
+Every page is a run of full-width bands, each with its own `.wrap`. It opens on a header band in the club shirt colour (`band-club`) holding the page title and the page's own summary (season totals, the selection's totals, a scoreboard). Content then alternates between the dark ground and light paper bands (`section-light`). The hall of shame gets a dark maroon band (`band-shame`) of its own. On the club band the accent can sit too close to the ground, so selected toggles and tabs there go white (on-club) instead of accent. On light bands the accent darkens (`--accent-light`), fields turn white, and shame and CPU warnings turn a dark red (#a3263b).
+
+### Card titles
+A card's own title (`.card-title`) is Hanken at 20px/800, not the display face. Page and section headings stay in display type.
+
+### Sessions (Seasons page)
+Matches are grouped into play sessions: games less than 3 hours apart belong to one night. Each session has a header with its day and record under a 2px ink rule, and its rows show kick-off times only.
+
+### Our row among other clubs
+In tables of other clubs (World top 100), the club's own row (`tr.is-us`) is filled with the club shirt colour.
+
+### Loss mark
+`--loss-mark` (#c4485a) marks a loss as a dot or a series-slot border, on either ground. The lineup picker's "Out" state uses it as an outline.
+
 ## Do's and Don'ts
 
 ### Do:

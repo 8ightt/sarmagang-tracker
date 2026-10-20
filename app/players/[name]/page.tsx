@@ -79,21 +79,26 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
   const maxSave = Math.max(1, ...(t?.saveTypes ?? []).map((x) => x.n));
 
   return (
-    <main className="wrap">
-      <a href="/players" style={{ fontWeight: 600 }}>← All players</a>
+    <main className="bands">
+      <section className="band band-club profile-hero">
+        <div className="wrap" style={{ gap: 28 }}>
+      <a href="/players" className="back-link">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 2 4 7l5 5" /></svg>
+        All players
+      </a>
 
-      <section className="row" style={{ gap: 32, alignItems: "stretch" }}>
-        <div className="card-strong stack" style={{ flex: "0 0 230px", justifyContent: "space-between", minHeight: 260 }}>
+      <section className="row" style={{ gap: 40, alignItems: "stretch" }}>
+        <div className="profile-card stack" style={{ flex: "0 0 240px", justifyContent: "space-between", minHeight: 260 }}>
           <div className="row between" style={{ alignItems: "flex-start" }}>
             <div>
-              <div className="display accent num" style={{ fontSize: 72, fontWeight: 900 }}>{p.overall || "–"}</div>
+              <div className="display num" style={{ fontSize: 72 }}>{p.overall || "–"}</div>
               <PosLabel position={p.position} role={p.role} />
             </div>
-            {p.height ? <span className="text-2" style={{ fontSize: 13 }}>{p.height} cm</span> : null}
+            {p.height ? <span className="text-2" style={{ fontSize: 14 }}>{p.height} cm</span> : null}
           </div>
           {p.photo ? <img src={p.photo} alt="" style={{ width: "100%", borderRadius: 12 }} /> : null}
           <div>
-            <div className="display" style={{ fontSize: 28 }}>{p.proName}</div>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>{p.proName}</div>
             <div className="row text-2" style={{ gap: 8, fontSize: 14 }}>
               <Flag nation={p.nation} size={28} />
               {p.eaPosition && p.eaPosition !== p.position ? `${p.eaPosition} on EA` : "Pro"}
@@ -101,20 +106,24 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           </div>
         </div>
         <div className="stack" style={{ flex: "1 1 520px", justifyContent: "flex-end" }}>
-          <span className="eyebrow">Player profile · this season</span>
           <h1 className="display" style={{ textTransform: "none" }}>{p.gamertag}</h1>
-          {p.nickname ? <div className="display accent" style={{ fontSize: 26 }}>“{p.nickname}”</div> : null}
-          {p.bio ? <p className="text-2" style={{ margin: 0, fontSize: 17, maxWidth: 640 }}>{p.bio}</p> : null}
+          {p.nickname ? <div className="display profile-nick">“{p.nickname}”</div> : null}
+          {p.bio ? <p className="text-2" style={{ margin: 0, fontSize: 18, maxWidth: "60ch" }}>{p.bio}</p> : null}
         </div>
       </section>
+        </div>
+      </section>
+
+      <section className="band">
+        <div className="wrap">
 
       <section className="grid grid-170">
         {tiles.map((t) => (
           <div key={t.label} className="card">
             <div className="kpi-label">{t.label}</div>
-            <div className="display kpi-value num" style={{ fontSize: 40 }}>{t.value}</div>
+            <div className="kpi-value">{t.value}</div>
             <div className="kpi-sub">{t.sub}</div>
-            {t.warn ? <div className="kpi-sub cpu-warn">⚠ {t.warn}</div> : null}
+            {t.warn ? <div className="kpi-sub cpu-warn">{t.warn}</div> : null}
           </div>
         ))}
       </section>
@@ -122,23 +131,23 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
       <section className="row" style={{ alignItems: "stretch", gap: 24 }}>
         <div className="card stack" style={{ flex: "1 1 520px" }}>
           <div className="section-head">
-            <h2 className="display" style={{ fontSize: 26 }}>Goals, last 10 games</h2>
-            <span className="muted" style={{ fontSize: 13 }}>Oldest → newest</span>
+            <h2 className="card-title">Goals, last 10 games</h2>
+            <span className="muted" style={{ fontSize: 14 }}>Oldest to newest</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 160, borderBottom: "1px solid var(--line-2)" }}>
             {last10.map((g, i) => (
               <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 6, height: "100%" }}>
-                <span className="text-2 num" style={{ fontSize: 13 }}>{g}</span>
+                <span className="text-2 num" style={{ fontSize: 14 }}>{g}</span>
                 <div style={{ width: "100%", maxWidth: 44, borderRadius: "6px 6px 0 0", background: g ? "var(--accent)" : "var(--line-2)", height: g ? Math.round((g / maxG) * 120) : 4 }} />
               </div>
             ))}
           </div>
-          <span className="muted" style={{ fontSize: 13 }}>
+          <span className="muted" style={{ fontSize: 14 }}>
             {last10.reduce((a, b) => a + b, 0)} goals in the last 10, season rate {per(p.goals)} per game.
           </span>
         </div>
         <div className="card stack" style={{ flex: "1 1 320px" }}>
-          <h2 className="display" style={{ fontSize: 26 }}>Success rates</h2>
+          <h2 className="card-title">Success rates</h2>
           {[
             ["Pass success", p.passPct],
             ["Shot success", p.shotPct],
@@ -155,8 +164,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
       {t?.saves ? (
         <section className="card stack">
           <div className="section-head">
-            <h2 className="display" style={{ fontSize: 26 }}>Saves by type</h2>
-            <span className="muted" style={{ fontSize: 13 }}>{t.saves} saves in {t.games} saved games</span>
+            <h2 className="card-title">Saves by type</h2>
+            <span className="muted" style={{ fontSize: 14 }}>{t.saves} saves in {t.games} saved games</span>
           </div>
           {t.saveTypes.map((x) => (
             <div key={x.label} className="stack" style={{ gap: 6 }}>
@@ -164,15 +173,15 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
               <div className="bar"><div style={{ width: `${Math.round((x.n / maxSave) * 100)}%` }} /></div>
             </div>
           ))}
-          <span className="muted" style={{ fontSize: 13 }}>EA doesn&apos;t give every save a type; those are counted as Other.</span>
+          <span className="muted" style={{ fontSize: 14 }}>EA doesn&apos;t give every save a type; those are counted as Other.</span>
         </section>
       ) : null}
 
       {adv?.games ? (
         <section className="card stack">
           <div className="section-head">
-            <h2 className="display" style={{ fontSize: 22 }}>More stats</h2>
-            <span className="muted" style={{ fontSize: 13 }}>{adv.games} saved games</span>
+            <h2 className="card-title">More stats</h2>
+            <span className="muted" style={{ fontSize: 14 }}>{adv.games} saved games</span>
           </div>
           <dl className="arch-stats">
             {COUNTER_STATS.map((s) => (
@@ -192,11 +201,16 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
         </section>
       ) : null}
 
+        </div>
+      </section>
+
+      <section className="band section-light">
+        <div className="wrap">
       {byArchetype ? (
         <section className="stack">
           <div className="section-head">
             <h2 className="display">{byArchetype.season} by archetype</h2>
-            <span className="muted" style={{ fontSize: 13 }}>Whole season, most played first</span>
+            <span className="muted" style={{ fontSize: 14 }}>Whole season, most played first</span>
           </div>
           <div className="grid grid-270">
             {byArchetype.rows.map((a) => {
@@ -233,19 +247,19 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                   <div className="row between" style={{ alignItems: "flex-start" }}>
                     <div className="stack" style={{ gap: 2 }}>
                       <span className="kpi-label">{unknown ? "Archetype unknown" : archetypeGroup(a.archetype)}</span>
-                      <strong className="display" style={{ fontSize: 24 }}>{unknown ? "Earlier games" : archetypeName(a.archetype)}</strong>
+                      <strong style={{ fontSize: 20, fontWeight: 800 }}>{unknown ? "Earlier games" : archetypeName(a.archetype)}</strong>
                     </div>
                     {a.archetype === currentArchetype ? <span className="chip">Current</span> : null}
                   </div>
                   {p.controlsCpu && (g || unknown) ? (
                     <div className="kpi-sub cpu-warn">
-                      ⚠ {unknown ? "EA's numbers: may include the CPU's" : `In-game numbers may include the CPU's${a.since.games ? `; the ${a.since.games} saved since are the player's own` : ""}`}
+                      {unknown ? "EA's numbers: may include the CPU's" : `In-game numbers may include the CPU's${a.since.games ? `; the ${a.since.games} saved since are the player's own` : ""}`}
                     </div>
                   ) : null}
                   <div className="stack" style={{ gap: 6 }}>
                     <div className="row between">
                       <span className="text-2">Games</span>
-                      <span className="display num" style={{ fontSize: 32, lineHeight: 1 }}>{t.games}</span>
+                      <span className="num" style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{t.games}</span>
                     </div>
                     <div className="bar" role="img" aria-label={`${t.games} of ${total} games`}>
                       <div style={{ width: `${total ? Math.round((t.games / total) * 100) : 0}%` }} />
@@ -283,7 +297,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
         <section className="stack">
           <div className="section-head">
             <h2 className="display">{byArchetype ? "Saved games by archetype" : "By archetype"}</h2>
-            <span className="muted" style={{ fontSize: 13 }}>From the saved games, most played first</span>
+            <span className="muted" style={{ fontSize: 14 }}>From the saved games, most played first</span>
           </div>
           <div className="table-box">
             <table>
@@ -336,7 +350,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                         <ResultBadge r={m.result} />
                         <Crest id={m.opp_crest} size={26} />
                         <strong className="num">{m.goals_for}–{m.goals_against}</strong> {m.opp_name}
-                        <span className="muted" style={{ fontSize: 13 }}>{when(m.ts)}</span>
+                        <span className="muted" style={{ fontSize: 14 }}>{when(m.ts)}</span>
                         {m.motm ? <span className="chip">MOTM</span> : null}
                         {m.controls_cpu ? <span className="chip chip-ghost">+CPU</span> : null}
                         {m.fixed ? <span className="chip chip-ghost">Real stats</span> : null}
@@ -364,13 +378,20 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
         </p>
       </section>
 
+        </div>
+      </section>
+
       {p.controlsCpu || p.redsEa > 0 ? (
+        <section className="band">
+        <div className="wrap">
         <section className="card stack">
-          <h2 className="display" style={{ fontSize: 22 }}>Red cards from before tracking</h2>
+          <h2 className="card-title">Red cards from before tracking</h2>
           <p className="text-2" style={{ margin: 0 }}>
             EA only gives a season total ({p.redsEa}). If some of those were the CPU&apos;s, enter how many here once.
           </p>
           <SeasonRedsForm player={p.gamertag} current={seasonCpuReds} />
+        </section>
+        </div>
         </section>
       ) : null}
     </main>

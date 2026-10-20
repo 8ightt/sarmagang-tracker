@@ -90,26 +90,30 @@ export default async function EaDataPage() {
   };
 
   return (
-    <main className="wrap ea-doc">
-      <section className="stack">
+    <main className="bands ea-doc">
+      <section className="band band-club board-head">
+        <div className="wrap" style={{ gap: 18 }}>
         <h1 className="display">EA data</h1>
-        <p className="muted">
+        <p className="text-2" style={{ margin: 0, fontSize: 17, maxWidth: "75ch" }}>
           Every field EA&apos;s Pro Clubs API sends, what each one means, how sure we are and where the site uses it. Last updated {data.updated}.
           Source: <code>docs/ea-data.json</code>.
         </p>
-        <nav className="row" aria-label="On this page">
-          <a href="#api">The API</a>
-          {Object.keys(endpoints).map((k) => <a key={k} href={`#${slug(k)}`}>{k}</a>)}
-          <a href="#counters">Hidden counters</a>
-          <a href="#seen">Counters in our games</a>
-          <a href="#screen">In-game screen</a>
-          <a href="#thanks">Thanks</a>
+        <nav className="row" aria-label="On this page" style={{ gap: 8 }}>
+          <a className="pill" href="#api">The API</a>
+          {Object.keys(endpoints).map((k) => <a key={k} className="pill" href={`#${slug(k)}`}>{k}</a>)}
+          <a className="pill" href="#counters">Hidden counters</a>
+          <a className="pill" href="#seen">Counters in our games</a>
+          <a className="pill" href="#screen">In-game screen</a>
+          <a className="pill" href="#thanks">Thanks</a>
         </nav>
-        <p className="muted small">
-          {Object.entries(data.status).map(([k, v]) => <span key={k} className="nowrap" style={{ marginRight: 16 }}>{STATUS_ICON[k]} <strong>{k}</strong>: {v}</span>)}
+        <p className="text-2 small" style={{ margin: 0, display: "flex", flexWrap: "wrap", gap: "6px 16px" }}>
+          {Object.entries(data.status).map(([k, v]) => <span key={k}>{STATUS_ICON[k]} <strong>{k}</strong>: {v}</span>)}
         </p>
+        </div>
       </section>
 
+      <section className="band section-light">
+        <div className="wrap">
       <section id="api" className="stack">
         <h2 className="display">The API</h2>
         <div className="card stack">
@@ -263,6 +267,8 @@ export default async function EaDataPage() {
             <div className="muted small">Used for: {t.usedFor}</div>
           </div>
         ))}
+      </section>
+        </div>
       </section>
     </main>
   );

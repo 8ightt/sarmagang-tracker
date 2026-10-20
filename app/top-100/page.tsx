@@ -1,5 +1,5 @@
 import { Crest, when } from "@/components/bits";
-import { CLUB_ID } from "@/lib/config";
+import { CLUB_ID, PLATFORM } from "@/lib/config";
 import { reputationName } from "@/lib/ea-assets";
 import { divisionName, getClub, getTop100 } from "@/lib/stats";
 
@@ -13,19 +13,26 @@ export default async function TopHundredPage() {
   const last = clubs[clubs.length - 1];
 
   return (
-    <main className="wrap">
-      <a href="/" style={{ fontWeight: 600 }}>← Club</a>
-      <div className="stack" style={{ gap: 8 }}>
-        <span className="eyebrow">EA leaderboard · PS5 / Xbox Series</span>
-        <h1 className="display">World top 100</h1>
-        <span className="text-2">
-          The 100 clubs with the highest Skill Rating.
-          {!inIt && last && club.skillRating !== null
-            ? ` Sarma gang (${club.skillRating}) needs ${last.skillRating - club.skillRating} more to reach #100.`
-            : ""}
-          {top ? ` Updated ${when(top.updatedAt / 1000)}.` : ""}
-        </span>
-      </div>
+    <main className="bands">
+      <section className="band band-club board-head">
+        <div className="wrap" style={{ gap: 14 }}>
+          <a href="/" className="back-link">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 2 4 7l5 5" /></svg>
+            Club
+          </a>
+          <h1 className="display">World top 100</h1>
+          <p className="text-2" style={{ margin: 0, fontSize: 17, maxWidth: "70ch" }}>
+            The 100 clubs with the highest Skill Rating on {PLATFORM === "common-gen4" ? "PS4 and Xbox One" : PLATFORM === "nx" ? "Switch" : "PS5, Xbox Series and PC"}.
+            {!inIt && last && club.skillRating !== null
+              ? ` ${club.name} (${club.skillRating}) needs ${last.skillRating - club.skillRating} more to reach #100.`
+              : ""}
+            {top ? ` Updated ${when(top.updatedAt / 1000)}.` : ""}
+          </p>
+        </div>
+      </section>
+
+      <section className="band section-light">
+        <div className="wrap" style={{ gap: 20 }}>
 
       {clubs.length ? (
         <div className="table-box">
@@ -35,7 +42,7 @@ export default async function TopHundredPage() {
             </thead>
             <tbody>
               {clubs.map((c) => (
-                <tr key={c.clubId} style={c.clubId === CLUB_ID ? { outline: "1px solid var(--accent)" } : undefined}>
+                <tr key={c.clubId} className={c.clubId === CLUB_ID ? "is-us" : undefined}>
                   <td className="num">{c.rank}</td>
                   <td style={{ textAlign: "left" }}>
                     <span className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
@@ -52,7 +59,7 @@ export default async function TopHundredPage() {
                 </tr>
               ))}
               {!inIt ? (
-                <tr style={{ outline: "1px solid var(--accent)" }}>
+                <tr className="is-us">
                   <td className="muted">–</td>
                   <td style={{ textAlign: "left" }}>
                     <span className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
@@ -73,6 +80,8 @@ export default async function TopHundredPage() {
       <p className="muted" style={{ fontSize: 13, margin: 0 }}>
         From EA&apos;s allTimeLeaderboard. Division is EA&apos;s own figure, which can lag behind the in-game lobby.
       </p>
+        </div>
+      </section>
     </main>
   );
 }

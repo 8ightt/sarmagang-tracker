@@ -18,21 +18,24 @@ export default async function AnalysisPage() {
   const { buckets, upsets, toughest } = x.opponents;
 
   return (
-    <main className="wrap">
-      <section className="stack" style={{ gap: 10 }}>
-        <span className="eyebrow">Analysis</span>
+    <main className="bands">
+      <section className="band band-club board-head">
+        <div className="wrap" style={{ gap: 14 }}>
         <h1 className="display">What the numbers say</h1>
-        <span className="text-2" style={{ maxWidth: 760 }}>
+        <span className="text-2" style={{ maxWidth: "70ch", fontSize: 17 }}>
           Worked out from the {x.games} games this site has saved{x.since ? ` since ${when(x.since)}` : ""}, not from EA&apos;s totals.
           Goals and assists are each player&apos;s own, without the CPU&apos;s. Players need {MIN_GAMES}+ games to appear;
           with this few games, treat it as a hint, not a verdict.
         </span>
+        </div>
       </section>
 
+      <section className="band">
+        <div className="wrap">
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Form</h2>
-          <span className="muted" style={{ fontSize: 13 }}>Average rating in the last 5 games vs all saved games</span>
+          <span className="muted" style={{ fontSize: 14 }}>Average rating in the last 5 games vs all saved games</span>
         </div>
         <div className="grid grid-240">
           {x.form.map((f) => (
@@ -54,16 +57,21 @@ export default async function AnalysisPage() {
                   </span>
                 ))}
               </div>
-              <span className="muted" style={{ fontSize: 13 }}>{f.last5GoalsAssists} goals + assists in the last 5 · {f.games} games</span>
+              <span className="muted" style={{ fontSize: 14 }}>{f.last5GoalsAssists} goals + assists in the last 5 · {f.games} games</span>
             </a>
           ))}
         </div>
       </section>
 
+        </div>
+      </section>
+
+      <section className="band section-light">
+        <div className="wrap">
       <section className="stack">
         <div className="section-head">
           <h2 className="display">With and without</h2>
-          <span className="muted" style={{ fontSize: 13 }}>Club points per game (win 3, draw 1) when the player plays and when they don&apos;t</span>
+          <span className="muted" style={{ fontSize: 14 }}>Club points per game (win 3, draw 1) when the player plays and when they don&apos;t</span>
         </div>
         <div className="table-box">
           <table>
@@ -93,7 +101,7 @@ export default async function AnalysisPage() {
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Pick a lineup</h2>
-          <span className="muted" style={{ fontSize: 13 }}>How the club does with some players in and others out</span>
+          <span className="muted" style={{ fontSize: 14 }}>How the club does with some players in and others out</span>
         </div>
         <Lineup players={x.lineup.players} games={x.lineup.games.map(({ ts, ...g }) => ({ ...g, date: when(ts) }))} />
       </section>
@@ -101,7 +109,7 @@ export default async function AnalysisPage() {
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Duos</h2>
-          <span className="muted" style={{ fontSize: 13 }}>Pairs with {MIN_GAMES}+ games together, best points per game first</span>
+          <span className="muted" style={{ fontSize: 14 }}>Pairs with {MIN_GAMES}+ games together, best points per game first</span>
         </div>
         {x.duos.length ? (
           <div className="table-box">
@@ -128,16 +136,21 @@ export default async function AnalysisPage() {
         )}
       </section>
 
+        </div>
+      </section>
+
+      <section className="band">
+        <div className="wrap">
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Opponent strength</h2>
-          <span className="muted" style={{ fontSize: 13 }}>By EA Skill Rating, {x.opponents.rated} of {x.games} games rated</span>
+          <span className="muted" style={{ fontSize: 14 }}>By EA Skill Rating, {x.opponents.rated} of {x.games} games rated</span>
         </div>
         <div className="grid grid-240">
           {buckets.map((b) => (
             <div key={b.label} className="card stack" style={{ gap: 8 }}>
               <div className="kpi-label">{b.label} <span className="muted">· {b.note}</span></div>
-              <div className="display kpi-value num" style={{ fontSize: 40 }}>{b.rec.games ? ppg(b.rec) : "–"}</div>
+              <div className="kpi-value">{b.rec.games ? ppg(b.rec) : "–"}</div>
               <div className="kpi-sub">{b.rec.games ? `points per game · ${wdl(b.rec)} in ${b.rec.games}` : "no games yet"}</div>
             </div>
           ))}
@@ -168,10 +181,15 @@ export default async function AnalysisPage() {
         </p>
       </section>
 
+        </div>
+      </section>
+
+      <section className="band section-light">
+        <div className="wrap">
       <section className="stack">
         <div className="section-head">
           <h2 className="display">Positions</h2>
-          <span className="muted" style={{ fontSize: 13 }}>EA&apos;s group (FWD/MID/DEF/GK) unless the exact position was entered with Fix stats</span>
+          <span className="muted" style={{ fontSize: 14 }}>EA&apos;s group (FWD/MID/DEF/GK) unless the exact position was entered with Fix stats</span>
         </div>
         <div className="table-box">
           <table>
@@ -190,6 +208,8 @@ export default async function AnalysisPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
         </div>
       </section>
     </main>

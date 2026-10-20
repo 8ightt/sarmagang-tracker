@@ -86,7 +86,7 @@ main.wrap { padding-top: 48px; padding-bottom: 72px; display: flex; flex-directi
 .grid-270 { grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); }
 
 /* a light band, for pages that alternate sections; the accent darkens to stay readable on it */
-.section-light { background: var(--paper); color: var(--ink); --text: var(--ink); --text-2: var(--ink-2); --muted: var(--ink-2); --line: #dcddd9; --line-2: #c9cbc6; --surface: #ffffff; --surface-2: #ebece8; --accent: var(--accent-light, #2a2c2c); --bg: #ffffff; color-scheme: light; }
+.section-light { background: var(--paper); color: var(--ink); --text: var(--ink); --text-2: var(--ink-2); --muted: var(--ink-2); --line: #dcddd9; --line-2: #c9cbc6; --surface: #ffffff; --surface-2: #ebece8; --accent: var(--accent-light, #2a2c2c); --bg: #ffffff; --shame: #a3263b; color-scheme: light; }
 .section-light .filter-search .field input { color-scheme: light; }
 
 /* full-width page bands, as on EA's Clubs pages: each band holds its own .wrap */
@@ -165,7 +165,7 @@ a.card.player-card { display: flex; flex-direction: column; gap: 18px; padding: 
 .board-value .num { font-family: var(--font-display), system-ui, sans-serif; font-stretch: 125%; font-weight: 900; font-size: 34px; line-height: 1; }
 .board-value small { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .board-who .cpu-warn { font-size: 13px; color: var(--shame); }
-.section-light .board-who .cpu-warn { color: #a3263b; }
+.section-light .cpu-warn { color: #a3263b; }
 .board-row.is-lead { background: var(--club); border-color: var(--club); color: var(--on-club); --text: var(--on-club); --muted: color-mix(in srgb, var(--on-club) 70%, var(--club)); }
 .board-row.is-lead .board-rank { color: var(--on-club); }
 .board-row.is-lead .board-bar { background: color-mix(in srgb, var(--on-club) 18%, var(--club)); }
@@ -403,3 +403,42 @@ details > summary:hover { color: var(--text); }
 .ea-doc td:nth-child(3) { min-width: 280px; }
 .ea-doc th { text-align: left; }
 .ea-doc td.num { text-align: right; min-width: 0; }
+
+/* match page: the scoreboard on the club's colour */
+.match-hero { padding: 40px 0 48px; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text-2); text-decoration: none; }
+.back-link:hover { color: var(--on-club); }
+.match-meta { margin: 20px 0 0; text-align: center; color: var(--text-2); font-size: 15px; }
+.scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; gap: 40px; align-items: center; margin-top: 28px; }
+.scoreboard-side { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; min-width: 0; }
+.scoreboard-crests { display: flex; align-items: center; gap: 8px; }
+.scoreboard-side strong { font-size: 24px; font-weight: 800; }
+.scoreboard-scorers { color: var(--text-2); font-size: 15px; }
+.scoreboard-score { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.scoreboard-score .display { font-size: 96px; color: var(--on-club); white-space: nowrap; }
+.match-honours { display: flex; justify-content: center; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+.match-honours > span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); }
+.match-honours strong { color: var(--on-club); }
+.section-light .table-box { scrollbar-color: var(--line-2) transparent; }
+
+/* player profile: card and name on the club's colour */
+.profile-hero { padding: 40px 0 56px; }
+.profile-card { background: color-mix(in srgb, var(--on-club) 8%, var(--club)); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.profile-nick { font-size: 26px; color: var(--accent); }
+/* a card's own title: smaller than a page heading, in the body face */
+.card-title { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.2; }
+
+/* records: the hall of shame gets its own band */
+.band-shame { background: #1e1112; --surface: #2a1719; --line: #3d2428; --line-2: #4e2e33; }
+.band-shame .card-shame { background: var(--surface); }
+.record-row:not(:last-child) { border-bottom: 1px solid var(--line); }
+/* our own row in a table of other clubs */
+tr.is-us td { background: var(--club); color: var(--on-club); --muted: color-mix(in srgb, var(--on-club) 70%, var(--club)); }
+/* pills that are buttons (lineup picker): outlined like link pills, never the solid action fill */
+button.pill { background: transparent; min-height: 38px; padding: 6px 16px; }
+button.pill:hover { filter: none; }
+.pill.is-out { border-color: var(--loss-mark); color: var(--loss-mark); }
+.section-light .pill.is-out { border-color: #a3263b; color: #a3263b; }
+/* "on this page" pills on the club band */
+.band-club .pill { border-color: color-mix(in srgb, var(--on-club) 30%, var(--club)); color: var(--text-2); }
+.band-club .pill:hover { border-color: var(--on-club); color: var(--on-club); }

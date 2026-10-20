@@ -45,7 +45,7 @@ export function Lineup({ players, games }: { players: string[]; games: LineupPic
   return (
     <div className="card stack" style={{ gap: 18 }}>
       <div className="stack" style={{ gap: 8 }}>
-        <span className="muted" style={{ fontSize: 13 }}>Tap a player: once for with, twice for without, again to clear.</span>
+        <span className="muted" style={{ fontSize: 14 }}>Tap a player: once for with, twice for without, again to clear.</span>
         <div className="filter-group">
           {players.map((p) => {
             const v = pick(p);
@@ -53,13 +53,12 @@ export function Lineup({ players, games }: { players: string[]; games: LineupPic
               <button
                 key={p}
                 type="button"
-                className="pill"
+                className={`pill${v === "without" ? " is-out" : ""}`}
                 aria-current={v === "with" ? "true" : undefined}
                 aria-label={`${p}: ${v === "any" ? "either" : v}`}
-                style={v === "without" ? { background: "var(--shame-line)", borderColor: "var(--shame-line)", color: "var(--shame)" } : { background: v === "with" ? undefined : "transparent" }}
                 onClick={() => setPicks({ ...picks, [p]: NEXT[v] })}
               >
-                {v === "with" ? "✓ " : v === "without" ? "✗ " : ""}
+                {v === "with" ? "In · " : v === "without" ? "Out · " : ""}
                 {p}
               </button>
             );
@@ -87,19 +86,19 @@ export function Lineup({ players, games }: { players: string[]; games: LineupPic
         {rec.games ? (
           <div className="stack" style={{ gap: 4 }}>
             <span className="kpi-label">Goals for / against</span>
-            <span className="display num" style={{ fontSize: 28 }}>{rec.gf.toFixed(1)} / {rec.ga.toFixed(1)}</span>
+            <span className="num" style={{ fontSize: 28, fontWeight: 800 }}>{rec.gf.toFixed(1)} / {rec.ga.toFixed(1)}</span>
             <span className="kpi-sub">per game</span>
           </div>
         ) : null}
         {picked && rec.games ? (
           <div className="stack" style={{ gap: 4 }}>
             <span className="kpi-label">vs all {all.games} games</span>
-            <span className="display num" style={{ fontSize: 28, color: rec.ppg - all.ppg >= 0 ? "var(--accent)" : "var(--shame)" }}>{signed(rec.ppg - all.ppg)}</span>
+            <span className="num" style={{ fontSize: 28, fontWeight: 800, color: rec.ppg - all.ppg >= 0 ? "var(--accent)" : "var(--shame)" }}>{signed(rec.ppg - all.ppg)}</span>
             <span className="kpi-sub">points per game ({all.ppg.toFixed(2)})</span>
           </div>
         ) : null}
       </div>
-      {picked && rec.games > 0 && rec.games < 3 ? <span className="muted" style={{ fontSize: 13 }}>Only {rec.games} game{rec.games === 1 ? "" : "s"}: says very little.</span> : null}
+      {picked && rec.games > 0 && rec.games < 3 ? <span className="muted" style={{ fontSize: 14 }}>Only {rec.games} game{rec.games === 1 ? "" : "s"}: says very little.</span> : null}
 
       {picked && rec.games ? (
         <div className="stack" style={{ gap: 0 }}>
