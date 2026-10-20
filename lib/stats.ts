@@ -117,6 +117,8 @@ export const idleLabel = (secs: number) => `${Math.floor(secs / 60)}:${String(se
 export type Club = {
   name: string;
   crestAssetId?: string;
+  /** the crest's main colour, as EA sends it with the kits */
+  crestColor?: number;
   stadium?: string;
   kits: { name: string; colors: number[] }[];
   played: number;
@@ -159,6 +161,7 @@ export const getClub = cache(async (): Promise<Club> => {
   return {
     name: c.name ?? "Sarma gang",
     crestAssetId: kit.crestAssetId,
+    crestColor: kit.crestColor ? num(kit.crestColor) : undefined,
     stadium: kit.stadName?.trim(),
     kits: [
       { name: "Home", colors: [kit.kitColor1, kit.kitColor2, kit.kitColor3, kit.kitColor4].map(num) },
