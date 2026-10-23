@@ -1,4 +1,4 @@
-import { CLUB_ID } from "@/lib/config";
+import { clubId } from "@/lib/config";
 import { REPUTATION_TIERS, divisionCrestUrl, reputationName, reputationUrl } from "@/lib/ea-assets";
 import type { TopClub } from "@/lib/poller";
 import { Crest } from "./bits";
@@ -62,7 +62,7 @@ export function ReputationLadder({ tier }: { tier: number }) {
 export function TopHundred({ clubs, us }: { clubs: TopClub[]; us: number | null }) {
   const first = clubs[0];
   const last = clubs[clubs.length - 1];
-  const mine = clubs.find((c) => c.clubId === CLUB_ID);
+  const mine = clubs.find((c) => c.clubId === clubId());
   const gap = us !== null && last ? last.skillRating - us : null;
   // our Skill Rating on a bar from 1000 up to #1
   const floor = 1000;
@@ -92,7 +92,7 @@ export function TopHundred({ clubs, us }: { clubs: TopClub[]; us: number | null 
       <div className="stack" style={{ gap: 6 }}>
         <div className="top100-bar">
           <div className="top100-zone" style={{ left: `${pct(last.skillRating)}%` }} />
-          {us !== null ? <div className="top100-us" style={{ left: `${pct(us)}%` }} title={`Sarma gang ${us}`} /> : null}
+          {us !== null ? <div className="top100-us" style={{ left: `${pct(us)}%` }} title={`You: ${us}`} /> : null}
         </div>
         <div className="row between muted" style={{ fontSize: 12 }}>
           <span>You: {us ?? "–"}</span>

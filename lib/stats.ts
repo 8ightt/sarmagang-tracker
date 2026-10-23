@@ -1,6 +1,6 @@
 import type postgres from "postgres";
 import { cache } from "react";
-import { CLUB_ID, currentSeason, inGameArchetypes, loadSettings, playoffsWindow, promotionRule, refreshSettings, seasonOf, type InGameArchetype } from "./config";
+import { clubId, currentSeason, inGameArchetypes, loadSettings, playoffsWindow, promotionRule, refreshSettings, seasonOf, type InGameArchetype } from "./config";
 import { COUNTER_STATS, counterStat, type Counters } from "./counters";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
@@ -152,8 +152,8 @@ export const getClub = cache(async (): Promise<Club> => {
     getSnapshot<Record<string, string>[]>("search"),
   ]);
   const overall = overallSnap?.data?.[0];
-  const search = searchSnap?.data?.find((c) => String(c.clubId) === CLUB_ID);
-  const c = info?.data?.[CLUB_ID] ?? {};
+  const search = searchSnap?.data?.find((c) => String(c.clubId) === clubId());
+  const c = info?.data?.[clubId()] ?? {};
   const kit = c.customKit ?? {};
   const code: Record<string, "W" | "L" | "D"> = { "1": "W", "2": "L", "3": "D" };
   const form = Array.from({ length: 10 }, (_, i) => code[overall?.[`lastMatch${i}`] ?? ""])
@@ -162,7 +162,7 @@ export const getClub = cache(async (): Promise<Club> => {
     .reverse();
   const nn = (v: unknown) => (v === undefined || v === null || v === "" ? null : Number(v));
   return {
-    name: c.name ?? "Sarma gang",
+    name: c.name ?? loadSettings().club?.name ?? "Your club",
     crestAssetId: kit.crestAssetId,
     crest: loadSettings().look.crest || crestUrl(kit.crestAssetId),
     crestColor: kit.crestColor ? num(kit.crestColor) : undefined,

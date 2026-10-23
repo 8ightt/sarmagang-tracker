@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { CLUB_ID, EA_FIXTURE_DIR, PLATFORM } from "./config";
+import { clubId, EA_FIXTURE_DIR, platform } from "./config";
 
 const BASE = "https://proclubs.ea.com/api/fc";
 
@@ -51,7 +51,7 @@ async function get<T>(endpoint: string, params: Record<string, string>, fixture:
   if (EA_FIXTURE_DIR) {
     return JSON.parse(fs.readFileSync(/*turbopackIgnore: true*/ path.join(EA_FIXTURE_DIR, fixture), "utf8")) as T;
   }
-  const url = `${BASE}/${endpoint}?${new URLSearchParams({ platform: PLATFORM, ...params })}`;
+  const url = `${BASE}/${endpoint}?${new URLSearchParams({ platform: platform(), ...params })}`;
   const order = (preferred ? [preferred] : (["plain", "browser"] as const)) as (keyof typeof HEADER_SETS)[];
   const failures: string[] = [];
   for (const name of order) {
@@ -78,20 +78,20 @@ async function get<T>(endpoint: string, params: Record<string, string>, fixture:
 export const eaHeaderMode = () => preferred;
 
 export const ea = {
-  clubInfo: () => get<Record<string, Record<string, unknown>>>("clubs/info", { clubIds: CLUB_ID }, "info.json"),
-  overallStats: () => get<Record<string, string>[]>("clubs/overallStats", { clubIds: CLUB_ID }, "overall.json"),
+  clubInfo: () => get<Record<string, Record<string, unknown>>>("clubs/info", { clubIds: clubId() }, "info.json"),
+  overallStats: () => get<Record<string, string>[]>("clubs/overallStats", { clubIds: clubId() }, "overall.json"),
   /** another club's totals (EA rejects several ids in one call) */
   clubStats: (clubId: string) => get<Record<string, string>[]>("clubs/overallStats", { clubIds: clubId }, "overall.json"),
-  search: (clubName: string) =>
-    get<Record<string, string>[]>("allTimeLeaderboard/search", { clubName }, "search.json"),
-  members: () => get<{ members: EaMember[] }>("members/stats", { clubId: CLUB_ID }, "members.json"),
-  career: () => get<{ members: EaMember[] }>("members/career/stats", { clubId: CLUB_ID }, "career.json"),
+  search: (clubName: string, onPlatform?: string) =>
+    get<Record<string, string>[]>("allTimeLeaderboard/search", { clubName, ...(onPlatform ? { platform: onPlatform } : {}) }, "search.json"),
+  members: () => get<{ members: EaMember[] }>("members/stats", { clubId: clubId() }, "members.json"),
+  career: () => get<{ members: EaMember[] }>("members/career/stats", { clubId: clubId() }, "career.json"),
   /** the top 100 clubs on the platform by Skill Rating */
   leaderboard: () => get<Record<string, unknown>[]>("allTimeLeaderboard", {}, "leaderboard.json"),
   matches: (matchType: "leagueMatch" | "playoffMatch" | "friendlyMatch") =>
     get<EaMatch[]>(
       "clubs/matches",
-      { clubIds: CLUB_ID, matchType, maxResultCount: "10" },
+      { clubIds: clubId(), matchType, maxResultCount: "10" },
       `matches-${matchType}.json`,
     ),
 };

@@ -1,8 +1,16 @@
 import archetypeStats from "@/config/archetype-stats.json";
 import siteSettings from "@/config/settings.json";
 
-export const CLUB_ID = process.env.CLUB_ID ?? "837026";
-export const PLATFORM = process.env.PLATFORM ?? "common-gen5";
+/** EA platforms a club can be on (EA rejects common-gen4 for FC 27). */
+export const PLATFORMS = { "common-gen5": "PS5, Xbox Series and PC", nx: "Switch" } as const;
+export type Platform = keyof typeof PLATFORMS;
+
+/**
+ * The club this site follows: picked on /setup (saved in site_settings), else CLUB_ID from the
+ * environment. Empty until set up. Read after refreshSettings(), like every setting.
+ */
+export const clubId = () => loadSettings().club?.id || process.env.CLUB_ID || "";
+export const platform = (): string => loadSettings().club?.platform || process.env.PLATFORM || "common-gen5";
 /** Password the club uses to edit captains, tactics and CPU red cards. */
 export const CLUB_PASSWORD = process.env.CLUB_PASSWORD ?? "";
 /** Shared secret for the scheduled EA check (Vercel cron / GitHub Actions). */
@@ -63,7 +71,11 @@ export function playoffsWindow(x: ClubSeason): { from: number; to: number } | nu
 /** The club's own look, overriding what EA sends: colours as #rrggbb, the crest as an image data URL. */
 export type LookSettings = { club?: string; accent?: string; crest?: string };
 
+/** The club picked on /setup. */
+export type ClubIdentity = { id: string; platform: string; name: string };
+
 export type SiteSettings = {
+  club?: ClubIdentity;
   tagline?: string;
   look: LookSettings;
   seasons: ClubSeason[];
@@ -105,6 +117,7 @@ export function loadSettings(): SiteSettings {
   for (const [name, p] of Object.entries(saved.players ?? {})) players[name] = { ...players[name], ...p };
   const league = { ...(file.league ?? {}), ...(saved.league ?? {}) } as Partial<LeagueRules>;
   return {
+    club: saved.club,
     tagline: s.tagline,
     look: { ...(file.look ?? {}), ...(saved.look ?? {}) },
     players,

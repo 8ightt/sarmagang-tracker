@@ -2,7 +2,7 @@ import { sql } from "./db";
 import { senderName, type TgMessage } from "./telegram";
 
 export const HELP = [
-  "Send me screenshots from EA FC (Player Performance, Archetypes › Statistics, match facts…) and I'll save them for the Sarma gang tracker.",
+  "Send me screenshots from EA FC (Player Performance, Archetypes › Statistics, match facts…) and I'll save them for the club's tracker.",
   "Tip: send them as a file (📎 → File) to keep full quality.",
   "",
   "Ran the CPU? EA mixes the CPU's ratings into yours, so the site estimates it. Send the real one:",

@@ -1,5 +1,6 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
-import { currentSeason, loadSettings, playoffsWindow, promotionRule, seasonEnd } from "@/lib/config";
+import { redirect } from "next/navigation";
+import { clubId, currentSeason, loadSettings, playoffsWindow, promotionRule, refreshSettings, seasonEnd } from "@/lib/config";
 import { divisionCrestUrl, reputationName, reputationUrl } from "@/lib/ea-assets";
 import { DivisionLadder, ReputationLadder, TopHundred } from "@/components/Ladders";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, getTop100, lastPoll } from "@/lib/stats";
@@ -10,6 +11,9 @@ import { getPlayerTakes } from "@/lib/takes";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  // a fresh deploy: pick the club first
+  await refreshSettings();
+  if (!clubId()) redirect("/setup");
   const [club, members, recent, records, poll, tactics, season, playoffs, top100, takes] = await Promise.all([
     getClub(),
     getMembers(),

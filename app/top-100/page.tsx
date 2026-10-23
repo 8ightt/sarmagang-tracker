@@ -1,5 +1,5 @@
 import { Crest, when } from "@/components/bits";
-import { CLUB_ID, PLATFORM } from "@/lib/config";
+import { PLATFORMS, clubId, platform, type Platform } from "@/lib/config";
 import { reputationName } from "@/lib/ea-assets";
 import { divisionName, getClub, getTop100 } from "@/lib/stats";
 
@@ -9,7 +9,7 @@ export const metadata = { title: "World top 100" };
 export default async function TopHundredPage() {
   const [club, top] = await Promise.all([getClub(), getTop100()]);
   const clubs = top?.clubs ?? [];
-  const inIt = clubs.some((c) => c.clubId === CLUB_ID);
+  const inIt = clubs.some((c) => c.clubId === clubId());
   const last = clubs[clubs.length - 1];
 
   return (
@@ -22,7 +22,7 @@ export default async function TopHundredPage() {
           </a>
           <h1 className="display">World top 100</h1>
           <p className="text-2" style={{ margin: 0, fontSize: 17, maxWidth: "70ch" }}>
-            The 100 clubs with the highest Skill Rating on {PLATFORM === "common-gen4" ? "PS4 and Xbox One" : PLATFORM === "nx" ? "Switch" : "PS5, Xbox Series and PC"}.
+            The 100 clubs with the highest Skill Rating on {PLATFORMS[platform() as Platform] ?? "this platform"}.
             {!inIt && last && club.skillRating !== null
               ? ` ${club.name} (${club.skillRating}) needs ${last.skillRating - club.skillRating} more to reach #100.`
               : ""}
@@ -42,7 +42,7 @@ export default async function TopHundredPage() {
             </thead>
             <tbody>
               {clubs.map((c) => (
-                <tr key={c.clubId} className={c.clubId === CLUB_ID ? "is-us" : undefined}>
+                <tr key={c.clubId} className={c.clubId === clubId() ? "is-us" : undefined}>
                   <td className="num">{c.rank}</td>
                   <td style={{ textAlign: "left" }}>
                     <span className="row" style={{ gap: 10, flexWrap: "nowrap" }}>

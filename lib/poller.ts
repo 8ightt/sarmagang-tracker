@@ -1,5 +1,5 @@
 import type postgres from "postgres";
-import { CLUB_ID, DISCORD_WEBHOOK_URL, SITE_URL } from "./config";
+import { clubId, DISCORD_WEBHOOK_URL, loadSettings, refreshSettings, SITE_URL } from "./config";
 import { getSnapshot, setSnapshot, sql } from "./db";
 import { ea, eaHeaderMode, type EaMatch } from "./ea";
 import { estimateRating } from "./rating-model";
@@ -106,13 +106,13 @@ const SR_WINDOW_SECONDS = 3 * 3600;
 
 /** Saves one match; returns true if it wasn't in the database yet. */
 async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): Promise<boolean> {
-  const us = m.clubs[CLUB_ID];
+  const us = m.clubs[clubId()];
   if (!us) return false;
-  const oppId = Object.keys(m.clubs).find((k) => k !== CLUB_ID) ?? "";
+  const oppId = Object.keys(m.clubs).find((k) => k !== clubId()) ?? "";
   const opp = m.clubs[oppId];
   const gf = n(us.goals);
   const ga = n(us.goalsAgainst);
-  const ours = Object.values(m.players?.[CLUB_ID] ?? {});
+  const ours = Object.values(m.players?.[clubId()] ?? {});
   const controller = cpuController(ours);
   const db = sql();
 
@@ -128,7 +128,7 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
     result: gf > ga ? "W" : gf < ga ? "L" : "D",
     dnf: n(us.winnerByDnf) === 1,
     minutes: Math.round(Math.max(0, ...ours.map((p) => n(p.secondsPlayed))) / 60),
-    team: db.json({ us: m.aggregate?.[CLUB_ID] ?? null, them: m.aggregate?.[oppId] ?? null } as postgres.JSONValue),
+    team: db.json({ us: m.aggregate?.[clubId()] ?? null, them: m.aggregate?.[oppId] ?? null } as postgres.JSONValue),
     our_kit: kitColors(us),
     opp_kit: kitColors(opp),
     our_sr: Date.now() / 1000 - n(m.timestamp) < SR_WINDOW_SECONDS ? ourSr : null,
@@ -224,13 +224,13 @@ async function saveMatch(m: EaMatch, matchType: string, ourSr: number | null): P
 
 async function announce(m: EaMatch) {
   if (!DISCORD_WEBHOOK_URL) return;
-  const us = m.clubs[CLUB_ID];
-  const oppId = Object.keys(m.clubs).find((k) => k !== CLUB_ID) ?? "";
+  const us = m.clubs[clubId()];
+  const oppId = Object.keys(m.clubs).find((k) => k !== clubId()) ?? "";
   const opp = m.clubs[oppId];
   const gf = n(us.goals);
   const ga = n(us.goalsAgainst);
   const verdict = gf > ga ? "WIN" : gf < ga ? "LOSS" : "DRAW";
-  const players = Object.values(m.players?.[CLUB_ID] ?? {});
+  const players = Object.values(m.players?.[clubId()] ?? {});
   const goalsOf = (p: Record<string, string>) => ownStats(p)?.goals ?? n(p.goals);
   const cpuGoals = gf - players.reduce((s, p) => s + goalsOf(p), 0);
   const scorers = [
@@ -248,7 +248,7 @@ async function announce(m: EaMatch) {
     await fetch(DISCORD_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "Sarma gang stats", content: lines.join("\n") }),
+      body: JSON.stringify({ username: `${loadSettings().club?.name ?? "Club"} stats`, content: lines.join("\n") }),
     });
   } catch (err) {
     console.warn("[poll] Discord post failed", err);
@@ -300,6 +300,8 @@ export type PollResult = { ok: boolean; newMatches: number; message: string };
 
 /** Saves a batch of EA data: new matches into the history, totals into snapshots. */
 export async function ingest(payload: EaPayload): Promise<PollResult> {
+  await refreshSettings();
+  if (!clubId()) return { ok: false, newMatches: 0, message: "No club set up yet: open /setup." };
   const db = sql();
   const errors = [...(payload.errors ?? [])].map(String).slice(0, 20);
   let newMatches = 0;
@@ -349,6 +351,7 @@ export async function ingest(payload: EaPayload): Promise<PollResult> {
  * the GitHub Actions workflow fetches instead and posts the data to /api/ingest.
  */
 export async function pollOnce(): Promise<PollResult> {
+  await refreshSettings();
   const payload: EaPayload = { source: "server", matches: {}, errors: [] };
   try {
     payload.matches!.leagueMatch = await ea.matches("leagueMatch");
@@ -364,14 +367,14 @@ export async function pollOnce(): Promise<PollResult> {
     }
   };
   const previous = (await getSnapshot<Record<string, { name?: string }>>("info"))?.data;
-  const clubName = previous?.[CLUB_ID]?.name ?? "Sarma gang";
+  const clubName = previous?.[clubId()]?.name ?? loadSettings().club?.name ?? "";
   const recent = Date.now() / 1000 - SR_WINDOW_SECONDS;
   const opponentIds = [
     ...new Set(
       (payload.matches!.leagueMatch ?? [])
         .filter((m) => n(m.timestamp) > recent)
         .flatMap((m) => Object.keys(m.clubs ?? {}))
-        .filter((club) => club !== CLUB_ID),
+        .filter((club) => club !== clubId()),
     ),
   ];
   payload.opponents = {};
