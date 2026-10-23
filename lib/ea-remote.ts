@@ -8,7 +8,17 @@ import type { EaPayload } from "./poller";
  * Running locally (next dev doesn't run them) it calls EA directly.
  */
 const onVercel = () => Boolean(process.env.VERCEL_URL);
-const self = (path: string) => `https://${process.env.VERCEL_URL}${path}`;
+// on production, the production address: deployment addresses (VERCEL_URL) can sit behind
+// Vercel's login (Deployment Protection), which would answer with a login page instead
+const self = (path: string) =>
+  `https://${process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL ? process.env.VERCEL_PROJECT_PRODUCTION_URL : process.env.VERCEL_URL}${path}`;
+
+/** The function's JSON, or an error naming what came back instead (e.g. a login page). */
+async function readJson<T>(res: Response): Promise<T> {
+  const type = res.headers.get("content-type") ?? "";
+  if (!type.includes("application/json")) throw new Error(`got ${type.split(";")[0] || "no content type"} (HTTP ${res.status}) instead of data; is Deployment Protection on?`);
+  return (await res.json()) as T;
+}
 // previews sit behind Vercel's login; with "Protection Bypass for Automation" on, this gets through
 const bypass = (): Record<string, string> =>
   process.env.VERCEL_AUTOMATION_BYPASS_SECRET ? { "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET } : {};
@@ -37,8 +47,8 @@ const toClub = (c: Record<string, unknown>): FoundClub => ({
 /** Clubs whose name starts with `name` on a platform (EA's search, up to 25). */
 export async function searchClubs(name: string, platform: string): Promise<FoundClub[]> {
   if (!onVercel()) return (await ea.search(name, platform)).map(toClub);
-  const res = await fetch(self(`/api/ea-search?${new URLSearchParams({ name, platform })}`), { headers: bypass(), cache: "no-store" });
-  const body = (await res.json().catch(() => ({}))) as { clubs?: Record<string, unknown>[]; error?: string };
+  const res = await fetch(self(`/api/ea-search?${new URLSearchParams({ name, platform })}`), { headers: bypass(), cache: "no-store", redirect: "manual" });
+  const body = await readJson<{ clubs?: Record<string, unknown>[]; error?: string }>(res);
   if (!res.ok) throw new Error(body.error ?? `search failed (HTTP ${res.status})`);
   return (body.clubs ?? []).map(toClub);
 }
@@ -49,8 +59,9 @@ export async function fetchPayload(club: string, platform: string): Promise<EaPa
   const res = await fetch(self(`/api/ea-fetch?${new URLSearchParams({ club, platform })}`), {
     headers: { Authorization: `Bearer ${CRON_SECRET}`, ...bypass() },
     cache: "no-store",
+    redirect: "manual",
   });
-  const body = (await res.json().catch(() => ({}))) as EaPayload & { error?: string };
+  const body = await readJson<EaPayload & { error?: string }>(res);
   if (!res.ok) throw new Error(body.error ?? `EA fetch failed (HTTP ${res.status})`);
   return body;
 }
