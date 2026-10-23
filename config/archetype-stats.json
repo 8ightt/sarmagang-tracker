@@ -1,5 +1,6 @@
 {
   "_readme": "Season totals per archetype, copied from the in-game Archetypes > Statistics screen (one screenshot per archetype). asOf is when the screenshots were taken: games the site saves after that are added on top. Percentages and averages are the game's own, as of asOf. avgPasses and avgTackles are ATTEMPTS per match (made ÷ success %), not completed ones.",
+  "clubId": "837026",
   "players": {
     "mo_nm": {
       "season": "Season 1",

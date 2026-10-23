@@ -1,42 +1,4 @@
 {
-  "tagline": "Four FC games, one club. Finally signed a defender.",
-  "players": {
-    "dirty8ightt": {
-      "position": "CAM",
-      "role": "ANY",
-      "nickname": "The Engine",
-      "bio": "Runs the CPU and the midfield: 17 assists in the last 20, the most in the squad. The MOTM voters haven't noticed yet."
-    },
-    "mo_nm": {
-      "nickname": "Big Game Mo",
-      "bio": "23 goals in the last 20 and seven straight games on the scoresheet. Still the first to volunteer for goal when we're short."
-    },
-    "EnEsC-37": {
-      "nickname": "Mr Efficient",
-      "bio": "Splits it right down the middle: 13 goals and 13 assists in the last 20. Won 10 of them too."
-    },
-    "Pakst-": {
-      "nickname": "The Sniper",
-      "bio": "The scope needs cleaning: no goal in 7 games. Leads the squad in tackles lately though, 28 in the last 20."
-    },
-    "x-LadruM-x": {
-      "nickname": "The Wall",
-      "bio": "The club's first real centre-back has 5 MOTM in the last 20, more than anyone. Chipped in 7 goals on top."
-    },
-    "RUPPADOR": {
-      "nickname": "New Signing",
-      "bio": "Scored on debut and hasn't really stopped: 9 goals in 11 games, and only 2 of them lost."
-    },
-    "Hamza__075": {
-      "bio": "4 games, 4 goals, 4 wins. Small sample, perfect record."
-    },
-    "Its-1-Shot-Wisk": {
-      "bio": "Two games, two wins, one MOTM and an 8.4 average. The name promises one shot; hasn't needed it yet."
-    },
-    "HachMonsterrr": {
-      "bio": "Two games, two wins. The stats sheet is still warming up."
-    }
-  },
   "seasons": [
     {
       "name": "Season 1",
@@ -51,15 +13,31 @@
     "chances": 3,
     "chancesAfterSurviving": 1,
     "promotion": {
-      "5": { "matches": 2, "wins": 1 },
-      "4": { "matches": 3, "wins": 2, "confirmed": true },
-      "3": { "matches": 4, "wins": 3 },
-      "2": { "matches": 5, "wins": 4 },
-      "1": { "matches": 5, "wins": 5 }
+      "1": {
+        "matches": 5,
+        "wins": 5
+      },
+      "2": {
+        "matches": 5,
+        "wins": 4
+      },
+      "3": {
+        "matches": 4,
+        "wins": 3
+      },
+      "4": {
+        "matches": 3,
+        "wins": 2,
+        "confirmed": true
+      },
+      "5": {
+        "matches": 2,
+        "wins": 1
+      }
     },
     "targets": {
-      "4": 9,
-      "3": 12
+      "3": 12,
+      "4": 9
     },
     "pointsAfterMissedPromotion": {
       "3": 9

@@ -199,5 +199,7 @@ export type InGameArchetype = {
 export type InGameArchetypes = { season: string; asOf: string; archetypes: Record<string, InGameArchetype> };
 
 export function inGameArchetypes(player: string): InGameArchetypes | null {
+  // the screens were copied for one club; another club's site (same players, other games) ignores them
+  if ((archetypeStats as { clubId?: string }).clubId !== clubId()) return null;
   return (archetypeStats.players as Record<string, InGameArchetypes>)[player] ?? null;
 }
