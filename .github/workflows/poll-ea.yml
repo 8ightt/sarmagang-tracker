@@ -14,10 +14,6 @@ concurrency:
   group: poll-ea
   cancel-in-progress: false
 
-env:
-  CLUB_ID: "837026"
-  PLATFORM: common-gen5
-
 jobs:
   poll:
     runs-on: ubuntu-latest
@@ -25,13 +21,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: scripts
+          sparse-checkout: |
+            scripts
+            api
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Fetch the club's data from EA
+        # the club comes from the site (/api/club, picked on /setup); CLUB_ID as a repository
+        # variable overrides it
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CLUB_ID: ${{ vars.CLUB_ID }}
+          PLATFORM: ${{ vars.PLATFORM }}
         run: |
           pip install --quiet "curl_cffi>=0.7,<1"
           python scripts/fetch-ea.py payload.json
