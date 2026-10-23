@@ -17,7 +17,7 @@ concurrency:
 env:
   # other clubs whose EA data is held here until they have a site of their own (lib/hold.ts),
   # so none of their games drop off EA's last-10 list; space-separated club ids
-  HOLD_CLUB_IDS: "1855658"
+  HOLD_CLUB_IDS: ""
 
 jobs:
   poll:
@@ -72,6 +72,32 @@ jobs:
             402|404) echo "::error::HTTP $status: SITE_URL ($SITE_URL) is not the production address, e.g. https://sarmagang-tracker.vercel.app"; exit 1 ;;
             *) echo "::error::HTTP $status from $SITE_URL: $body"; exit 1 ;;
           esac
+
+      - name: Check the other sites
+        # other deploys of this code, one per line in the EXTRA_SITES secret: "<site url> <its CRON_SECRET>".
+        # Each site says which club it follows (/api/club); runs even when the main site's check
+        # failed, and never fails the run itself
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          EXTRA_SITES: ${{ secrets.EXTRA_SITES }}
+        run: |
+          printf '%s\n' "$EXTRA_SITES" | while read -r site secret; do
+            [ -n "$site" ] && [ -n "$secret" ] || continue
+            site="${site%/}"
+            club=$(curl --silent --max-time 30 "$site/api/club" | python -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or '', d.get('platform') or 'common-gen5')" 2>/dev/null || true)
+            set -- $club
+            if [ -z "${1:-}" ]; then echo "::warning::$site has no club yet (finish /setup there)"; continue; fi
+            if ! CLUB_ID="$1" PLATFORM="${2:-common-gen5}" python scripts/fetch-ea.py extra.json; then
+              echo "::warning::Couldn't fetch club $1 for $site from EA this time"
+              continue
+            fi
+            status=$(curl --silent --show-error --max-time 90 -o extra.txt -w '%{http_code}' -X POST \
+              -H "Authorization: Bearer $secret" -H "Content-Type: application/json" \
+              --data-binary @extra.json "$site/api/ingest" || echo 000)
+            echo "$site (club $1): HTTP $status $(head -c 200 extra.txt | tr '\n' ' ')"
+            case "$status" in 200|207) ;; *) echo "::warning::$site answered HTTP $status" ;; esac
+          done
 
       - name: Hold other clubs' data
         # runs even when the club's own check failed, and never fails the run itself
