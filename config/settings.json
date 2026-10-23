@@ -32,7 +32,8 @@
       },
       "5": {
         "matches": 2,
-        "wins": 1
+        "wins": 1,
+        "confirmed": true
       }
     },
     "targets": {
