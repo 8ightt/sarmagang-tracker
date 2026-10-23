@@ -48,17 +48,17 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
     : undefined;
   const tiles: { label: string; value: string | number; sub: string; warn?: string }[] = [
     { label: "Games", value: p.games, sub: `${p.winRate}% win rate` },
-    { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game${p.goalsEa !== p.goals ? ` · EA: ${p.goalsEa} incl. CPU` : ""}`, warn: cpuWarn },
-    { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game${p.assistsEa !== p.assists ? ` · EA: ${p.assistsEa} incl. CPU` : ""}`, warn: cpuWarn },
+    { label: "Goals", value: p.goals, sub: `${per(p.goals)} per game`, warn: cpuWarn },
+    { label: "Assists", value: p.assists, sub: `${per(p.assists)} per game`, warn: cpuWarn },
     {
       label: "Avg rating",
       value: p.rating.toFixed(1),
-      sub: `Squad avg ${squadRating.toFixed(1)}${p.ratingEstimated ? ` · ${p.ratingEstimated} +CPU game${p.ratingEstimated === 1 ? "" : "s"} estimated` : ""}${p.ratingUnknown ? ` · ${p.ratingUnknown} +CPU game${p.ratingUnknown === 1 ? "" : "s"} left out` : ""}${p.ratingEstimated || p.ratingUnknown ? ` · EA: ${p.ratingEa.toFixed(1)} incl. CPU` : ""}`,
+      sub: `Squad avg ${squadRating.toFixed(1)}${p.ratingEstimated ? ` · ${p.ratingEstimated} rating${p.ratingEstimated === 1 ? "" : "s"} estimated` : ""}${p.ratingUnknown ? ` · ${p.ratingUnknown} game${p.ratingUnknown === 1 ? "" : "s"} without a rating left out` : ""}`,
       warn: cpuWarn,
     },
     { label: "MOTM", value: p.motm, sub: p.games ? `${Math.round((p.motm / p.games) * 100)}% of games` : "" },
-    { label: "Passes", value: p.passes.toLocaleString("en-GB"), sub: `${per(p.passes)} per game${p.passesEa !== p.passes ? ` · EA: ${p.passesEa.toLocaleString("en-GB")} incl. CPU` : ""}`, warn: cpuWarn },
-    { label: "Tackles", value: p.tackles.toLocaleString("en-GB"), sub: `${per(p.tackles)} per game${p.tacklesEa !== p.tackles ? ` · EA: ${p.tacklesEa} incl. CPU` : ""}`, warn: cpuWarn },
+    { label: "Passes", value: p.passes.toLocaleString("en-GB"), sub: `${per(p.passes)} per game`, warn: cpuWarn },
+    { label: "Tackles", value: p.tackles.toLocaleString("en-GB"), sub: `${per(p.tackles)} per game`, warn: cpuWarn },
     {
       label: "Red cards",
       value: p.redsCpu ? `${p.reds}` : p.redsEa,
@@ -352,7 +352,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
                         <strong className="num">{m.goals_for}–{m.goals_against}</strong> {m.opp_name}
                         <span className="muted" style={{ fontSize: 14 }}>{when(m.ts)}</span>
                         {m.motm ? <span className="chip">MOTM</span> : null}
-                        {m.controls_cpu ? <span className="chip chip-ghost">+CPU</span> : null}
                         {m.fixed ? <span className="chip chip-ghost">Real stats</span> : null}
                         {m.clean_sheet ? <span className="chip chip-ghost">CS</span> : null}
                         {m.idle_seconds >= AFK_SECONDS ? <span className="chip chip-shame">AFK {idleLabel(m.idle_seconds)}</span> : null}
@@ -372,8 +371,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
           <p className="muted">No saved matches for {p.gamertag} yet.</p>
         )}
         <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-          Goals, assists, shots, passes and tackles are the player&apos;s own. “+CPU” = the player ran the CPU teammates that
-          game, so EA&apos;s line also had theirs (red cards still do). “Real stats” = corrected from the in-game screen.
+          Goals, assists, shots, passes and tackles are the player&apos;s own, with the CPU teammates&apos; taken out. “Real
+          stats” = corrected from the in-game screen.
           Positions are EA&apos;s group (FWD/MID/DEF/GK) unless the exact one was entered with Fix stats on the match page.
         </p>
       </section>
