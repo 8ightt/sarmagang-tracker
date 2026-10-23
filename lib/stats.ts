@@ -901,7 +901,9 @@ export const getSeasonPlayoffs = cache(async (): Promise<SeasonPlayoffs | null> 
   await refreshSettings();
   const x = currentSeason();
   const win = x ? playoffsWindow(x) : null;
-  if (!x || !win || Date.now() / 1000 < win.from) return null;
+  // only while they're on: once the season is over, the league card (next season, promotion match) is back
+  const now = Date.now() / 1000;
+  if (!x || !win || now < win.from || now > win.to) return null;
   const db = sql();
   const [srCols] = await db`
     select exists (select 1 from information_schema.columns where table_name = 'matches' and column_name = 'our_sr') as ok`;
