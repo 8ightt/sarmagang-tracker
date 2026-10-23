@@ -6,8 +6,9 @@ export function Flag({ nation, size = 24 }: { nation?: string; size?: number }) 
   return <img className="flag" src={flagUrl(nation)} alt="" width={size} height={Math.round(size * 0.6)} style={{ width: size, height: Math.round(size * 0.6) }} />;
 }
 
-export function Crest({ id, size = 30, alt = "" }: { id?: string | null; size?: number; alt?: string }) {
-  return <img src={crestUrl(id)} alt={alt} width={size} height={size} style={{ width: size, height: size, objectFit: "contain" }} />;
+/** A club crest from EA by asset id, or from `src` (our own crest, which may be an upload). */
+export function Crest({ id, src, size = 30, alt = "" }: { id?: string | null; src?: string; size?: number; alt?: string }) {
+  return <img src={src ?? crestUrl(id)} alt={alt} width={size} height={size} style={{ width: size, height: size, objectFit: "contain" }} />;
 }
 
 export function ResultBadge({ r }: { r: "W" | "D" | "L" }) {

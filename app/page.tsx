@@ -1,6 +1,6 @@
 import { Crest, Flag, KitShirt, PosLabel, ResultBadge, ago, when } from "@/components/bits";
 import { currentSeason, loadSettings, playoffsWindow, promotionRule, seasonEnd } from "@/lib/config";
-import { crestUrl, divisionCrestUrl, reputationName, reputationUrl } from "@/lib/ea-assets";
+import { divisionCrestUrl, reputationName, reputationUrl } from "@/lib/ea-assets";
 import { DivisionLadder, ReputationLadder, TopHundred } from "@/components/Ladders";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, getTop100, lastPoll } from "@/lib/stats";
 import { SeasonForm } from "@/components/Forms";
@@ -70,7 +70,7 @@ export default async function Home() {
       <section className="band band-club club-hero">
         <div className="wrap" style={{ gap: 0 }}>
           <div className="hero-main">
-            <img className="hero-crest" src={crestUrl(club.crestAssetId)} alt={`${club.name} crest`} width={180} height={180} />
+            <img className="hero-crest" src={club.crest} alt={`${club.name} crest`} width={180} height={180} />
             <div style={{ minWidth: 0 }}>
               <h1 className="display">{club.name}</h1>
               {settings.tagline ? <p className="tagline" style={{ margin: "14px 0 0" }}>{settings.tagline}</p> : null}
@@ -440,7 +440,7 @@ export default async function Home() {
                     <ResultBadge r={m.result} />
                     <span className="muted" style={{ fontSize: 13, width: 130 }}>{when(m.ts)}</span>
                     <div className="row" style={{ gap: 12, flex: "1 1 280px", flexWrap: "nowrap" }}>
-                      <Crest id={club.crestAssetId} size={30} />
+                      <Crest src={club.crest} size={30} />
                       <span className="score num">{m.goals_for}–{m.goals_against}</span>
                       <Crest id={m.opp_crest} size={30} />
                       <span style={{ fontWeight: 700 }}>{m.opp_name}</span>

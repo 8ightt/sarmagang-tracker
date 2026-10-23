@@ -1,10 +1,10 @@
 import type postgres from "postgres";
 import { cache } from "react";
-import { CLUB_ID, currentSeason, inGameArchetypes, loadSettings, playoffsWindow, promotionRule, seasonOf, type InGameArchetype } from "./config";
+import { CLUB_ID, currentSeason, inGameArchetypes, loadSettings, playoffsWindow, promotionRule, refreshSettings, seasonOf, type InGameArchetype } from "./config";
 import { COUNTER_STATS, counterStat, type Counters } from "./counters";
 import { getSnapshot, sql } from "./db";
 import type { EaMember } from "./ea";
-import { positionName } from "./ea-assets";
+import { crestUrl, positionName } from "./ea-assets";
 import type { TopClub } from "./poller";
 
 /**
@@ -117,6 +117,8 @@ export const idleLabel = (secs: number) => `${Math.floor(secs / 60)}:${String(se
 export type Club = {
   name: string;
   crestAssetId?: string;
+  /** the crest to show: the one uploaded on /settings, else EA's */
+  crest: string;
   /** the crest's main colour, as EA sends it with the kits */
   crestColor?: number;
   stadium?: string;
@@ -143,6 +145,7 @@ export type Club = {
 };
 
 export const getClub = cache(async (): Promise<Club> => {
+  await refreshSettings();
   const [info, overallSnap, searchSnap] = await Promise.all([
     getSnapshot<Record<string, Record<string, any>>>("info"),
     getSnapshot<Record<string, string>[]>("overall"),
@@ -161,6 +164,7 @@ export const getClub = cache(async (): Promise<Club> => {
   return {
     name: c.name ?? "Sarma gang",
     crestAssetId: kit.crestAssetId,
+    crest: loadSettings().look.crest || crestUrl(kit.crestAssetId),
     crestColor: kit.crestColor ? num(kit.crestColor) : undefined,
     stadium: kit.stadName?.trim(),
     kits: [
@@ -237,6 +241,7 @@ export type Member = {
 type Delta = { goals: number; assists: number; motm: number; passes: number; pass_attempts: number; tackles: number };
 
 export const getMembers = cache(async (): Promise<Member[]> => {
+  await refreshSettings();
   const db = sql();
   const fixesReady = (await playersTable()) === "match_players_effective";
   const [snap, cpuRows, cpuPlayerRows, savedRows, ratingRows, fixRows] = await Promise.all([
@@ -304,11 +309,12 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         height: num(m.proHeight),
         nation: m.proNationality ?? "",
         eaPosition: eaPos,
-        position: s.position ?? eaPos ?? "",
-        role: s.role ?? "",
-        nickname: s.nickname,
-        bio: s.bio,
-        photo: s.photo,
+        // an empty value saved on /settings means "not set"
+        position: s.position || eaPos || "",
+        role: s.role || "",
+        nickname: s.nickname || undefined,
+        bio: s.bio || undefined,
+        photo: s.photo || undefined,
         games: num(m.gamesPlayed),
         winRate: num(m.winRate),
         // EA's season totals minus the CPU's share (and with the club's fixes) in saved games
@@ -505,6 +511,7 @@ export const UNKNOWN_ARCHETYPE = -1;
 export async function getArchetypeSeason(
   player: string,
 ): Promise<{ season: string; asOf: number | null; rows: ArchetypeSeason[] } | null> {
+  await refreshSettings();
   const copied = inGameArchetypes(player);
   const current = currentSeason();
   const snap = copied ?? (current ? { season: current.name, asOf: null, archetypes: {} as Record<string, InGameArchetype> } : null);
@@ -760,6 +767,7 @@ export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
  * Games during a season's end-of-season Playoffs are left out (see getSeasonPlayoffs).
  */
 export const getSeason = cache(async (): Promise<Season | null> => {
+  await refreshSettings();
   const db = sql();
   const [exists] = await db`select to_regclass('public.season_state') is not null as ok`;
   if (!exists?.ok) return null; // supabase/migrations/0004 not run yet
@@ -890,6 +898,7 @@ export type SeasonPlayoffs = {
  * start in config/settings.json and the season's last day. Null before they start.
  */
 export const getSeasonPlayoffs = cache(async (): Promise<SeasonPlayoffs | null> => {
+  await refreshSettings();
   const x = currentSeason();
   const win = x ? playoffsWindow(x) : null;
   if (!x || !win || Date.now() / 1000 < win.from) return null;

@@ -63,7 +63,7 @@ export default async function TopHundredPage() {
                   <td className="muted">–</td>
                   <td style={{ textAlign: "left" }}>
                     <span className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
-                      <Crest id={club.crestAssetId} size={26} />
+                      <Crest src={club.crest} size={26} />
                       <strong>{club.name}</strong>
                     </span>
                   </td>

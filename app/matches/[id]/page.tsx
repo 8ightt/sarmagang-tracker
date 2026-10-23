@@ -57,7 +57,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           <div className="scoreboard">
             <div className="scoreboard-side">
               <div className="scoreboard-crests">
-                <Crest id={club.crestAssetId} size={112} alt={`${club.name} crest`} />
+                <Crest src={club.crest} size={112} alt={`${club.name} crest`} />
                 {ourKit ? <KitShirt colors={ourKit} size={56} /> : null}
               </div>
               <strong>{club.name}</strong>

@@ -1,3 +1,4 @@
+import type { LookSettings } from "./config";
 import type { Club } from "./stats";
 
 /** The page ground the accent has to read on (keep in step with --bg in app/globals.css). */
@@ -82,13 +83,16 @@ const inkOn = (c: Rgb) => (contrast(c, [255, 255, 255]) >= contrast(c, [0, 0, 0]
  * The club's colours as site tokens. The accent is the most colourful of the crest colour and
  * the home-kit colours that reads on the dark ground (the most colourful one lightened if none
  * does), so every club gets a legible accent whatever it picked; the club colour is the shirt
- * body, used for fills.
+ * body, used for fills. Colours the club set on /settings (look) win over EA's; an accent that
+ * doesn't read on the ground is still lightened until it does.
  */
-export function clubTheme(club: Pick<Club, "kits" | "crestColor">): ClubTheme {
+export function clubTheme(club: Pick<Club, "kits" | "crestColor">, look: LookSettings = {}): ClubTheme {
   const ground = fromHex(GROUND);
   const valid = (n: number | undefined): n is number => Number.isFinite(n) && (n as number) > 0;
-  const home = (club.kits.find((k) => k.name === "Home")?.colors ?? []).filter(valid).map(toRgb);
-  const candidates = [...(valid(club.crestColor) ? [toRgb(club.crestColor)] : []), ...home];
+  const hex = (v?: string) => (v && /^#[0-9a-f]{6}$/i.test(v) ? fromHex(v) : null);
+  const kitHome = (club.kits.find((k) => k.name === "Home")?.colors ?? []).filter(valid).map(toRgb);
+  const home = hex(look.club) ? [hex(look.club)!, ...kitHome] : kitHome;
+  const candidates = hex(look.accent) ? [hex(look.accent)!] : [...(valid(club.crestColor) ? [toRgb(club.crestColor)] : []), ...home];
   if (!candidates.length)
     return { accent: "#e8e8e3", onAccent: "#0b0c0c", accentLight: "#2a2c2c", club: "#2a2c2c", onClub: "#ffffff", win: "#e8e8e3", onWin: "#0b0c0c" };
 

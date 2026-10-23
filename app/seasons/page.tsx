@@ -1,5 +1,5 @@
 import { Crest, ResultBadge, when } from "@/components/bits";
-import { TIMEZONE, currentSeason, loadSettings, localDay, matchKind, seasonOf, type MatchKind } from "@/lib/config";
+import { TIMEZONE, currentSeason, loadSettings, localDay, matchKind, refreshSettings, seasonOf, type MatchKind } from "@/lib/config";
 import { getClub, getMatches, getSeason } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +26,7 @@ const clock = (ts: number) => new Date(ts * 1000).toLocaleTimeString("en-GB", { 
 type Params = Record<string, string | string[] | undefined>;
 
 export default async function SeasonsPage({ searchParams }: { searchParams: Promise<Params> }) {
+  await refreshSettings();
   const p = await searchParams;
   const one = (k: string) => (Array.isArray(p[k]) ? p[k][0] : p[k]) ?? "";
   const seasons = loadSettings().seasons;
@@ -204,7 +205,7 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
                       <ResultBadge r={m.result} />
                       <span className="muted num" style={{ fontSize: 14, width: 48 }}>{clock(Number(m.ts))}</span>
                       <div className="row" style={{ gap: 12, flex: "1 1 320px", flexWrap: "nowrap" }}>
-                        <Crest id={club.crestAssetId} size={30} />
+                        <Crest src={club.crest} size={30} />
                         <span className="score num">{m.goals_for}–{m.goals_against}</span>
                         <Crest id={m.opp_crest} size={30} />
                         <span style={{ fontWeight: 700 }}>{m.opp_name}</span>

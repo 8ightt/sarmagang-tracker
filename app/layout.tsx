@@ -4,8 +4,8 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { LiveBadge } from "@/components/LiveBadge";
 import { getClub, lastPoll, savedMatchCount } from "@/lib/stats";
-import { crestUrl } from "@/lib/ea-assets";
 import { clubTheme } from "@/lib/club-theme";
+import { loadSettings } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 // a page that can't finish should fail quickly, not hang for minutes
@@ -22,13 +22,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { default: `${club.name} · Clubs stats`, template: `%s · ${club.name}` },
     description: `Live EA FC Clubs stats for ${club.name}.`,
-    icons: club.crestAssetId ? { icon: crestUrl(club.crestAssetId) } : undefined,
+    icons: { icon: club.crest },
   };
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [club, poll, saved] = await Promise.all([getClub(), lastPoll(), savedMatchCount()]);
-  const theme = clubTheme(club);
+  const theme = clubTheme(club, loadSettings().look);
   const vars = {
     "--accent": theme.accent,
     "--on-accent": theme.onAccent,
@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--win": theme.win,
     "--on-win": theme.onWin,
     // the crest, as the watermark on the club-colour bands
-    "--crest": `url("${crestUrl(club.crestAssetId)}")`,
+    "--crest": `url("${club.crest}")`,
   } as React.CSSProperties;
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${accent.variable}`} style={vars}>
@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="site-header">
           <div className="wrap">
             <a className="brand" href="/">
-              <img src={crestUrl(club.crestAssetId)} alt="" width={36} height={36} style={{ objectFit: "contain" }} />
+              <img src={club.crest} alt="" width={36} height={36} style={{ objectFit: "contain" }} />
               <span className="display">{club.name}</span>
             </a>
             <LiveBadge lastCheck={poll?.at ?? null} matchCount={saved.count} />
@@ -58,6 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="wrap">
             <span className="display">FC Clubs Tracker</span>
             <span>Stats, crests and flags from EA&apos;s Clubs data, checked every 2 minutes while you play. Fan site, not affiliated with EA.</span>
+            <a href="/settings" style={{ color: "var(--text-2)", fontWeight: 600 }}>Settings</a>
           </div>
         </footer>
       </body>

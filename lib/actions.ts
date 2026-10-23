@@ -3,7 +3,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { CLUB_PASSWORD } from "./config";
+import { CLUB_PASSWORD, refreshSettings, type ClubSeason, type LeagueRules, type LookSettings, type PlayerSettings } from "./config";
 import { sql } from "./db";
 
 export type ActionState = { ok: boolean; message: string } | null;
@@ -199,4 +199,116 @@ export async function setSeasonState(_prev: ActionState, form: FormData): Promis
       target = excluded.target, anchor_ts = excluded.anchor_ts, updated_by = excluded.updated_by, updated_at = now()`;
   revalidatePath("/", "layout");
   return { ok: true, message: `Season set: Division ${division}, ${points}/${target} points, ${chances} chance(s).` };
+}
+
+export type SettingsSection = "club" | "look" | "players" | "seasons" | "league";
+
+const HEX = /^#[0-9a-f]{6}$/i;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** an uploaded crest, already scaled down in the browser (components/SettingsForms.tsx) */
+const MAX_CREST_CHARS = 400_000;
+const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const num = (v: unknown, min: number, max: number) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= min && n <= max ? n : null;
+};
+
+/** One section of /settings, checked field by field; null with a reason when it doesn't hold. */
+function parseSection(section: SettingsSection, raw: unknown): { value: unknown } | { error: string } {
+  const v = (raw ?? {}) as Record<string, unknown>;
+  switch (section) {
+    case "club":
+      return { value: str(v.tagline, 120) || undefined };
+    case "look": {
+      const look: LookSettings = {};
+      for (const key of ["club", "accent"] as const) {
+        const c = str(v[key], 7);
+        if (c && !HEX.test(c)) return { error: `${key === "club" ? "Shirt colour" : "Accent"} must be a colour like #189745.` };
+        if (c) look[key] = c.toLowerCase();
+      }
+      const crest = typeof v.crest === "string" ? v.crest : "";
+      if (crest && (!/^data:image\/(png|jpeg|webp);base64,/.test(crest) || crest.length > MAX_CREST_CHARS))
+        return { error: "The crest must be a PNG, JPG or WebP image under about 300 KB." };
+      if (crest) look.crest = crest;
+      return { value: look };
+    }
+    case "players": {
+      const players: Record<string, PlayerSettings> = {};
+      for (const [name, p] of Object.entries(v)) {
+        const q = (p ?? {}) as Record<string, unknown>;
+        const photo = str(q.photo, 300);
+        if (photo && !/^(https:\/\/|\/)/.test(photo)) return { error: `${name}: the photo must be an https:// link or a /path.` };
+        // empty strings, not missing keys: an emptied field must also clear what config/settings.json says
+        const entry: PlayerSettings = {
+          nickname: str(q.nickname, 40),
+          bio: str(q.bio, 240),
+          position: str(q.position, 6).toUpperCase(),
+          role: str(q.role, 10).toUpperCase(),
+          photo,
+        };
+        players[name.slice(0, 40)] = entry;
+      }
+      return { value: players };
+    }
+    case "seasons": {
+      if (!Array.isArray(raw)) return { error: "Seasons must be a list." };
+      const seasons: ClubSeason[] = [];
+      for (const s of raw as Record<string, unknown>[]) {
+        const name = str(s.name, 40);
+        const start = str(s.start, 10);
+        const end = str(s.end, 10);
+        if (!name) return { error: "Every season needs a name." };
+        if (!DAY.test(start) || !DAY.test(end) || end < start) return { error: `${name}: enter a start and an end date, end after start.` };
+        const time = (k: string) => {
+          const t = str(s[k], 40);
+          return t && Number.isFinite(Date.parse(t)) ? new Date(t).toISOString() : undefined;
+        };
+        seasons.push({ name, start, end, endsAt: time("endsAt"), playoffsStart: time("playoffsStart"), playoffsMatches: num(s.playoffsMatches, 1, 50) ?? undefined });
+      }
+      return { value: seasons.sort((a, b) => a.start.localeCompare(b.start)) };
+    }
+    case "league": {
+      const chances = num(v.chances, 1, 10);
+      const after = num(v.chancesAfterSurviving, 0, 10);
+      if (chances === null || after === null) return { error: "Chances must be whole numbers." };
+      const league: LeagueRules = { chances, chancesAfterSurviving: after, targets: {}, promotion: {}, pointsAfterMissedPromotion: {} };
+      for (const [d, r] of Object.entries((v.divisions ?? {}) as Record<string, Record<string, unknown>>)) {
+        if (!/^[1-9]$/.test(d)) continue;
+        const target = num(r.target, 1, 99);
+        const matches = num(r.matches, 1, 9);
+        const wins = num(r.wins, 1, 9);
+        const kept = num(r.pointsAfterMissed, 0, 99);
+        if (target !== null) league.targets[d] = target;
+        if (matches !== null && wins !== null) {
+          if (wins > matches) return { error: `Division ${d}: wins needed can't be more than games in the series.` };
+          league.promotion[d] = { matches, wins, confirmed: Boolean(r.confirmed) };
+        }
+        if (kept !== null) league.pointsAfterMissedPromotion[d] = kept;
+      }
+      return { value: league };
+    }
+  }
+}
+
+/** Saves one section of /settings (club password), on top of config/settings.json. */
+export async function saveSettings(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const err = await checkPassword(form.get("password"));
+  if (err) return { ok: false, message: err };
+  const section = String(form.get("section")) as SettingsSection;
+  if (!["club", "look", "players", "seasons", "league"].includes(section)) return { ok: false, message: "Unknown section." };
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(form.get("payload") ?? "null"));
+  } catch {
+    return { ok: false, message: "That didn't come through: reload the page and try again." };
+  }
+  const parsed = parseSection(section, raw);
+  if ("error" in parsed) return { ok: false, message: parsed.error };
+  const key = section === "club" ? "tagline" : section;
+  await sql()`
+    insert into site_settings (key, data, updated_at) values ('main', ${sql().json({ [key]: parsed.value ?? null } as never)}, now())
+    on conflict (key) do update set data = site_settings.data || excluded.data, updated_at = now()`;
+  await refreshSettings(true);
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Saved." };
 }

@@ -60,20 +60,54 @@ export function playoffsWindow(x: ClubSeason): { from: number; to: number } | nu
   return { from: Date.parse(x.playoffsStart) / 1000, to: seasonEnd(x) };
 }
 
+/** The club's own look, overriding what EA sends: colours as #rrggbb, the crest as an image data URL. */
+export type LookSettings = { club?: string; accent?: string; crest?: string };
+
 export type SiteSettings = {
   tagline?: string;
+  look: LookSettings;
   seasons: ClubSeason[];
   players: Record<string, PlayerSettings>;
   league: LeagueRules;
 };
 
-/** Edit config/settings.json and push: the site redeploys with the change. */
+/** What the club saved on /settings (the site_settings table), laid over config/settings.json. */
+let saved: Partial<SiteSettings> = {};
+let savedAt = 0;
+const SETTINGS_TTL_MS = 10_000;
+
+/**
+ * Reads the club's saved settings from the database, at most every SETTINGS_TTL_MS (force after a
+ * save). The data functions that use settings call it first, so loadSettings() can stay synchronous.
+ */
+export async function refreshSettings(force = false) {
+  if (!force && Date.now() - savedAt < SETTINGS_TTL_MS) return;
+  try {
+    const { sql } = await import("./db");
+    const [row] = await sql()`select data from site_settings where key = 'main'`;
+    saved = (row?.data as Partial<SiteSettings> | undefined) ?? {};
+  } catch {
+    // table not there yet (supabase/migrations/0019): the file alone
+    saved = {};
+  }
+  savedAt = Date.now();
+}
+
+/**
+ * config/settings.json with the club's saved settings on top. Players merge field by field, so a
+ * nickname saved on /settings keeps the position set in the file; seasons and league rules saved
+ * on /settings replace the file's.
+ */
 export function loadSettings(): SiteSettings {
-  const s = siteSettings as Partial<SiteSettings>;
-  const league = (s.league ?? {}) as Partial<LeagueRules>;
+  const file = siteSettings as Partial<SiteSettings>;
+  const s = { ...file, ...saved };
+  const players: Record<string, PlayerSettings> = { ...(file.players ?? {}) };
+  for (const [name, p] of Object.entries(saved.players ?? {})) players[name] = { ...players[name], ...p };
+  const league = { ...(file.league ?? {}), ...(saved.league ?? {}) } as Partial<LeagueRules>;
   return {
     tagline: s.tagline,
-    players: s.players ?? {},
+    look: { ...(file.look ?? {}), ...(saved.look ?? {}) },
+    players,
     seasons: s.seasons ?? [],
     league: {
       chances: league.chances ?? 3,

@@ -509,3 +509,30 @@ button.pill:hover { filter: none; }
   .band-club::after { width: 300px; height: 300px; right: -90px; opacity: .07; }
 }
 @media (prefers-contrast: more) { .band-club::before, .band-club::after { display: none; } }
+
+/* settings page */
+.settings { display: flex; flex-direction: column; gap: 24px; }
+.settings-password { display: flex; flex-direction: column; gap: 10px; }
+.settings-form { display: flex; flex-direction: column; gap: 18px; }
+.settings-look { display: flex; flex-wrap: wrap; gap: 28px; align-items: center; }
+.settings-colour, .settings-crest { display: flex; align-items: center; gap: 12px; }
+.settings-colour input[type="color"] { width: 56px; height: 40px; padding: 2px; border: 1.5px solid var(--line-2); border-radius: 10px; background: var(--surface); cursor: pointer; }
+.settings-crest img { width: 72px; height: 72px; object-fit: contain; }
+.settings-crest .pill { position: relative; }
+.settings-players { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 16px; }
+.settings-player { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px 18px; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px 12px; }
+.settings-player legend { font-weight: 800; padding: 0 6px; }
+.settings-player label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.settings-player label.wide { grid-column: 1 / -1; }
+.settings-player label span { font-size: 13px; font-weight: 600; color: var(--muted); }
+.settings-player input, .settings-player textarea { width: 100%; min-width: 0; }
+textarea { font: inherit; padding: 10px 16px; border-radius: 14px; border: 1.5px solid var(--line-2); background: var(--bg); color: var(--text); resize: vertical; }
+textarea:focus-visible { outline: none; border-color: var(--accent); }
+input[type="datetime-local"] { min-height: 46px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line-2); background: var(--bg); color: var(--text); font: inherit; }
+.settings-table td { white-space: nowrap; }
+.settings-table input[type="date"], .settings-table input[type="datetime-local"] { min-height: 40px; }
+input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); }
+@media (max-width: 760px) {
+  .settings-player { grid-template-columns: 1fr 1fr; }
+  .settings-player label:first-of-type { grid-column: 1 / -1; }
+}
