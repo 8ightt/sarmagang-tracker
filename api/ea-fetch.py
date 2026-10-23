@@ -7,10 +7,14 @@ Bearer token, so only the site itself can make it call EA.
 import hmac
 import json
 import os
+import sys
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
-from _eafetch import build_payload
+# Vercel runs functions from the project root, so the shared module next to this file isn't on the path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from _eafetch import build_payload  # noqa: E402
 
 PLATFORMS = {"common-gen5", "nx"}
 
