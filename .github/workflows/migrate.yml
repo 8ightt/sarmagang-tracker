@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 5
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # the other sites' databases (EXTRA_SITES in poll-ea.yml), one connection string per line
+      EXTRA_DATABASE_URLS: ${{ secrets.EXTRA_DATABASE_URLS }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -28,29 +30,43 @@ jobs:
             exit 0
           fi
           sudo apt-get install -y -qq postgresql-client >/dev/null
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "
-            create table if not exists schema_migrations (
-              name text primary key,
-              applied_at timestamptz not null default now()
-            );
-            alter table schema_migrations enable row level security;"
 
-          # 0001-0003 were run by hand in the SQL Editor (0002 needs a GitHub token pasted in).
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "
-            insert into schema_migrations (name) values
-              ('0001_init.sql'), ('0002_schedule_ea_check.sql'), ('0003_live_schedule.sql')
-            on conflict do nothing;"
+          migrate() {
+            db="$1"
+            psql "$db" -v ON_ERROR_STOP=1 -q -c "
+              create table if not exists schema_migrations (
+                name text primary key,
+                applied_at timestamptz not null default now()
+              );
+              alter table schema_migrations enable row level security;"
 
-          for file in $(ls supabase/migrations/*.sql | sort); do
-            name=$(basename "$file")
-            done=$(psql "$DATABASE_URL" -tA -c "select 1 from schema_migrations where name = '$name'")
-            if [ "$done" = "1" ]; then
-              echo "skip  $name"
-              continue
-            fi
-            echo "apply $name"
-            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q --single-transaction \
-              -f "$file" \
-              -c "insert into schema_migrations (name) values ('$name')"
-            echo "::notice::Applied $name"
+            # 0001-0003 were run by hand in the SQL Editor (0002 needs a GitHub token pasted in).
+            psql "$db" -v ON_ERROR_STOP=1 -q -c "
+              insert into schema_migrations (name) values
+                ('0001_init.sql'), ('0002_schedule_ea_check.sql'), ('0003_live_schedule.sql')
+              on conflict do nothing;"
+
+            for file in $(ls supabase/migrations/*.sql | sort); do
+              name=$(basename "$file")
+              done=$(psql "$db" -tA -c "select 1 from schema_migrations where name = '$name'")
+              if [ "$done" = "1" ]; then
+                echo "skip  $name"
+                continue
+              fi
+              echo "apply $name"
+              psql "$db" -v ON_ERROR_STOP=1 -q --single-transaction \
+                -f "$file" \
+                -c "insert into schema_migrations (name) values ('$name')"
+              echo "::notice::Applied $name"
+            done
+          }
+
+          echo "== this site's database"
+          migrate "$DATABASE_URL"
+          n=1
+          printf '%s\n' "$EXTRA_DATABASE_URLS" | while read -r db; do
+            [ -n "$db" ] || continue
+            n=$((n + 1))
+            echo "== database $n"
+            migrate "$db"
           done

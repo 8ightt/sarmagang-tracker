@@ -1,11 +1,24 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveStatFixes, setCaptain, setSeasonCpuReds, setSeasonState, toggleCpuRed, type ActionState } from "@/lib/actions";
+import { checkNow, saveStatFixes, setCaptain, setSeasonCpuReds, setSeasonState, toggleCpuRed, type ActionState } from "@/lib/actions";
 
 function Msg({ state }: { state: ActionState }) {
   if (!state) return null;
   return <span className={`form-msg ${state.ok ? "ok" : "err"}`} role="status">{state.message}</span>;
+}
+
+/** Fetches from EA right away (at most once a minute, see checkNow). */
+export function CheckNowButton() {
+  const [state, action, pending] = useActionState(checkNow, null);
+  return (
+    <form action={action} className="inline-form" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+      <button type="submit" className="pill" disabled={pending}>
+        {pending ? "Checking EA…" : "Check now"}
+      </button>
+      <Msg state={state} />
+    </form>
+  );
 }
 
 export function CpuRedButton({ matchId, player, isCpu }: { matchId: string; player: string; isCpu: boolean }) {

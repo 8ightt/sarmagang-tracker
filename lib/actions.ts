@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { checkEa } from "./check-ea";
 import { checkPassword } from "./password";
 import { refreshSettings, type ClubSeason, type LeagueRules, type LookSettings, type PlayerSettings } from "./config";
 import { sql } from "./db";
@@ -143,6 +144,21 @@ export async function saveStatFixes(_prev: ActionState, form: FormData): Promise
   });
   revalidatePath("/", "layout");
   return { ok: true, message: fixed ? `Saved the real stats for ${fixed} player(s).` : "Back to EA's numbers for this match." };
+}
+
+/** Seconds between EA checks the "Check now" button may start; anyone can press it, so EA stays unhammered. */
+const CHECK_NOW_GAP = 60;
+
+/** The club page's "Check now": one EA check right away instead of waiting for the timer. */
+export async function checkNow(_prev: ActionState): Promise<ActionState> {
+  const [last] = await sql()`select extract(epoch from now() - at)::int as ago from poll_log order by id desc limit 1`;
+  if (last && Number(last.ago) < CHECK_NOW_GAP) {
+    return { ok: true, message: `Checked ${Number(last.ago)}s ago; try again in ${CHECK_NOW_GAP - Number(last.ago)}s.` };
+  }
+  const result = await checkEa("button");
+  revalidatePath("/", "layout");
+  if (!result.ok) return { ok: false, message: "EA didn't answer properly; the timer tries again soon." };
+  return { ok: true, message: result.newMatches ? `${result.newMatches} new game${result.newMatches === 1 ? "" : "s"} saved.` : "Up to date: no new games yet." };
 }
 
 /** Sets the league season as shown in the lobby right now; later results are applied automatically. */

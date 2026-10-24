@@ -4,7 +4,7 @@ import { clubId, currentSeason, loadSettings, playoffsWindow, promotionRule, ref
 import { divisionCrestUrl, reputationName, reputationUrl } from "@/lib/ea-assets";
 import { DivisionLadder, ReputationLadder, TopHundred } from "@/components/Ladders";
 import { divisionName, getClub, getMatches, getMembers, getRecords, getSeason, getSeasonPlayoffs, getTactics, getTop100, lastPoll } from "@/lib/stats";
-import { SeasonForm } from "@/components/Forms";
+import { CheckNowButton, SeasonForm } from "@/components/Forms";
 import { Tactics } from "@/components/Tactics";
 import { getPlayerTakes } from "@/lib/takes";
 
@@ -81,6 +81,9 @@ export default async function Home() {
               <p className="meta" style={{ margin: "6px 0 0" }}>
                 {club.stadium ? `Home ground: ${club.stadium} · ` : ""}Updated {ago(poll?.at)}
               </p>
+              <div style={{ marginTop: 10 }}>
+                <CheckNowButton />
+              </div>
             </div>
             <div className="hero-side">
               <div className="hero-standing">
