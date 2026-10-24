@@ -1,5 +1,5 @@
 import { Crest, ResultBadge, when } from "@/components/bits";
-import { TIMEZONE, currentSeason, loadSettings, localDay, matchKind, refreshSettings, seasonOf, type MatchKind } from "@/lib/config";
+import { TIMEZONE, currentSeason, loadSettings, localDay, matchKind, refreshSettings, seasonEnd, seasonOf, type MatchKind } from "@/lib/config";
 import { getClub, getMatches, getSeason } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +30,9 @@ export default async function SeasonsPage({ searchParams }: { searchParams: Prom
   const p = await searchParams;
   const one = (k: string) => (Array.isArray(p[k]) ? p[k][0] : p[k]) ?? "";
   const seasons = loadSettings().seasons;
-  const current = currentSeason();
+  const latest = currentSeason();
+  // a season that has ended isn't current: games after it would all be filtered out
+  const current = latest && Date.now() / 1000 <= seasonEnd(latest) ? latest : null;
   // the current season by default; "all" shows every saved game
   const seasonParam = one("season") || current?.name || "all";
   const season = seasons.find((x) => x.name === seasonParam) ?? null;
