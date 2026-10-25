@@ -762,7 +762,7 @@ export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
  *   club in its division with all chances back and the points one win short of the target
  *   (Division 3: 9 of 12, seen in the lobby on 14 Oct).
  * - Losing the last chance means a relegation match: win and you stay (with some chances
- *   back), lose and you go down a division.
+ *   back, and the win's points, which can reach the promotion match), lose and you go down a division.
  * Points targets per division and the chances you get back are in config/settings.json.
  * Games during a season's end-of-season Playoffs are left out (see getSeasonPlayoffs).
  */
@@ -827,9 +827,15 @@ export const getSeason = cache(async (): Promise<Season | null> => {
 
     if (phase === "relegation") {
       if (g.result === "W") {
+        // the win's points count too: enough of them goes straight to the promotion match (AFC DWS, 26 Oct)
+        events.push({ ts, kind: "survived", division });
+        points += POINTS.W;
         chances = league.chancesAfterSurviving;
         phase = "league";
-        events.push({ ts, kind: "survived", division });
+        if (points >= target) {
+          phase = "playoffs";
+          events.push({ ts, kind: "playoffs", division });
+        }
       } else if (g.result === "L") {
         const down = Math.min(LOWEST_DIVISION, division + 1);
         events.push({ ts, kind: "relegated", division: down });
