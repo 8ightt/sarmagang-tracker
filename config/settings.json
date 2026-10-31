@@ -24,8 +24,9 @@
         "wins": 5
       },
       "2": {
-        "matches": 5,
-        "wins": 4
+        "matches": 4,
+        "wins": 4,
+        "confirmed": true
       },
       "3": {
         "matches": 4,
@@ -43,6 +44,7 @@
       }
     },
     "targets": {
+      "2": 16,
       "3": 12,
       "4": 9,
       "5": 7
