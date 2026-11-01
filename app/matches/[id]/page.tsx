@@ -27,7 +27,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   // 0 seconds without EA's quit flag: left early (e.g. before a red was shown) and EA wiped the line
   const left = (p: (typeof players)[number]) => !p.quit && p.seconds === 0;
   const quitters = [
-    ...players.filter((p) => p.quit).map((p) => `${p.player} quit at ${Math.round(p.seconds / 60)}′`),
+    ...players.filter((p) => p.quit).map((p) => `${p.player} left`),
     ...players.filter(left).map((p) => `${p.player} left`),
   ];
   // EA sends promotion match games as league games; the season replay knows which ones they were
@@ -141,7 +141,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                             {p.motm ? <span className="chip">MOTM</span> : null}
                             {m.captain === p.player ? <span className="chip chip-ghost">C</span> : null}
                             {p.quit ? (
-                              <span className="chip chip-shame" title="Left mid-game. EA wiped this line (the rating is its quit penalty); passes and the like come from the hidden counters, goals conceded are the team's">Quit {Math.round(p.seconds / 60)}′</span>
+                              <span className="chip chip-shame" title="Left mid-game. EA wiped this line (the rating is its quit penalty); passes and the like come from the hidden counters, goals conceded are the team's">Left</span>
                             ) : null}
                             {left(p) ? (
                               <span className="chip chip-shame" title="Left the game early. EA wiped the whole line: no minutes, stats or cards (a red shown after he left too), and the 3.0 is EA's fill-in, left out of the average">Left</span>
