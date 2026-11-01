@@ -61,8 +61,13 @@ export default async function PlayerPage({ params }: { params: Promise<{ name: s
     { label: "Tackles", value: p.tackles.toLocaleString("en-GB"), sub: `${per(p.tackles)} per game`, warn: cpuWarn },
     {
       label: "Red cards",
-      value: p.redsCpu ? `${p.reds}` : p.redsEa,
-      sub: p.redsCpu ? `${p.redsEa} on EA · ${p.redsCpu} were the CPU's` : p.controlsCpu ? "EA total · may include CPU cards" : "",
+      value: p.redsCpu || p.redsMissed ? `${p.reds}` : p.redsEa,
+      sub: [
+        p.redsCpu ? `${p.redsEa} on EA · ${p.redsCpu} were the CPU's` : p.controlsCpu ? "EA total · may include CPU cards" : "",
+        p.redsMissed ? `${p.redsMissed} EA missed (left before it was shown)` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
     },
     ...(t?.games
       ? [

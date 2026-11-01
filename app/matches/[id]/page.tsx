@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
+import { CaptainForm, CpuRedButton, FixStatsForm, MissedRedButton } from "@/components/Forms";
 import { Crest, Flag, KitShirt, PosLabel, Rating, ResultBadge, when } from "@/components/bits";
 import { COUNTER_STATS, counterStat } from "@/lib/counters";
 import { groupShort } from "@/lib/ea-assets";
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await getMatch((await params).id);
   if (!data) notFound();
-  const { match: m, players, team, cpuReds } = data;
+  const { match: m, players, team, cpuReds, missedReds } = data;
   const [club, memberList] = await Promise.all([getClub(), getMembers()]);
   const members = new Map(memberList.map((x) => [x.gamertag, x]));
   const cpuGoals = m.goals_for - players.reduce((s, p) => s + p.goals, 0);
@@ -24,7 +24,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
     ...(cpuGoals > 0 ? [cpuGoals > 1 ? `CPU ×${cpuGoals}` : "CPU"] : []),
   ];
   const motm = players.find((p) => p.motm);
-  const quitters = players.filter((p) => p.quit).map((p) => `${p.player} quit at ${Math.round(p.seconds / 60)}′`);
+  // 0 seconds without EA's quit flag: left early (e.g. before a red was shown) and EA wiped the line
+  const left = (p: (typeof players)[number]) => !p.quit && p.seconds === 0;
+  const quitters = [
+    ...players.filter((p) => p.quit).map((p) => `${p.player} quit at ${Math.round(p.seconds / 60)}′`),
+    ...players.filter(left).map((p) => `${p.player} left`),
+  ];
   // EA sends promotion match games as league games; the season replay knows which ones they were
   const promo = (await getSeason())?.promotionGames[m.id] ?? null;
   const ourKit = m.our_kit ?? club.kits[0]?.colors;
@@ -34,7 +39,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
     { label: "Passes completed", v: stat("passesmade"), sub: stat("passattempts") },
     { label: "Tackles won", v: stat("tacklesmade"), sub: stat("tackleattempts") },
     { label: "Saves", v: stat("saves") },
-    { label: "Red cards", v: stat("redcards") },
+    { label: "Red cards", v: [stat("redcards")[0] + missedReds.size, stat("redcards")[1]] },
   ];
 
   const kindLabel = promo
@@ -138,6 +143,9 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                             {p.quit ? (
                               <span className="chip chip-shame" title="Left mid-game. EA wiped this line (the rating is its quit penalty); passes and the like come from the hidden counters, goals conceded are the team's">Quit {Math.round(p.seconds / 60)}′</span>
                             ) : null}
+                            {left(p) ? (
+                              <span className="chip chip-shame" title="Left the game early. EA wiped the whole line: no minutes, stats or cards, and the 3.0 is EA's fill-in, left out of the average">Left</span>
+                            ) : null}
                             {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
                             {p.clean_sheet ? <span className="chip chip-ghost" title="EA credited a clean sheet">CS</span> : null}
                             {p.idle_seconds >= AFK_SECONDS ? (
@@ -166,7 +174,15 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                             </div>
                           ) : null}
                         </td>
-                        <td>{p.reds ? <CpuRedButton matchId={m.id} player={p.player} isCpu={cpuReds.has(p.player)} /> : <span className="muted">–</span>}</td>
+                        <td>
+                          {p.reds ? (
+                            <CpuRedButton matchId={m.id} player={p.player} isCpu={cpuReds.has(p.player)} />
+                          ) : left(p) || missedReds.has(p.player) ? (
+                            <MissedRedButton matchId={m.id} player={p.player} added={missedReds.has(p.player)} />
+                          ) : (
+                            <span className="muted">–</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}

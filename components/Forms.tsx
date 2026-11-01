@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { checkNow, saveStatFixes, setCaptain, setSeasonCpuReds, setSeasonState, toggleCpuRed, type ActionState } from "@/lib/actions";
+import { checkNow, saveStatFixes, setCaptain, setSeasonCpuReds, setSeasonState, toggleCpuRed, toggleMissedRed, type ActionState } from "@/lib/actions";
 
 function Msg({ state }: { state: ActionState }) {
   if (!state) return null;
@@ -33,6 +33,23 @@ export function CpuRedButton({ matchId, player, isCpu }: { matchId: string; play
       </label>
       <button type="submit" className={isCpu ? "ghost" : "danger"} disabled={pending}>
         {isCpu ? "CPU card · undo" : "His card · mark as CPU"}
+      </button>
+      <Msg state={state} />
+    </form>
+  );
+}
+
+/** For a player who left before his red card was shown: EA has no card, the club adds it. */
+export function MissedRedButton({ matchId, player, added }: { matchId: string; player: string; added: boolean }) {
+  const [state, action, pending] = useActionState(toggleMissedRed, null);
+  return (
+    <form action={action} className="inline-form" style={{ justifyContent: "flex-end" }}>
+      <input type="hidden" name="matchId" value={matchId} />
+      <input type="hidden" name="player" value={player} />
+      {added ? <span className="chip chip-shame" title="Two yellows; left before the red was shown, so EA never recorded it">Red · 2nd yellow</span> : null}
+      <input type="password" name="password" placeholder="Club password" aria-label="Club password" style={{ width: 150 }} required />
+      <button type="submit" className={added ? "ghost" : "danger"} disabled={pending}>
+        {added ? "Undo" : "Add red card"}
       </button>
       <Msg state={state} />
     </form>
