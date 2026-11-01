@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CaptainForm, CpuRedButton, FixStatsForm, MissedRedButton } from "@/components/Forms";
+import { CaptainForm, CpuRedButton, FixStatsForm } from "@/components/Forms";
 import { Crest, Flag, KitShirt, PosLabel, Rating, ResultBadge, when } from "@/components/bits";
 import { COUNTER_STATS, counterStat } from "@/lib/counters";
 import { groupShort } from "@/lib/ea-assets";
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await getMatch((await params).id);
   if (!data) notFound();
-  const { match: m, players, team, cpuReds, missedReds } = data;
+  const { match: m, players, team, cpuReds } = data;
   const [club, memberList] = await Promise.all([getClub(), getMembers()]);
   const members = new Map(memberList.map((x) => [x.gamertag, x]));
   const cpuGoals = m.goals_for - players.reduce((s, p) => s + p.goals, 0);
@@ -39,7 +39,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
     { label: "Passes completed", v: stat("passesmade"), sub: stat("passattempts") },
     { label: "Tackles won", v: stat("tacklesmade"), sub: stat("tackleattempts") },
     { label: "Saves", v: stat("saves") },
-    { label: "Red cards", v: [stat("redcards")[0] + missedReds.size, stat("redcards")[1]] },
+    { label: "Red cards", v: stat("redcards") },
   ];
 
   const kindLabel = promo
@@ -144,7 +144,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                               <span className="chip chip-shame" title="Left mid-game. EA wiped this line (the rating is its quit penalty); passes and the like come from the hidden counters, goals conceded are the team's">Quit {Math.round(p.seconds / 60)}′</span>
                             ) : null}
                             {left(p) ? (
-                              <span className="chip chip-shame" title="Left the game early. EA wiped the whole line: no minutes, stats or cards, and the 3.0 is EA's fill-in, left out of the average">Left</span>
+                              <span className="chip chip-shame" title="Left the game early. EA wiped the whole line: no minutes, stats or cards (a red shown after he left too), and the 3.0 is EA's fill-in, left out of the average">Left</span>
                             ) : null}
                             {p.fixed ? <span className="chip chip-ghost" title="Corrected from the in-game screen">Real stats</span> : null}
                             {p.clean_sheet ? <span className="chip chip-ghost" title="EA credited a clean sheet">CS</span> : null}
@@ -174,15 +174,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                             </div>
                           ) : null}
                         </td>
-                        <td>
-                          {p.reds ? (
-                            <CpuRedButton matchId={m.id} player={p.player} isCpu={cpuReds.has(p.player)} />
-                          ) : left(p) || missedReds.has(p.player) ? (
-                            <MissedRedButton matchId={m.id} player={p.player} added={missedReds.has(p.player)} />
-                          ) : (
-                            <span className="muted">–</span>
-                          )}
-                        </td>
+                        <td>{p.reds ? <CpuRedButton matchId={m.id} player={p.player} isCpu={cpuReds.has(p.player)} /> : <span className="muted">–</span>}</td>
                       </tr>
                     );
                   })}

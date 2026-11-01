@@ -31,31 +31,6 @@ export async function toggleCpuRed(_prev: ActionState, form: FormData): Promise<
   return { ok: true, message: existing ? "Red card given back to the player." : "Red card moved to the CPU." };
 }
 
-/**
- * A red card EA never recorded: the player left before it was shown, so EA wiped his line
- * (deturk_, two yellows, 8–1 vs Lunden BoIS, 1 Nov). Stored as a negative CPU-card correction.
- */
-export async function toggleMissedRed(_prev: ActionState, form: FormData): Promise<ActionState> {
-  const err = await checkPassword(form.get("password"));
-  if (err) return { ok: false, message: err };
-  const matchId = text(form, "matchId", 40);
-  const player = text(form, "player", 40);
-  const db = sql();
-  const [row] = await db`select reds from match_players where match_id = ${matchId} and player = ${player}`;
-  if (!row) return { ok: false, message: "That player isn't in this match." };
-  if (row.reds > 0) return { ok: false, message: "EA already has a red card for this player here." };
-  const [existing] = await db`select id from corrections where match_id = ${matchId} and player = ${player} and stat = 'reds' and amount < 0`;
-  if (existing) {
-    await db`delete from corrections where id = ${existing.id}`;
-  } else {
-    await db`
-      insert into corrections (match_id, player, stat, amount, note, created_by)
-      values (${matchId}, ${player}, 'reds', -1, 'Red card EA missed: two yellows, left before it was shown', ${text(form, "by", 40) || null})`;
-  }
-  revalidatePath("/", "layout");
-  return { ok: true, message: existing ? "Red card taken off again." : "Red card added (second yellow)." };
-}
-
 /** Season-level correction for red cards from before the site saved matches. */
 export async function setSeasonCpuReds(_prev: ActionState, form: FormData): Promise<ActionState> {
   const err = await checkPassword(form.get("password"));
