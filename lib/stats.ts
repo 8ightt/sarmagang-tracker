@@ -220,6 +220,8 @@ export type Member = {
   motm: number;
   redsEa: number;
   redsCpu: number;
+  /** red cards EA never recorded: the player left before it was shown (entered on the match page while it had a button, 1 Nov) */
+  redsMissed: number;
   reds: number;
   passes: number;
   passPct: number;
@@ -246,7 +248,9 @@ export const getMembers = cache(async (): Promise<Member[]> => {
   const fixesReady = (await playersTable()) === "match_players_effective";
   const [snap, cpuRows, cpuPlayerRows, savedRows, ratingRows, fixRows] = await Promise.all([
     getSnapshot<{ members: EaMember[] }>("members"),
-    db`select player, sum(amount)::int as n from corrections where stat = 'reds' group by player`,
+    // a positive amount is a CPU card taken off the player, a negative one a red EA missed
+    db`select player, coalesce(sum(amount) filter (where amount > 0), 0)::int as n, coalesce(-sum(amount) filter (where amount < 0), 0)::int as missed
+        from corrections where stat = 'reds' group by player`,
     db`select distinct player from match_players where controls_cpu`,
     db`select mp.player, m.ts from match_players mp join matches m on m.id = mp.match_id where mp.seconds > 0`,
     // lines whose rating isn't EA's: unknown or estimated (+CPU), or fixed from the in-game screen; needs migration 0017
@@ -271,6 +275,7 @@ export const getMembers = cache(async (): Promise<Member[]> => {
   const members = snap?.data?.members ?? [];
   const settings = loadSettings();
   const cpuReds = new Map(cpuRows.map((r) => [r.player as string, r.n as number]));
+  const missedReds = new Map(cpuRows.map((r) => [r.player as string, r.missed as number]));
   const cpuPlayers = new Set(cpuPlayerRows.map((r) => r.player as string));
   const fixDelta = new Map(fixRows.map((r) => [r.player as string, r as unknown as Delta]));
   // saved games of the season EA's totals cover
@@ -298,6 +303,7 @@ export const getMembers = cache(async (): Promise<Member[]> => {
       const eaPos = positionName(m.proPos);
       const redsEa = num(m.redCards);
       const redsCpu = cpuReds.get(m.name) ?? 0;
+      const redsMissed = missedReds.get(m.name) ?? 0;
       const fix = fixDelta.get(m.name) ?? { goals: 0, assists: 0, motm: 0, passes: 0, pass_attempts: 0, tackles: 0 };
       // EA only sends pass success %, so its attempts are worked back from that
       const passesEa = num(m.passesMade);
@@ -336,7 +342,8 @@ export const getMembers = cache(async (): Promise<Member[]> => {
         motm: Math.max(0, num(m.manOfTheMatch) + fix.motm),
         redsEa,
         redsCpu,
-        reds: Math.max(0, redsEa - redsCpu),
+        redsMissed,
+        reds: Math.max(0, redsEa - redsCpu) + redsMissed,
         passes,
         passPct: attempts > 0 ? Math.round((passes / attempts) * 100) : num(m.passSuccessRate),
         passesEa,
@@ -389,7 +396,9 @@ export async function getMatch(id: string) {
     match,
     players,
     team: match.team ?? { us: null, them: null },
-    cpuReds: new Map(cpuReds.map((r) => [r.player as string, r.n as number])),
+    // positive: CPU card taken off the player; negative: a red EA missed
+    cpuReds: new Map(cpuReds.filter((r) => r.n > 0).map((r) => [r.player as string, r.n as number])),
+    missedReds: new Set(cpuReds.filter((r) => r.n < 0).map((r) => r.player as string)),
   };
 }
 
