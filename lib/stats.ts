@@ -762,7 +762,7 @@ export const divisionName = (d: number) => (d <= 0 ? "Elite" : `Division ${d}`);
  *   club in its division with all chances back and the points one win short of the target
  *   (Division 3: 9 of 12, seen in the lobby on 14 Oct).
  * - Losing the last chance means a relegation match: win and you stay (with some chances
- *   back, but no points for the win: AFC DWS stayed on 9 of 12 after one, 30 Oct), lose and you go down a division.
+ *   back, all 3, but no points for the win: AFC DWS stayed on 9 of 12 after one, 30 Oct), lose and you go down a division.
  * Points targets per division and the chances you get back are in config/settings.json.
  * Games during a season's end-of-season Playoffs are left out (see getSeasonPlayoffs).
  */

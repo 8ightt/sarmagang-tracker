@@ -124,7 +124,7 @@ export function loadSettings(): SiteSettings {
     seasons: s.seasons ?? [],
     league: {
       chances: league.chances ?? 3,
-      chancesAfterSurviving: league.chancesAfterSurviving ?? 1,
+      chancesAfterSurviving: league.chancesAfterSurviving ?? 3,
       targets: league.targets ?? {},
       promotion: league.promotion ?? {},
       pointsAfterMissedPromotion: league.pointsAfterMissedPromotion ?? {},

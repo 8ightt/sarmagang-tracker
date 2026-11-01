@@ -17,7 +17,7 @@
   ],
   "league": {
     "chances": 3,
-    "chancesAfterSurviving": 1,
+    "chancesAfterSurviving": 3,
     "promotion": {
       "1": {
         "matches": 5,
