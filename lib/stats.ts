@@ -29,8 +29,8 @@ export type MatchRow = {
   goals_against: number;
   result: "W" | "D" | "L";
   dnf: boolean;
-  /** one of our players quit mid-game: the club takes the loss */
-  we_quit?: boolean;
+  /** our players who quit mid-game (the rest played on), comma-separated */
+  quitters?: string | null;
   minutes: number;
   team: { us: Record<string, number> | null; them: Record<string, number> | null } | null;
   captain?: string | null;
@@ -365,7 +365,7 @@ export async function getMatches(limit = 50): Promise<MatchRow[]> {
   return (await sql()`
     select m.id, m.ts, m.match_type, m.opp_id, m.opp_name, m.opp_crest, m.goals_for, m.goals_against,
            m.result, m.dnf, m.minutes, m.team, n.captain, ${kits},
-           exists (select 1 from match_players q where q.match_id = m.id and q.quit) as we_quit
+           (select string_agg(q.player, ', ' order by q.player) from match_players q where q.match_id = m.id and q.quit) as quitters
     from matches m left join match_notes n on n.match_id = m.id
     order by m.ts desc limit ${limit}`) as unknown as MatchRow[];
 }
