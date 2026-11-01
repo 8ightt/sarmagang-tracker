@@ -771,7 +771,8 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   const db = sql();
   const [exists] = await db`select to_regclass('public.season_state') is not null as ok`;
   if (!exists?.ok) return null; // supabase/migrations/0004 not run yet
-  const [state] = await db`select division, points, chances, target, anchor_ts, updated_by, updated_at from season_state where id = 1`;
+  // select * so the page keeps working before 0022 (promotion_played, promotion_wins) is applied
+  const [state] = await db`select * from season_state where id = 1`;
   if (!state) return null;
   const games = (await db`
     select id, ts, result, opp_name, goals_for, goals_against, match_type from matches
@@ -790,8 +791,20 @@ export const getSeason = cache(async (): Promise<Season | null> => {
   let phase: SeasonPhase = points >= target ? "playoffs" : chances <= 0 ? "relegation" : "league";
   const events: SeasonEvent[] = [];
   let results: Season["results"] = [];
-  let series = { played: 0, wins: 0 };
+  let series = phase === "playoffs" ? { played: Number(state.promotion_played ?? 0), wins: Number(state.promotion_wins ?? 0) } : { played: 0, wins: 0 };
+  // promotion games already played when the state was set: the last ones before it
+  const before = series.played
+    ? ((await db`
+        select id, ts, result, opp_name, goals_for, goals_against, match_type from matches
+        where match_type in ('leagueMatch', 'playoffMatch') and ts <= ${Number(state.anchor_ts)} order by ts desc limit ${series.played}`) as unknown as (MatchRow & {
+        opp_name: string;
+      })[])
+    : [];
+  let seriesGames: Season["results"] = before.reverse().map((g) => ({
+    id: g.id, ts: Number(g.ts), result: g.result, opp: g.opp_name, score: `${g.goals_for}–${g.goals_against}`, type: g.match_type,
+  }));
   const promotionGames: Season["promotionGames"] = {};
+  seriesGames.forEach((g, i) => (promotionGames[g.id] = { game: i + 1, of: promotionRule(division).matches, division }));
   const newSeason = (d: number) => {
     division = d;
     points = 0;
@@ -800,6 +813,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     phase = "league";
     results = [];
     series = { played: 0, wins: 0 };
+    seriesGames = [];
   };
 
   // games in the end-of-season Playoffs don't move league points or chances
@@ -812,6 +826,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
     if (phase === "playoffs") {
       series.played += 1;
       if (g.result === "W") series.wins += 1;
+      seriesGames.push(results[results.length - 1]);
       const rule = promotionRule(division);
       promotionGames[g.id] = { game: series.played, of: rule.matches, division };
       if (series.wins >= rule.wins) {
@@ -867,7 +882,7 @@ export const getSeason = cache(async (): Promise<Season | null> => {
             matches: promotionRule(division).matches,
             winsNeeded: promotionRule(division).wins,
             confirmed: promotionRule(division).confirmed,
-            games: results.slice(results.length - series.played),
+            games: seriesGames,
           }
         : null,
     promotionGames,

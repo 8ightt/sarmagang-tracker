@@ -172,14 +172,21 @@ export async function setSeasonState(_prev: ActionState, form: FormData): Promis
   if (division === null || division < 1 || division > 10) return { ok: false, message: "Division must be 1–10." };
   if (points === null || target === null || target < 1) return { ok: false, message: "Enter the points and the target." };
   if (chances === null || chances > 3) return { ok: false, message: "Chances must be 0–3." };
+  // only during the promotion match: how far the series already is
+  const inSeries = points >= target;
+  const played = inSeries ? (intOrNull(form.get("promotionPlayed")) ?? 0) : 0;
+  const wins = inSeries ? (intOrNull(form.get("promotionWins")) ?? 0) : 0;
+  if (played > 5 || wins > played) return { ok: false, message: "Promotion match: wins can't be more than games played (at most 5)." };
   const now = Math.floor(Date.now() / 1000);
   await sql()`
-    insert into season_state (id, division, points, chances, target, anchor_ts, updated_by, updated_at)
-    values (1, ${division}, ${points}, ${chances}, ${target}, ${now}, ${text(form, "by", 40) || null}, now())
+    insert into season_state (id, division, points, chances, target, anchor_ts, promotion_played, promotion_wins, updated_by, updated_at)
+    values (1, ${division}, ${points}, ${chances}, ${target}, ${now}, ${played}, ${wins}, ${text(form, "by", 40) || null}, now())
     on conflict (id) do update set division = excluded.division, points = excluded.points, chances = excluded.chances,
-      target = excluded.target, anchor_ts = excluded.anchor_ts, updated_by = excluded.updated_by, updated_at = now()`;
+      target = excluded.target, anchor_ts = excluded.anchor_ts, promotion_played = excluded.promotion_played,
+      promotion_wins = excluded.promotion_wins, updated_by = excluded.updated_by, updated_at = now()`;
   revalidatePath("/", "layout");
-  return { ok: true, message: `Season set: Division ${division}, ${points}/${target} points, ${chances} chance(s).` };
+  const series = inSeries ? `, promotion match ${wins} win(s) from ${played} game(s)` : "";
+  return { ok: true, message: `Season set: Division ${division}, ${points}/${target} points, ${chances} chance(s)${series}.` };
 }
 
 export type SettingsSection = "club" | "look" | "players" | "seasons" | "league";

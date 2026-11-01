@@ -140,7 +140,10 @@ export function FixStatsForm({ matchId, rows }: { matchId: string; rows: FixRow[
   );
 }
 
-export function SeasonForm({ division, points, target, chances }: { division: number; points: number; target: number; chances: number }) {
+/** promotionPlayed/promotionWins only count when points reach the target (the promotion match) */
+export function SeasonForm({ division, points, target, chances, promotionPlayed, promotionWins }: {
+  division: number; points: number; target: number; chances: number; promotionPlayed: number; promotionWins: number;
+}) {
   const [state, action, pending] = useActionState(setSeasonState, null);
   const field = { width: 72 } as const;
   return (
@@ -149,6 +152,8 @@ export function SeasonForm({ division, points, target, chances }: { division: nu
       <label className="row" style={{ gap: 6 }}><span className="text-2">Points</span><input type="number" name="points" min={0} defaultValue={points} style={field} /></label>
       <label className="row" style={{ gap: 6 }}><span className="text-2">of</span><input type="number" name="target" min={1} defaultValue={target} style={field} /></label>
       <label className="row" style={{ gap: 6 }}><span className="text-2">Chances</span><input type="number" name="chances" min={0} max={3} defaultValue={chances} style={field} /></label>
+      <label className="row" style={{ gap: 6 }}><span className="text-2">Promotion match: played</span><input type="number" name="promotionPlayed" min={0} max={5} defaultValue={promotionPlayed} style={field} /></label>
+      <label className="row" style={{ gap: 6 }}><span className="text-2">won</span><input type="number" name="promotionWins" min={0} max={5} defaultValue={promotionWins} style={field} /></label>
       <input type="password" name="password" placeholder="Club password" aria-label="Club password" style={{ width: 150 }} required />
       <button type="submit" disabled={pending}>Save</button>
       <Msg state={state} />

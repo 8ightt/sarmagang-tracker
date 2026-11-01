@@ -325,7 +325,7 @@ export default async function Home() {
               <details>
                 <summary style={{ fontSize: 13 }}>Doesn&apos;t match the lobby? Set it from the game</summary>
                 <div style={{ marginTop: 12 }}>
-                  <SeasonForm division={season.division} points={season.points} target={season.target} chances={season.chances} />
+                  <SeasonForm division={season.division} points={season.points} target={season.target} chances={season.chances} promotionPlayed={season.promotion?.played ?? 0} promotionWins={season.promotion?.wins ?? 0} />
                 </div>
               </details>
             </section>
