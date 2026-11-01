@@ -152,8 +152,8 @@ export function SeasonForm({ division, points, target, chances, promotionPlayed,
       <label className="row" style={{ gap: 6 }}><span className="text-2">Points</span><input type="number" name="points" min={0} defaultValue={points} style={field} /></label>
       <label className="row" style={{ gap: 6 }}><span className="text-2">of</span><input type="number" name="target" min={1} defaultValue={target} style={field} /></label>
       <label className="row" style={{ gap: 6 }}><span className="text-2">Chances</span><input type="number" name="chances" min={0} max={3} defaultValue={chances} style={field} /></label>
-      <label className="row" style={{ gap: 6 }}><span className="text-2">Promotion match: played</span><input type="number" name="promotionPlayed" min={0} max={5} defaultValue={promotionPlayed} style={field} /></label>
-      <label className="row" style={{ gap: 6 }}><span className="text-2">won</span><input type="number" name="promotionWins" min={0} max={5} defaultValue={promotionWins} style={field} /></label>
+      <label className="row" style={{ gap: 6 }}><span className="text-2">Promotion match: won</span><input type="number" name="promotionWins" min={0} max={5} defaultValue={promotionWins} style={field} /></label>
+      <label className="row" style={{ gap: 6 }}><span className="text-2">lost</span><input type="number" name="promotionLost" min={0} max={5} defaultValue={promotionPlayed - promotionWins} style={field} /></label>
       <input type="password" name="password" placeholder="Club password" aria-label="Club password" style={{ width: 150 }} required />
       <button type="submit" disabled={pending}>Save</button>
       <Msg state={state} />

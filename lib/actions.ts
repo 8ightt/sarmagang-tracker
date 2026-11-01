@@ -174,9 +174,9 @@ export async function setSeasonState(_prev: ActionState, form: FormData): Promis
   if (chances === null || chances > 3) return { ok: false, message: "Chances must be 0–3." };
   // only during the promotion match: how far the series already is
   const inSeries = points >= target;
-  const played = inSeries ? (intOrNull(form.get("promotionPlayed")) ?? 0) : 0;
-  const wins = inSeries ? (intOrNull(form.get("promotionWins")) ?? 0) : 0;
-  if (played > 5 || wins > played) return { ok: false, message: "Promotion match: wins can't be more than games played (at most 5)." };
+  const wins = inSeries ? Math.max(0, intOrNull(form.get("promotionWins")) ?? 0) : 0;
+  const played = wins + (inSeries ? Math.max(0, intOrNull(form.get("promotionLost")) ?? 0) : 0);
+  if (played > 5) return { ok: false, message: "Promotion match: at most 5 games won and lost together." };
   const now = Math.floor(Date.now() / 1000);
   await sql()`
     insert into season_state (id, division, points, chances, target, anchor_ts, promotion_played, promotion_wins, updated_by, updated_at)
@@ -185,7 +185,7 @@ export async function setSeasonState(_prev: ActionState, form: FormData): Promis
       target = excluded.target, anchor_ts = excluded.anchor_ts, promotion_played = excluded.promotion_played,
       promotion_wins = excluded.promotion_wins, updated_by = excluded.updated_by, updated_at = now()`;
   revalidatePath("/", "layout");
-  const series = inSeries ? `, promotion match ${wins} win(s) from ${played} game(s)` : "";
+  const series = inSeries ? `, promotion match ${wins} won, ${played - wins} lost` : "";
   return { ok: true, message: `Season set: Division ${division}, ${points}/${target} points, ${chances} chance(s)${series}.` };
 }
 
