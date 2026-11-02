@@ -38,6 +38,23 @@ export async function reply(chatId: number, text: string, replyTo?: number): Pro
   }).catch((e) => console.error(e));
 }
 
+/**
+ * Points the bot at this site's webhook, like scripts/telegram-setup.mjs but from the site itself,
+ * so the token and CRON_SECRET never leave Vercel (used by the Connect button on /settings).
+ */
+export async function connectWebhook(site: string): Promise<{ username: string; url: string; error?: string }> {
+  const me = await call<{ username: string }>("getMe", {});
+  await call("setWebhook", {
+    url: `${site.replace(/\/$/, "")}/api/telegram`,
+    secret_token: webhookSecret(),
+    allowed_updates: ["message"],
+    drop_pending_updates: false,
+  });
+  await call("setMyCommands", { commands: [{ command: "start", description: "How to send screenshots" }] });
+  const info = await call<{ url: string; last_error_message?: string }>("getWebhookInfo", {});
+  return { username: me.username, url: info.url, error: info.last_error_message };
+}
+
 /** Downloads a file the bot received. */
 export async function download(fileId: string): Promise<Buffer> {
   const f = await call<{ file_path?: string; file_size?: number }>("getFile", { file_id: fileId });

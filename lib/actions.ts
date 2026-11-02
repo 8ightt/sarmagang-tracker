@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { checkEa } from "./check-ea";
 import { checkPassword } from "./password";
-import { refreshSettings, type ClubSeason, type LeagueRules, type LookSettings, type PlayerSettings } from "./config";
+import { connectWebhook, TELEGRAM_TOKEN, webhookSecret } from "./telegram";
+import { refreshSettings, SITE_URL, type ClubSeason, type LeagueRules, type LookSettings, type PlayerSettings } from "./config";
 import { sql } from "./db";
 
 export type ActionState = { ok: boolean; message: string } | null;
@@ -159,6 +160,20 @@ export async function checkNow(_prev: ActionState): Promise<ActionState> {
   revalidatePath("/", "layout");
   if (!result.ok) return { ok: false, message: "EA didn't answer properly; the timer tries again soon." };
   return { ok: true, message: result.newMatches ? `${result.newMatches} new game${result.newMatches === 1 ? "" : "s"} saved.` : "Up to date: no new games yet." };
+}
+
+/** /settings "Connect bot": points the Telegram bot (TELEGRAM_TOKEN on Vercel) at this site. */
+export async function connectTelegram(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const err = await checkPassword(form.get("password"));
+  if (err) return { ok: false, message: err };
+  if (!TELEGRAM_TOKEN) return { ok: false, message: "No TELEGRAM_TOKEN on Vercel yet: add it there and redeploy first." };
+  if (!webhookSecret() || !SITE_URL) return { ok: false, message: "The site has no CRON_SECRET or address set." };
+  try {
+    const r = await connectWebhook(SITE_URL);
+    return { ok: true, message: `Connected: @${r.username} sends to ${r.url}${r.error ? ` (Telegram's last error: ${r.error})` : ""}.` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Telegram didn't answer." };
+  }
 }
 
 /** Sets the league season as shown in the lobby right now; later results are applied automatically. */

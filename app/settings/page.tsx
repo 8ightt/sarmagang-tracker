@@ -1,7 +1,9 @@
+import { ConnectBotForm } from "@/components/Forms";
 import { SettingsForms } from "@/components/SettingsForms";
 import { clubTheme } from "@/lib/club-theme";
 import { CLUB_PASSWORD, loadSettings } from "@/lib/config";
 import { crestUrl } from "@/lib/ea-assets";
+import { TELEGRAM_TOKEN } from "@/lib/telegram";
 import { getClub, getMembers } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +38,7 @@ export default async function SettingsPage() {
             How {club.name} looks and how the site counts. Anyone can read this page; saving needs the club password.
           </p>
           <nav className="row" aria-label="Settings sections" style={{ gap: 8 }}>
-            {[["club", "Club"], ["look", "Look"], ["players", "Players"], ["seasons", "Seasons"], ["league", "League rules"]].map(([id, label]) => (
+            {[["club", "Club"], ["look", "Look"], ["players", "Players"], ["seasons", "Seasons"], ["league", "League rules"], ["bot", "Telegram bot"]].map(([id, label]) => (
               <a key={id} className="pill" href={`#${id}`}>{label}</a>
             ))}
           </nav>
@@ -54,6 +56,15 @@ export default async function SettingsPage() {
             seasons={settings.seasons}
             league={settings.league}
           />
+          <div id="bot" className="settings-form">
+            <h2 className="display">Telegram bot</h2>
+            <p className="text-2" style={{ margin: 0, maxWidth: "70ch" }}>
+              {TELEGRAM_TOKEN
+                ? "The bot's token is set. Press Connect once (and again if the site's address changes) so Telegram sends the bot's messages here. Then players can /iam their gamertag, /rr their rating after a CPU game and send screenshots."
+                : "No bot yet: make one with @BotFather in Telegram, add its token as TELEGRAM_TOKEN in this site's Vercel environment variables, redeploy, then come back and press Connect."}
+            </p>
+            {TELEGRAM_TOKEN ? <ConnectBotForm /> : null}
+          </div>
           <p className="muted small" style={{ margin: 0, maxWidth: "75ch" }}>
             Saved settings are stored in the database and win over config/settings.json, which stays as the starting values. The Discord
             webhook, the Telegram bot and the club password itself are set in Vercel&apos;s environment variables.

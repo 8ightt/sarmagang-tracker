@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { checkNow, saveStatFixes, setCaptain, setSeasonCpuReds, setSeasonState, toggleCpuRed, type ActionState } from "@/lib/actions";
+import { checkNow, saveStatFixes, setCaptain, setSeasonCpuReds, setSeasonState, toggleCpuRed, connectTelegram, type ActionState } from "@/lib/actions";
 
 function Msg({ state }: { state: ActionState }) {
   if (!state) return null;
@@ -34,6 +34,18 @@ export function CpuRedButton({ matchId, player, isCpu }: { matchId: string; play
       <button type="submit" className={isCpu ? "ghost" : "danger"} disabled={pending}>
         {isCpu ? "CPU card · undo" : "His card · mark as CPU"}
       </button>
+      <Msg state={state} />
+    </form>
+  );
+}
+
+/** /settings: points the Telegram bot at this site (see connectTelegram). */
+export function ConnectBotForm() {
+  const [state, action, pending] = useActionState(connectTelegram, null);
+  return (
+    <form action={action} className="inline-form">
+      <input type="password" name="password" placeholder="Club password" aria-label="Club password" style={{ width: 150 }} required />
+      <button type="submit" disabled={pending}>{pending ? "Connecting…" : "Connect bot"}</button>
       <Msg state={state} />
     </form>
   );
