@@ -6,7 +6,7 @@
  *
  * A linear model trained by scripts/rating-model.mjs on the human-only lines of the EA FC Pro Clubs
  * API research dataset (github.com/Interactive-63/eafc-pro-clubs-api-research), then tuned on our own
- * games without the CPU. No imports, so the script can load this file with --experimental-strip-types.
+ * games: those without the CPU, plus +CPU games whose in-game rating was entered. No imports, so the script can load this file with --experimental-strip-types.
  */
 
 type Get = (key: string) => number;
@@ -51,7 +51,7 @@ export function estimateRating(line: Record<string, unknown>, cpu: boolean): num
   const f = ratingFeatures((k) => num(line[k]), (id) => counters.get(id) ?? 0, String(line.pos ?? ""), RATING_MODEL.counterIds, cpu);
   let raw = 0;
   for (const [k, w] of Object.entries(RATING_MODEL.weights)) raw += w * (f[k] ?? 0);
-  const tuned = RATING_MODEL.tune.a + RATING_MODEL.tune.b * raw;
+  const tuned = RATING_MODEL.tune.a + RATING_MODEL.tune.b * raw + (cpu ? (RATING_MODEL.tune.cpu ?? 0) : 0);
   return Math.round(Math.min(10, Math.max(3, tuned)) * 10) / 10;
 }
 
@@ -62,11 +62,11 @@ export const RATING_MODEL: {
   tunedOn: number;
   counterIds: number[];
   weights: Record<string, number> | null;
-  tune: { a: number; b: number };
+  tune: { a: number; b: number; cpu?: number };
 } = {
-  "trained": "2026-10-15",
+  "trained": "2026-11-03",
   "lines": 38382,
-  "tunedOn": 97,
+  "tunedOn": 379,
   "counterIds": [
     0,
     1,
@@ -469,8 +469,9 @@ export const RATING_MODEL: {
     "conceded@forward": 0.0009
   },
   "tune": {
-    "a": -0.7608,
-    "b": 1.0868
+    "a": -1.0395,
+    "b": 1.1308,
+    "cpu": -0.2849
   }
 };
 // ---- end generated ----
